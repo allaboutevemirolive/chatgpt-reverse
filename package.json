@@ -4,19 +4,26 @@
     "private": true,
     "description": "A ChatGPT extension built around reverse-engineered REST API.",
     "scripts": {
-        "build": "pnpm --filter \"./packages/**\" build",
-        "dev": "pnpm --filter \"./packages/**\" dev",
-        "clean": "rimraf build && pnpm --filter \"./packages/**\" run clean",
+        "clean": "rimraf build",
+        "build:packages": "pnpm --filter \"./packages/**\" build",
+        "copy:public": "copyfiles -u 1 public/**/* build",
+        "build": "pnpm run clean && pnpm run build:packages && pnpm run copy:public",
+        "dev": "pnpm --parallel --filter \"./packages/**\" dev",
         "typecheck": "pnpm --filter \"./packages/**\" typecheck"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@types/chrome": "^0.0.268",
-        "@types/node": "^20.14.2",
-        "rimraf": "^5.0.7",
+        "@biomejs/biome": "^1.9.4",
+        "@types/chrome": "^0.0.313",
+        "@types/node": "^22.14.0",
+        "copyfiles": "^2.4.1",
+        "rimraf": "^6.0.1",
         "typescript": "^5.4.5",
-        "vite": "^5.2.13"
+        "vite": "^6.2.5"
+    },
+    "dependencies": {
+        "@vitejs/plugin-react": "^4.3.0"
     }
 }

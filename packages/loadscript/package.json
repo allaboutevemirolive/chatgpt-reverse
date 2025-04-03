@@ -1,7 +1,8 @@
 {
-    "name": "@my-ext/scripts",
+    "name": "@my-ext/loadscript",
     "version": "1.0.0",
-    "description": "Utility scripts (interceptor, loadScript)",
+    "description": "Script loader utility",
+    "main": "src/loadScript.ts",
     "scripts": {
         "build": "vite build",
         "clean": "rimraf dist",
@@ -11,8 +12,6 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "dependencies": {
-        "@my-ext/shared": "workspace:*"
-    },
+    "dependencies": {},
     "devDependencies": {}
 }

@@ -1,0 +1,17 @@
+{
+    "name": "@my-ext/interceptor",
+    "version": "1.0.0",
+    "description": "Request interceptor script",
+    "main": "src/interceptor.ts",
+    "scripts": {
+        "build": "vite build",
+        "clean": "rimraf dist",
+        "dev": "vite build --watch",
+        "typecheck": "tsc --noEmit"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {},
+    "devDependencies": {}
+}

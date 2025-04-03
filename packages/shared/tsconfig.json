@@ -5,7 +5,10 @@
     "rootDir": "./src",
     "noEmit": false,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "allowImportingTsExtensions": false,
+    "isolatedModules": false,
+    "composite": true
   },
   "include": [
     "src/**/*"

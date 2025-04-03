@@ -1,0 +1,47 @@
+{
+    "manifest_version": 3,
+    "name": "ChatGPT Reverse",
+    "version": "1.0.0",
+    "description": "A ChatGPT extension built using a reverse-engineered REST API.",
+    "action": {
+        "default_popup": "popup/index.html"
+    },
+    "permissions": [
+        "scripting",
+        "storage",
+        "cookies"
+    ],
+    "host_permissions": [
+        "https://chatgpt.com/*"
+    ],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://chatgpt.com/*"
+            ],
+            "js": [
+                "loadScript.js",
+                "content.js"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "interceptor.js",
+                "loadScript.js"
+            ],
+            "matches": [
+                "https://chatgpt.com/*"
+            ]
+        }
+    ]
+}
