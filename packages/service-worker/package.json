@@ -1,0 +1,19 @@
+{
+    "name": "@my-ext/service-worker",
+    "version": "1.0.0",
+    "description": "Extension background service worker (MV3)",
+    "main": "src/background.ts",
+    "scripts": {
+        "build": "vite build",
+        "clean": "rimraf dist",
+        "dev": "vite build --watch",
+        "typecheck": "tsc --noEmit"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@my-ext/shared": "workspace:*"
+    },
+    "devDependencies": {}
+}

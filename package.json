@@ -1,0 +1,22 @@
+{
+    "name": "chatgpt-reverse",
+    "version": "1.0.0",
+    "private": true,
+    "description": "A ChatGPT extension built around reverse-engineered REST API.",
+    "scripts": {
+        "build": "pnpm --filter \"./packages/**\" build",
+        "dev": "pnpm --filter \"./packages/**\" dev",
+        "clean": "rimraf build && pnpm --filter \"./packages/**\" run clean",
+        "typecheck": "pnpm --filter \"./packages/**\" typecheck"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/chrome": "^0.0.268",
+        "@types/node": "^20.14.2",
+        "rimraf": "^5.0.7",
+        "typescript": "^5.4.5",
+        "vite": "^5.2.13"
+    }
+}

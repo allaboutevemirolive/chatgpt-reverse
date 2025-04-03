@@ -1,0 +1,18 @@
+{
+    "name": "@my-ext/shared",
+    "version": "1.0.0",
+    "description": "Shared types and utilities for the extension",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -b",
+        "clean": "rimraf dist tsconfig.tsbuildinfo",
+        "dev": "tsc -b --watch",
+        "typecheck": "tsc --noEmit"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {},
+    "devDependencies": {}
+}
