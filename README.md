@@ -111,12 +111,12 @@ This method builds the extension inside a container, ensuring a consistent envir
 
     To access them, we need to manually extract the contents from the built Docker image into our host filesystem, specifically into the root of our project.
 
-    1. Clean Up Existing `build` Directory (if it exists):
-
+    **1. Clean Up Existing `build` Directory (if it exists):**
+    
     ```bash
     rm -rf ./build
     ```
-    2. Create a Temporary Container:
+    **2. Create a Temporary Container:**
     
     Use `docker create` to make a container based on the image *without starting it*. We'll give it a temporary name like `extractor_container`.
 
@@ -125,14 +125,14 @@ This method builds the extension inside a container, ensuring a consistent envir
     docker create --name extractor_container chatgpt-reverse-build
     ```
 
-    3. Copy Files from the Container to Your Host:
+    **3. Copy Files from the Container to Your Host:**
 
     Use the `docker cp` command. The syntax is `docker cp <container_name>:<path_inside_container> <path_on_host>`.
 
     ```bash
     docker cp extractor_container:/extension_build/. ./build
     ```
-    4. Check Ownership (After Copying):
+    **4. Check Ownership (After Copying):**
 
     If the copy now succeeds without error, check the ownership of the newly created `./build` directory and its contents:
 
@@ -147,7 +147,7 @@ This method builds the extension inside a container, ensuring a consistent envir
     # Replace 'myusername' with your actual username if different
     sudo chown -R myusername:myusername ./build
     ```
-    5. Remove the Temporary Container:
+    **5. Remove the Temporary Container:**
 
     Don't forget to clean up:
 
