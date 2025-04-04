@@ -103,6 +103,58 @@ This method builds the extension inside a container, ensuring a consistent envir
     ```
     If the compose file includes a volume mount (`volumes: - ./build:/extension_build`), the built extension will also appear in the `./build` directory on your host machine. Otherwise, the artifacts are within the container created by compose.
 
+*   **How to Retrieve the Output from the Built Docker Image(s):**
+
+    The command `docker compose build` does exactly what its name implies: it **builds the Docker image(s)** defined in your `docker-compose.yml` file, following the instructions in your `Dockerfile`. It **does not** automatically run a container from that image, nor does it automatically copy files *out* of the built image back onto your host machine.
+
+    The build artifacts (the contents of your `build/` directory) now exist *inside* the newly built Docker image, specifically at the `/extension_build` path within the image's filesystem. They were **not** created on your host filesystem.
+
+    To access them, we need to manually extract the contents from the built Docker image into our host filesystem, specifically into the root of our project.
+
+    1. Clean Up Existing `build` Directory (if it exists):
+
+    ```bash
+    rm -rf ./build
+    ```
+    2. Create a Temporary Container:
+    
+    Use `docker create` to make a container based on the image *without starting it*. We'll give it a temporary name like `extractor_container`.
+
+    ```bash
+    # Only run this if 'extractor_container' doesn't exist
+    docker create --name extractor_container chatgpt-reverse-build
+    ```
+
+    3. Copy Files from the Container to Your Host:
+
+    Use the `docker cp` command. The syntax is `docker cp <container_name>:<path_inside_container> <path_on_host>`.
+
+    ```bash
+    docker cp extractor_container:/extension_build/. ./build
+    ```
+    4. Check Ownership (After Copying):
+
+    If the copy now succeeds without error, check the ownership of the newly created `./build` directory and its contents:
+
+    ```bash
+    ls -ld ./build
+    ls -l ./build
+    ```
+    
+    If they are owned by `root` instead of your user (`myusername`), change the ownership back:
+
+    ```bash
+    # Replace 'myusername' with your actual username if different
+    sudo chown -R myusername:myusername ./build
+    ```
+    5. Remove the Temporary Container:
+
+    Don't forget to clean up:
+
+    ```bash
+    docker rm extractor_container
+    ```
+
 ## Linting and Formatting
 
 This project uses Biome for linting and formatting.

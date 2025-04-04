@@ -3,7 +3,6 @@
 # Generally not required just for building the extension. It's more useful if
 # we need to run multiple services together (e.g., the extension build + a
 # test server + a database). If we just need to build, use docker build.
-version: '3.8'
 services:
   build:
     build:
