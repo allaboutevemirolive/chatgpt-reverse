@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    // Adjust lib if needed, DOM might be necessary
     "lib": [
       "ESNext",
       "DOM"

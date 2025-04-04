@@ -1,12 +1,11 @@
 // packages/service-worker/src/background.ts
-import { VERSION } from '@shared'; // Example import
+import { VERSION } from '@shared';
 
 console.log('Service Worker loaded!');
-console.log('Shared Version:', VERSION); // Example using shared
+console.log('Shared Version:', VERSION);
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Extension installed!');
-    // Add initialization logic here (e.g., setting alarms, context menus)
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -17,5 +16,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     return true; // Indicates asynchronous response potentially
 });
-
-// Other service worker logic...

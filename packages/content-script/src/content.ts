@@ -1,9 +1,8 @@
 // packages/content-script/src/content.ts
-import { createGreeting } from '@shared'; // Example import
+import { createGreeting } from '@shared';
 
 console.log('Content script loaded!');
 
-// Example using shared code (if shared dependency exists)
 const message = createGreeting('Content Script User');
 console.log(message.text);
 

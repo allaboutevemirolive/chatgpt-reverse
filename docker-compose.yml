@@ -1,0 +1,17 @@
+# docker-compose.yml (e.g., for CI build step)
+# 
+# Generally not required just for building the extension. It's more useful if
+# we need to run multiple services together (e.g., the extension build + a
+# test server + a database). If we just need to build, use docker build.
+version: '3.8'
+services:
+  build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Build up to the 'final' stage
+      target: final 
+    # Optionally mount the output volume for easy access on host
+    volumes:
+      - ./build:/extension_build
+    # command: ["tail", "-f", "/dev/null"] # Keep container running if needed

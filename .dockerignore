@@ -1,0 +1,13 @@
+# .dockerignore
+.git
+node_modules
+packages/**/node_modules
+build
+dist
+packages/**/dist
+*.tsbuildinfo
+.env*
+*.log
+.DS_Store
+Dockerfile
+docker-compose.yml
