@@ -50,7 +50,7 @@ Clone the repository and install dependencies using pnpm:
 
 ```bash
 git clone <repository-url>
-cd chatgpt-reverse # Or your project directory name
+cd chatgpt-reverse
 pnpm install
 ```
 
