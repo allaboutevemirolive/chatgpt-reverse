@@ -1,7 +1,12 @@
 # ChatGPT Reverse Engineered API
 
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](./LICENSE)
-<!-- Add other relevant badges here (e.g., build status, version) -->
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://semver.org)
+[![Build](https://img.shields.io/github/actions/workflow/status/allaboutevemirolive/chatgpt-reverse/ci.yml?branch=main)](https://github.com/allaboutevemirolive/chatgpt-reverse/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/allaboutevemirolive/chatgpt-reverse?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/allaboutevemirolive/chatgpt-reverse)
+[![Issues](https://img.shields.io/github/issues/allaboutevemirolive/chatgpt-reverse.svg)](https://github.com/allaboutevemirolive/chatgpt-reverse/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/allaboutevemirolive/chatgpt-reverse.svg)](https://github.com/allaboutevemirolive/chatgpt-reverse/pulls)
+[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?label=Join%20Community&logo=discord)](https://discord.gg/YOUR_INVITE_CODE)
 
 ## Overview
 
