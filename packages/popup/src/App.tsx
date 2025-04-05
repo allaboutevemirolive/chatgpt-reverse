@@ -45,7 +45,7 @@ function App() {
                     color: theme.colors.accentPrimary,
                 }}
             >
-                ChatGPT Extension
+                ChatGPT Reverse
             </h1>
 
             {/* Brief Description */}
