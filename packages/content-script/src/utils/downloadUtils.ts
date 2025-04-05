@@ -36,7 +36,6 @@ export function triggerAudioDownload(
     }
 }
 
-
 /**
  * Triggers a browser download for text content.
  * @param content - The string content to download.

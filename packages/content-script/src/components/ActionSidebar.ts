@@ -103,8 +103,10 @@ export class ActionSidebar {
         // Hover/Focus States
         button.addEventListener("mouseenter", () => {
             button.style.backgroundColor = hoverBgColor;
-            if (type === "danger") button.style.color = theme.colors.error; // Keep text red
-            else if (type !== "primary") button.style.color = theme.colors.textPrimary; // Default/Danger hover text
+            if (type === "danger")
+                button.style.color = theme.colors.error; // Keep text red
+            else if (type !== "primary")
+                button.style.color = theme.colors.textPrimary; // Default/Danger hover text
             button.style.transform = "translateY(-1px)";
             button.style.boxShadow = theme.shadows.medium; // Add subtle shadow on hover
         });
@@ -112,17 +114,17 @@ export class ActionSidebar {
         button.addEventListener("mouseleave", () => {
             Object.assign(button.style, baseStyles); // Reset to original styles
             button.style.transform = "translateY(0)";
-            button.style.boxShadow = 'none';
+            button.style.boxShadow = "none";
         });
 
-        button.addEventListener("focus", () => { // Add focus state for accessibility
+        button.addEventListener("focus", () => {
+            // Add focus state for accessibility
             button.style.outline = `2px solid ${theme.colors.accentPrimary}`;
-            button.style.outlineOffset = '2px';
+            button.style.outlineOffset = "2px";
         });
         button.addEventListener("blur", () => {
-            button.style.outline = 'none';
+            button.style.outline = "none";
         });
-
 
         // Active State
         button.addEventListener("mousedown", () => {
@@ -130,15 +132,16 @@ export class ActionSidebar {
             button.style.transform = "translateY(0)"; // Remove hover lift
             button.style.boxShadow = theme.shadows.small; // Slightly less shadow when pressed
         });
-        button.addEventListener("mouseup", () => { // Reset background on mouse up if still hovering
-            if (button.matches(':hover')) {
+        button.addEventListener("mouseup", () => {
+            // Reset background on mouse up if still hovering
+            if (button.matches(":hover")) {
                 button.style.backgroundColor = hoverBgColor;
                 button.style.transform = "translateY(-1px)"; // Re-apply hover lift
                 button.style.boxShadow = theme.shadows.medium;
             } else {
                 Object.assign(button.style, baseStyles); // Reset fully if mouse left
                 button.style.transform = "translateY(0)";
-                button.style.boxShadow = 'none';
+                button.style.boxShadow = "none";
             }
         });
 
