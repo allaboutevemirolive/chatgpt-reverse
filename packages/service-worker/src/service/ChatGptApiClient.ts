@@ -4,7 +4,6 @@ interface RequestHeaders {
 }
 
 async function getStoredHeadersFromWorker(): Promise<RequestHeaders> {
-
     try {
         const data = await chrome.storage.local.get("apiHeaders");
         console.log(
@@ -28,8 +27,9 @@ export class ChatGptApiClient {
     private readonly baseUrl: string = "https://chatgpt.com";
 
     private constructor() {
-
-        console.log("ChatGptApiClient instance created in Service Worker context.");
+        console.log(
+            "ChatGptApiClient instance created in Service Worker context.",
+        );
     }
 
     public static getInstance(): ChatGptApiClient {
@@ -41,11 +41,13 @@ export class ChatGptApiClient {
 
     public async setHeaders(newHeaders: RequestHeaders): Promise<void> {
         this.headers = {
-
             ...newHeaders,
             "Content-Type": "application/json",
         };
-        console.log("ChatGptApiClient: Headers updated in instance", this.headers);
+        console.log(
+            "ChatGptApiClient: Headers updated in instance",
+            this.headers,
+        );
     }
 
     public static async initialize(): Promise<void> {
@@ -55,13 +57,11 @@ export class ChatGptApiClient {
     }
 
     private getHeaders(): RequestHeaders {
-
         if (!this.headers["Authorization"] || !this.headers["OAI-Device-Id"]) {
             console.warn(
                 "ChatGptApiClient: Attempting to get headers, but required fields might be missing.",
                 this.headers,
             );
-
         }
         return { ...this.headers };
     }
@@ -77,7 +77,6 @@ export class ChatGptApiClient {
         body?: any,
         responseType: "json" | "blob" = "json",
     ): Promise<T> {
-
         const currentHeaders = this.getHeaders();
 
         if (
@@ -117,7 +116,7 @@ export class ChatGptApiClient {
             let errorBody = "";
             try {
                 errorBody = await response.text();
-            } catch (_) { }
+            } catch (_) {}
             console.error(
                 `ChatGptApiClient: API request failed: ${response.status} ${response.statusText}. Body: ${errorBody}`,
             );
@@ -145,7 +144,10 @@ export class ChatGptApiClient {
 
             return jsonData;
         } catch (e) {
-            console.error("ChatGptApiClient: Failed to parse JSON response.", e);
+            console.error(
+                "ChatGptApiClient: Failed to parse JSON response.",
+                e,
+            );
             throw new Error("Failed to parse JSON response from API.");
         }
     }

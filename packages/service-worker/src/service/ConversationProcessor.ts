@@ -51,9 +51,9 @@ const isStandardMessage = (
 ): boolean =>
     Boolean(
         message.id &&
-        message.author?.role &&
-        message.content?.parts &&
-        ["user", "assistant"].includes(message.author.role),
+            message.author?.role &&
+            message.content?.parts &&
+            ["user", "assistant"].includes(message.author.role),
     );
 
 const isContextMessage = (
@@ -61,8 +61,8 @@ const isContextMessage = (
 ): boolean =>
     Boolean(
         message.id &&
-        message.author &&
-        message.content?.model_set_context !== undefined,
+            message.author &&
+            message.content?.model_set_context !== undefined,
     );
 
 const isAuthorCountableMessage = (
@@ -70,7 +70,7 @@ const isAuthorCountableMessage = (
 ): boolean =>
     Boolean(
         message.author?.role &&
-        ["user", "assistant"].includes(message.author.role),
+            ["user", "assistant"].includes(message.author.role),
     );
 
 // Generic conversation fetcher
@@ -98,7 +98,10 @@ async function fetchConversationData<T>(
 
         return messages;
     } catch (error) {
-        console.error("Failed to fetch conversation data for processing:", error);
+        console.error(
+            "Failed to fetch conversation data for processing:",
+            error,
+        );
         throw error;
     }
 }

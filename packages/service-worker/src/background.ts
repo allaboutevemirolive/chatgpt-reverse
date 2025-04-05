@@ -1,5 +1,5 @@
 // packages/service-worker/src/background.ts
-import { VERSION } from '@shared';
+import { VERSION } from "@shared";
 
 // chrome.runtime.onInstalled.addListener(() => {
 //     console.log('Extension installed!');
@@ -48,7 +48,7 @@ import { countConversationTokens } from "@/service/ConversationTokens";
 // --- Initialization & Logging ---
 // Optionally include shared version if needed, ensure '@shared' path is configured correctly
 // import { VERSION } from '@shared';
-console.log('Shared Version:', VERSION);
+console.log("Shared Version:", VERSION);
 console.log("Service Worker starting...");
 
 // --- Initialize ChatGptApiClient ---
@@ -408,4 +408,3 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 
 console.log("Service Worker event listeners attached.");
-

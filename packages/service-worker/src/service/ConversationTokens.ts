@@ -47,9 +47,11 @@ export async function countConversationTokens(
             totalTokens,
             messageTokens,
         };
-
     } catch (error) {
-        console.error(`Error counting tokens for conversation ${conversationId}:`, error);
+        console.error(
+            `Error counting tokens for conversation ${conversationId}:`,
+            error,
+        );
         // Clean up encoder if it was initialized before error
         // Note: Tiktoken doesn't seem to require explicit cleanup on error path,
         // but be mindful if using libraries that do.

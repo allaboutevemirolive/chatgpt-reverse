@@ -1,20 +1,15 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "noEmit": false,
-    "declaration": true,
-    "declarationMap": true,
-    "allowImportingTsExtensions": false,
-    "isolatedModules": false,
-    "composite": true
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "noEmit": false,
+        "declaration": true,
+        "declarationMap": true,
+        "allowImportingTsExtensions": false,
+        "isolatedModules": false,
+        "composite": true
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
 }

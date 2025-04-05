@@ -1,23 +1,14 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    // Adjust lib if needed, DOM might be necessary
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "noEmit": true
-  },
-  "include": [
-    "src/**/*.ts",
-    "vite.config.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "references": [
-    // Only include if shared is a dependency
-    // { "path": "../shared" }
-  ]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        // Adjust lib if needed, DOM might be necessary
+        "lib": ["ESNext", "DOM"],
+        "noEmit": true
+    },
+    "include": ["src/**/*.ts", "vite.config.ts"],
+    "exclude": ["node_modules", "dist"],
+    "references": [
+        // Only include if shared is a dependency
+        // { "path": "../shared" }
+    ]
 }

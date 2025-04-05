@@ -1,5 +1,5 @@
 // ./packages/shared/src/index.ts
-export * from './theme';
+export * from "./theme";
 
 export type MessageType = "GREETING" | "FAREWELL";
 

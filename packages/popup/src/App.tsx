@@ -137,7 +137,7 @@ function App() {
                         +
                     </span>
                     <kbd
-                         style={{
+                        style={{
                             display: "inline-block",
                             padding: `${theme.spacing.xxsmall} ${theme.spacing.xsmall}`, // py-1 px-2
                             fontSize: theme.typography.fontSize.small, // text-sm

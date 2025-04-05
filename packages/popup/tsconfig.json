@@ -1,22 +1,14 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "noEmit": true
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "vite.config.ts"
-  ],
-  "references": [
-    {
-      "path": "../shared"
-    }
-  ]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "noEmit": true
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
+    "references": [
+        {
+            "path": "../shared"
+        }
+    ]
 }

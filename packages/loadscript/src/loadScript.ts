@@ -1,5 +1,5 @@
 // packages/loadscript/src/loadScript.ts
-console.log('LoadScript script placeholder');
+console.log("LoadScript script placeholder");
 
 type AuthEventResponse = CustomEvent<{ accessToken: string }>;
 type AccountEventResponse = CustomEvent<{ accounts: any[] }>;
@@ -53,7 +53,7 @@ function injectScript(scriptUrl: string): void {
         document.createElement("script");
     newScriptElement.setAttribute("src", scriptUrl);
     newScriptElement.setAttribute("type", "text/javascript"); // Keep as text/javascript for wide compatibility
-    newScriptElement.onload = function(
+    newScriptElement.onload = function (
         this: GlobalEventHandlers,
         _ev: Event,
     ): void {

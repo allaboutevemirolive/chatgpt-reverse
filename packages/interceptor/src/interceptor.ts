@@ -1,5 +1,5 @@
 // packages/interceptor/src/interceptor.ts
-console.log('Interceptor script placeholder');
+console.log("Interceptor script placeholder");
 
 export const API_ENDPOINTS = {
     AUTH: "api/auth/session",
@@ -27,13 +27,13 @@ export interface RequestHeaders {
     Authorization?: string;
 }
 
-export type AuthResponse = { accessToken: string;[key: string]: any };
-export type AccountResponse = { accounts: any[];[key: string]: any };
+export type AuthResponse = { accessToken: string; [key: string]: any };
+export type AccountResponse = { accounts: any[]; [key: string]: any };
 export type ConversationLimitResponse = {
     message_cap: any;
     [key: string]: any;
 };
-export type ModelResponse = { models: any[];[key: string]: any };
+export type ModelResponse = { models: any[]; [key: string]: any };
 
 // Store for headers
 let storedHeaders: RequestHeaders = {};
@@ -60,7 +60,7 @@ function extractHeaders(request: Request): RequestHeaders {
 
 const originalFetch: typeof fetch = window.fetch;
 
-window.fetch = async function(
+window.fetch = async function (
     ...args: Parameters<typeof fetch>
 ): Promise<Response> {
     console.log("Running Interceptor: ", args);
