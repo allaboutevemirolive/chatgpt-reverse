@@ -1,9 +1,9 @@
 // packages/service-worker/src/background.ts
 import { VERSION } from '@shared';
 
-chrome.runtime.onInstalled.addListener(() => {
-    console.log('Extension installed!');
-});
+// chrome.runtime.onInstalled.addListener(() => {
+//     console.log('Extension installed!');
+// });
 
 // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 //     console.log('Message received in background:', message);
@@ -32,18 +32,18 @@ import {
     getAudioForMessage,
     markMessageAsThumbsUp,
     markMessageAsThumbsDown,
-} from "@/service/chatGptUtils";
+} from "@/service/ChatGptService";
 
 import {
     fetchConversationMessageIds,
     fetchConversationMessages,
     fetchConversationContext,
     fetchConversationAuthorCounts,
-} from "@/service/conversationUtils";
+} from "@/service/ConversationProcessor";
 
-import { exportConversationAsMarkdown } from "@/service/markdownExporter";
+import { exportConversationAsMarkdown } from "@/service/MarkdownExporter";
 
-import { countConversationTokens } from "@/service/conversationTokenCounter";
+import { countConversationTokens } from "@/service/ConversationTokens";
 
 // --- Initialization & Logging ---
 // Optionally include shared version if needed, ensure '@shared' path is configured correctly
@@ -57,7 +57,7 @@ console.log("Service Worker starting...");
     try {
         // Initialize the singleton instance and load initial headers from storage.
         // ChatGptApiClient.initialize() handles getting the instance and calling setHeaders internally.
-        await ChatGptApiClient.initialize(); // Use renamed class
+        await ChatGptApiClient.initialize();
         console.log(
             "Service Worker: ChatGptApiClient initialized successfully.",
         );
@@ -79,22 +79,22 @@ async function storeHeaders(headers: any): Promise<void> {
         console.log("Service Worker: Headers stored", mergedHeaders);
 
         // Update the ChatGptApiClient singleton instance
-        await ChatGptApiClient.getInstance().setHeaders(mergedHeaders); // Use renamed class
+        await ChatGptApiClient.getInstance().setHeaders(mergedHeaders);
     } catch (error) {
         console.error("Service Worker: Error storing/updating headers", error);
     }
 }
 
-// Retrieve headers from storage
-async function getStoredHeaders(): Promise<any> {
-    try {
-        const data = await chrome.storage.local.get("apiHeaders");
-        return data.apiHeaders || {};
-    } catch (error) {
-        console.error("Service Worker: Error retrieving headers", error);
-        return {};
-    }
-}
+// // Retrieve headers from storage
+// async function getStoredHeaders(): Promise<any> {
+//     try {
+//         const data = await chrome.storage.local.get("apiHeaders");
+//         return data.apiHeaders || {};
+//     } catch (error) {
+//         console.error("Service Worker: Error retrieving headers", error);
+//         return {};
+//     }
+// }
 
 // --- Message Listener ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -166,7 +166,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     // Route messages to appropriate handlers
     switch (message.type) {
-        // --- Data Fetching/Manipulation (from chatGptUtils) ---
+        // --- Data Fetching/Manipulation ---
         case "FETCH_CONVERSATIONS":
             handleAsync(() =>
                 fetchConversations(
@@ -176,7 +176,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ),
             );
             break;
-        case "FETCH_CONVERSATION": // This now comes from chatGptUtils
+        case "FETCH_CONVERSATION":
             handleAsync(() =>
                 fetchConversation(message.payload.conversationId),
             );
@@ -395,7 +395,7 @@ chrome.runtime.onStartup.addListener(async () => {
     try {
         // Re-initialize to load fresh headers from storage,
         // ensuring the singleton instance is up-to-date.
-        await ChatGptApiClient.initialize(); // Use renamed class
+        await ChatGptApiClient.initialize();
         console.log(
             "Service Worker: ChatGptApiClient headers refreshed on browser startup.",
         );

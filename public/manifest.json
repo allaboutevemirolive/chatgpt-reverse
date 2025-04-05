@@ -3,8 +3,19 @@
     "name": "ChatGPT Reverse",
     "version": "1.0.0",
     "description": "A ChatGPT extension built using a reverse-engineered REST API.",
+    "icons": {
+        "16": "logo_16.png",
+        "48": "logo_48.png",
+        "64": "logo.svg",
+        "128": "logo_128.png"
+    },
     "action": {
-        "default_popup": "popup/index.html"
+        "default_popup": "popup/index.html",
+        "default_icon": {
+            "16": "logo_16.png",
+            "32": "logo_48.png",
+            "48": "logo_48.png"
+        }
     },
     "permissions": [
         "scripting",
@@ -37,7 +48,9 @@
         {
             "resources": [
                 "interceptor.js",
-                "loadScript.js"
+                "loadScript.js",
+                "*.png",
+                "logo.svg"
             ],
             "matches": [
                 "https://chatgpt.com/*"

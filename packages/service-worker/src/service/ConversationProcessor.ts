@@ -1,5 +1,5 @@
 // packages/service-worker/src/service/conversationUtils.ts
-import { fetchConversation } from "@/service/chatGptUtils";
+import { fetchConversation } from "@/service/ChatGptService";
 
 interface ConversationNode {
     message?: {
@@ -98,7 +98,7 @@ async function fetchConversationData<T>(
 
         return messages;
     } catch (error) {
-        console.error("Failed to fetch conversation:", error);
+        console.error("Failed to fetch conversation data for processing:", error);
         throw error;
     }
 }
