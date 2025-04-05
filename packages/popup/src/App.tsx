@@ -37,10 +37,7 @@ function App() {
         });
     };
 
-    // Inline styles removed
-
     return (
-        // Use class names instead of inline styles
         <div className="AppContainer">
             <h1 className="AppTitle">ChatGPT Reverse Extension</h1>
 
