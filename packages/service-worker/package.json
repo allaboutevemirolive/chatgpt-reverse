@@ -13,7 +13,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@my-ext/shared": "workspace:*"
-    },
-    "devDependencies": {}
+        "@my-ext/shared": "workspace:*",
+        "tiktoken": "^1.0.20"
+    }
 }
