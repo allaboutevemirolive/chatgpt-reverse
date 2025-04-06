@@ -11,6 +11,9 @@
             <stop offset="0%" stop-color="#FFDD35" />
             <stop offset="100%" stop-color="#F5A623" />
         </linearGradient>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-opacity="0.3"/>
+        </filter>
     </defs>
 
     <g id="logo-icon">
@@ -31,7 +34,8 @@
             stroke-linejoin="round"
             stroke-linecap="round"
             dominant-baseline="middle"
-            text-anchor="start">
+            text-anchor="start"
+            filter="url(#shadow)">
             ChatGPT Reverse
         </text>
         <text
