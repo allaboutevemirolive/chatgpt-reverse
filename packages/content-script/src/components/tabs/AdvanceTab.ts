@@ -261,7 +261,6 @@ export class AdvanceTab {
             // Append in label -> input order
             container.appendChild(labelElement);
             container.appendChild(input);
-
         } else {
             // --- Text/Number/Other Input Styling & Layout ---
             Object.assign(container.style, {
@@ -867,7 +866,10 @@ export class AdvanceTab {
             const exportData = await fetchMarkdownExportData(
                 conversationid as string,
             );
-            const fileName = generateMarkdownFileName(exportData.createTime);
+            const fileName = generateMarkdownFileName(
+                exportData.createTime,
+                exportData.title,
+            );
             downloadTextFile(
                 exportData.markdownContent,
                 fileName,
@@ -962,4 +964,3 @@ export class AdvanceTab {
         }
     }
 }
-

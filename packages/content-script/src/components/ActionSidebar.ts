@@ -25,20 +25,20 @@ export class ActionSidebar {
             flexShrink: "0", // Prevent shrinking if space is tight
         });
 
-        const title = document.createElement("h2");
+        // const title = document.createElement("h2");
         // Styling remains the same
-        Object.assign(title.style, {
-            margin: 0,
-            fontSize: theme.typography.fontSize.medium,
-            fontWeight: theme.typography.fontWeight.bold,
-            color: theme.colors.textPrimary,
-            padding: `${theme.spacing.small} ${theme.spacing.xsmall}`,
-            borderBottom: `1px solid ${theme.colors.borderSecondary}`,
-            letterSpacing: "0.3px",
-            textAlign: "center", // Center the title
-        });
-        title.textContent = "Actions"; // Title specific to this sidebar's purpose
-        sidebar.appendChild(title);
+        // Object.assign(title.style, {
+        //     margin: 0,
+        //     fontSize: theme.typography.fontSize.medium,
+        //     fontWeight: theme.typography.fontWeight.bold,
+        //     color: theme.colors.textPrimary,
+        //     padding: `${theme.spacing.small} ${theme.spacing.xsmall}`,
+        //     borderBottom: `1px solid ${theme.colors.borderSecondary}`,
+        //     letterSpacing: "0.3px",
+        //     textAlign: "center", // Center the title
+        // });
+        // title.textContent = "Actions"; // Title specific to this sidebar's purpose
+        // sidebar.appendChild(title);
 
         return sidebar;
     }

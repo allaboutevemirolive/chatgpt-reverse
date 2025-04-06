@@ -282,85 +282,88 @@ export class ConversationCleanupTab {
         }
 
         const fragment = document.createDocumentFragment();
-        this.conversations.forEach((conv: ConversationSummary, index: number) => {
-            const item = document.createElement("div");
-            Object.assign(item.style, {
-                display: "flex",
-                alignItems: "center",
-                gap: theme.spacing.medium,
-                padding: `${theme.spacing.small} ${theme.spacing.medium}`,
-                borderBottom:
-                    index < this.conversations.length - 1
-                        ? `1px solid ${theme.colors.borderSecondary}`
-                        : "none",
-                cursor: "pointer",
-                transition: "background-color 0.1s ease-in-out",
-                boxSizing: "border-box",
-                backgroundColor: theme.colors.backgroundPrimary,
-            });
-            item.addEventListener("mouseenter", () => {
-                item.style.backgroundColor = theme.colors.backgroundHover;
-            });
-            item.addEventListener("mouseout", () => {
-                item.style.backgroundColor = theme.colors.backgroundPrimary;
-            });
-            item.addEventListener("click", (e) => {
-                if ((e.target as HTMLElement).tagName !== "INPUT") {
-                    const checkbox =
-                        item.querySelector<HTMLInputElement>("input");
-                    if (checkbox) {
-                        checkbox.checked = !checkbox.checked;
-                        this.handleConversationCheckboxChange(
-                            conv.id,
-                            checkbox.checked,
-                            checkbox,
-                        );
+        this.conversations.forEach(
+            (conv: ConversationSummary, index: number) => {
+                const item = document.createElement("div");
+                Object.assign(item.style, {
+                    display: "flex",
+                    alignItems: "center",
+                    gap: theme.spacing.medium,
+                    padding: `${theme.spacing.small} ${theme.spacing.medium}`,
+                    borderBottom:
+                        index < this.conversations.length - 1
+                            ? `1px solid ${theme.colors.borderSecondary}`
+                            : "none",
+                    cursor: "pointer",
+                    transition: "background-color 0.1s ease-in-out",
+                    boxSizing: "border-box",
+                    backgroundColor: theme.colors.backgroundPrimary,
+                });
+                item.addEventListener("mouseenter", () => {
+                    item.style.backgroundColor = theme.colors.backgroundHover;
+                });
+                item.addEventListener("mouseout", () => {
+                    item.style.backgroundColor = theme.colors.backgroundPrimary;
+                });
+                item.addEventListener("click", (e) => {
+                    if ((e.target as HTMLElement).tagName !== "INPUT") {
+                        const checkbox =
+                            item.querySelector<HTMLInputElement>("input");
+                        if (checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            this.handleConversationCheckboxChange(
+                                conv.id,
+                                checkbox.checked,
+                                checkbox,
+                            );
+                        }
                     }
-                }
-            });
+                });
 
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.value = conv.id;
-            checkbox.checked = this.selectedConversationIds.has(conv.id);
-            checkbox.id = `conv-checkbox-${conv.id}`;
-            Object.assign(checkbox.style, {
-                cursor: "pointer",
-                width: "16px",
-                height: "16px",
-                accentColor: theme.colors.accentPrimary,
-                flexShrink: "0",
-                margin: "0",
-            });
-            checkbox.addEventListener("change", (e) => {
-                const target = e.target as HTMLInputElement;
-                this.handleConversationCheckboxChange(
-                    conv.id,
-                    target.checked,
-                    target,
-                );
-            });
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = conv.id;
+                checkbox.checked = this.selectedConversationIds.has(conv.id);
+                checkbox.id = `conv-checkbox-${conv.id}`;
+                Object.assign(checkbox.style, {
+                    cursor: "pointer",
+                    width: "16px",
+                    height: "16px",
+                    accentColor: theme.colors.accentPrimary,
+                    flexShrink: "0",
+                    margin: "0",
+                });
+                checkbox.addEventListener("change", (e) => {
+                    const target = e.target as HTMLInputElement;
+                    this.handleConversationCheckboxChange(
+                        conv.id,
+                        target.checked,
+                        target,
+                    );
+                });
 
-            const titleLabel = document.createElement("label");
-            titleLabel.htmlFor = checkbox.id;
-            titleLabel.textContent = conv.title || "(Untitled Conversation)";
-            Object.assign(titleLabel.style, {
-                flexGrow: "1",
-                fontSize: theme.typography.fontSize.small,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.textPrimary,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                cursor: "pointer",
-                lineHeight: "1.3",
-            });
-            titleLabel.title = conv.title || "(Untitled Conversation)";
+                const titleLabel = document.createElement("label");
+                titleLabel.htmlFor = checkbox.id;
+                titleLabel.textContent =
+                    conv.title || "(Untitled Conversation)";
+                Object.assign(titleLabel.style, {
+                    flexGrow: "1",
+                    fontSize: theme.typography.fontSize.small,
+                    fontWeight: theme.typography.fontWeight.medium,
+                    color: theme.colors.textPrimary,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    cursor: "pointer",
+                    lineHeight: "1.3",
+                });
+                titleLabel.title = conv.title || "(Untitled Conversation)";
 
-            item.appendChild(checkbox);
-            item.appendChild(titleLabel);
-            fragment.appendChild(item);
-        });
+                item.appendChild(checkbox);
+                item.appendChild(titleLabel);
+                fragment.appendChild(item);
+            },
+        );
         this.listContainer.appendChild(fragment);
 
         this.updateSelectAllState(); // Update checkbox based on rendered items
@@ -402,10 +405,10 @@ export class ConversationCleanupTab {
         const infoText = this.isLoading
             ? `Loading...`
             : this.error
-                ? `Error`
-                : this.totalConversations > 0
-                    ? `Showing ${this.conversations.length} of ${this.totalConversations}`
-                    : `0 conversations`;
+              ? `Error`
+              : this.totalConversations > 0
+                ? `Showing ${this.conversations.length} of ${this.totalConversations}`
+                : `0 conversations`;
         this.updateListInfo(infoText);
 
         // Only render pagination controls if needed
@@ -463,7 +466,9 @@ export class ConversationCleanupTab {
             }
         }
         // Update Select All enabled state
-        this.toggleSelectAllEnabled(!isActionInProgress && this.conversations.length > 0);
+        this.toggleSelectAllEnabled(
+            !isActionInProgress && this.conversations.length > 0,
+        );
     }
 
     private createButton(
