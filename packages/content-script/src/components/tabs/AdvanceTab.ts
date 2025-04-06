@@ -151,7 +151,6 @@ export class AdvanceTab {
                 type: "number",
                 defaultValue: "4",
             },
-            { label: "In Search Mode", name: "insearchmode", type: "checkbox" },
             {
                 label: "Message ID",
                 name: "messageid",
@@ -175,6 +174,11 @@ export class AdvanceTab {
                 name: "format",
                 type: "text",
                 defaultValue: "aac",
+            },
+            {
+                label: "In Search Mode",
+                name: "insearchmode",
+                type: "checkbox"
             },
         ];
         fields.forEach((field) => {
@@ -220,19 +224,20 @@ export class AdvanceTab {
                 alignItems: "center",
                 gap: theme.spacing.small,
                 padding: theme.spacing.small,
-                backgroundColor: `${theme.colors.accentPrimary}15`,
-                border: `1px solid ${theme.colors.accentPrimary}50`,
-                borderRadius: theme.borderRadius.medium,
-                marginTop: theme.spacing.xsmall,
+                backgroundColor: theme.colors.backgroundSecondary,
+                // border: `1px solid ${theme.colors.borderPrimary}`,
+                borderRadius: theme.borderRadius.small,
+                // marginTop: theme.spacing.xsmall,
             });
 
-            labelElement.style.fontWeight = theme.typography.fontWeight.bold;
-            labelElement.style.color = theme.colors.textPrimary;
+            // labelElement.style.fontWeight = theme.typography.fontWeight.bold;
+            // labelElement.style.color = theme.colors.textPrimary;
 
+            // Checkbox
             Object.assign(input.style, {
                 accentColor: theme.colors.accentPrimary,
-                width: "20px",
-                height: "20px",
+                width: "15px",
+                height: "15px",
                 cursor: "pointer",
                 margin: "0",
             });
