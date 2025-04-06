@@ -1,4 +1,8 @@
-# ChatGPT Reverse
+<!-- # ChatGPT Reverse -->
+
+<p align="center">
+  <img src="./assets/logo.svg" alt="Project Logo" width="450"/>
+</p>
 
 <p align="center">
   <img src="./assets/chatgpt_reverse.png" alt="ChatGPT Reverse Logo" width="600"/>
