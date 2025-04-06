@@ -7,12 +7,6 @@
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
   <a href="https://semver.org"><img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version"/></a>
-  <!-- <a href="https://github.com/allaboutevemirolive/chatgpt-reverse/actions"><img src="https://img.shields.io/github/actions/workflow/status/allaboutevemirolive/chatgpt-reverse/ci.yml?branch=main" alt="Build"/></a> -->
-  <!-- <a href="https://codecov.io/gh/allaboutevemirolive/chatgpt-reverse"><img src="https://img.shields.io/codecov/c/github/allaboutevemirolive/chatgpt-reverse?token=YOUR_CODECOV_TOKEN" alt="Coverage"/></a> -->
-  <!-- <br/> <!-- Optional: Add a line break if you want the next row of badges below --> -->
-  <!-- <a href="https://github.com/allaboutevemirolive/chatgpt-reverse/issues"><img src="https://img.shields.io/github/issues/allaboutevemirolive/chatgpt-reverse.svg" alt="Issues"/></a> -->
-  <!-- <a href="https://github.com/allaboutevemirolive/chatgpt-reverse/pulls"><img src="https://img.shields.io/github/issues-pr/allaboutevemirolive/chatgpt-reverse.svg" alt="Pull Requests"/></a> -->
-  <!-- <a href="https://discord.gg/YOUR_INVITE_CODE"><img src="https://img.shields.io/discord/YOUR_DISCORD_ID?label=Join%20Community&logo=discord" alt="Discord"/></a> -->
 </p>
 
 ## Overview
