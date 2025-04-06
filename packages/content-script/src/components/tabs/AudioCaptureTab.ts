@@ -1,6 +1,5 @@
 // packages/content-script/src/components/tabs/AudioCaptureTab.ts
 import { theme } from "@shared"; // Ensure this path resolves correctly
-import { AudioCapture } from "@/constants/tabConfig";
 import { triggerAudioDownload } from "@/utils/downloadUtils";
 import { SendMessageToSW } from "@/utils/swMessenger";
 
