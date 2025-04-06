@@ -178,7 +178,6 @@ This project uses Biome for linting and formatting.
     # pnpm biome format --write .
     # pnpm biome lint --apply .
     ```
-*(You might want to add root `lint` and `format` scripts to `package.json` for convenience).*
 
 ## Testing
 
