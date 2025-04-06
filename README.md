@@ -1,6 +1,6 @@
 # ChatGPT Reverse
 
-![ChatGPT Reverse Logo](./assets/chatgpt_reverse.png)
+<img src="./assets/chatgpt_reverse.png" alt="ChatGPT Reverse Logo" width="500"/>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://semver.org)
