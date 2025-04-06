@@ -86,8 +86,7 @@ export class ActionSidebar {
 
         button.addEventListener("mouseenter", () => {
             button.style.backgroundColor = hoverBgColor;
-            if (type === "danger")
-                button.style.color = theme.colors.error;
+            if (type === "danger") button.style.color = theme.colors.error;
             else if (type !== "primary")
                 button.style.color = theme.colors.textPrimary;
             button.style.transform = "translateY(-1px)";
@@ -101,7 +100,6 @@ export class ActionSidebar {
         });
 
         button.addEventListener("focus", () => {
-
             button.style.outline = `2px solid ${theme.colors.accentPrimary}`;
             button.style.outlineOffset = "2px";
         });
@@ -115,7 +113,6 @@ export class ActionSidebar {
             button.style.boxShadow = theme.shadows.small;
         });
         button.addEventListener("mouseup", () => {
-
             if (button.matches(":hover")) {
                 button.style.backgroundColor = hoverBgColor;
                 button.style.transform = "translateY(-1px)";

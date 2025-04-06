@@ -35,7 +35,11 @@ export class ConversationCleanupTab {
     constructor(sendMessage: SendMessageToSW) {
         this.sendMessage = sendMessage;
         this.rootElement = this.buildUI();
-        this.fetchDataForCurrentPage();
+
+        this.renderConversationList();
+        this.renderPagination();
+        this.updateDeleteButtonState();
+        this.updateSelectAllState();
     }
 
     public getElement(): HTMLDivElement {
@@ -72,6 +76,11 @@ export class ConversationCleanupTab {
             boxShadow: theme.shadows.small,
             marginBottom: theme.spacing.small,
         });
+
+        this.listContainer.appendChild(
+            this.createStatusMessage("Click 'Refresh' to load conversations."),
+        );
+
         container.appendChild(this.listContainer);
 
         this.feedbackArea = document.createElement("div");
@@ -206,6 +215,7 @@ export class ConversationCleanupTab {
             margin: "0",
             whiteSpace: "nowrap",
         });
+        this.listInfoArea.textContent = "Ready";
         rightActions.appendChild(this.listInfoArea);
 
         this.paginationContainer = document.createElement("div");
@@ -225,27 +235,39 @@ export class ConversationCleanupTab {
         this.listContainer.innerHTML = "";
         const hasContent = this.conversations && this.conversations.length > 0;
 
-        this.toggleSelectAllEnabled(hasContent && !this.isLoading);
+        this.toggleSelectAllEnabled(
+            hasContent && !this.isLoading && !this.isDeleting,
+        );
 
         if (this.isLoading) {
             this.listContainer.appendChild(
                 this.createStatusMessage("⏳ Loading conversations..."),
             );
-
             return;
         }
         if (this.error) {
             this.listContainer.appendChild(
                 this.createStatusMessage(`❌ Error: ${this.error}`, true),
             );
-
             return;
         }
-        if (!hasContent) {
-            this.listContainer.appendChild(
-                this.createStatusMessage("🗑️ No conversations found."),
-            );
 
+        if (!hasContent && !this.isLoading && !this.error) {
+            if (this.totalConversations > 0) {
+                this.listContainer.appendChild(
+                    this.createStatusMessage("No conversations on this page."),
+                );
+            } else if (this.totalConversations === 0) {
+                this.listContainer.appendChild(
+                    this.createStatusMessage("🗑️ No conversations found."),
+                );
+            } else {
+                this.listContainer.appendChild(
+                    this.createStatusMessage(
+                        "Click 'Refresh' to load conversations.",
+                    ),
+                );
+            }
             return;
         }
 
@@ -279,10 +301,10 @@ export class ConversationCleanupTab {
                             item.querySelector<HTMLInputElement>("input");
                         if (checkbox) {
                             checkbox.checked = !checkbox.checked;
+
                             this.handleConversationCheckboxChange(
                                 conv.id,
                                 checkbox.checked,
-                                checkbox,
                             );
                         }
                     }
@@ -306,7 +328,6 @@ export class ConversationCleanupTab {
                     this.handleConversationCheckboxChange(
                         conv.id,
                         target.checked,
-                        target,
                     );
                 });
 
@@ -369,21 +390,34 @@ export class ConversationCleanupTab {
 
         const isActionInProgress = this.isLoading || this.isDeleting;
 
-        const infoText = this.isLoading
-            ? `Loading...`
-            : this.error
-                ? `Error`
-                : this.totalConversations > 0
-                    ? `Showing ${this.conversations.length} of ${this.totalConversations}`
-                    : `0 conversations`;
+        let infoText = "";
+        if (this.isLoading) {
+            infoText = "Loading...";
+        } else if (this.isDeleting) {
+            infoText = "Deleting...";
+        } else if (this.error) {
+            infoText = "Error loading";
+        } else if (this.totalConversations > 0) {
+            const startItem = (this.currentPage - 1) * ITEMS_PER_PAGE + 1;
+            const endItem = Math.min(
+                this.currentPage * ITEMS_PER_PAGE,
+                this.totalConversations,
+            );
+            infoText = `Showing ${startItem}-${endItem} of ${this.totalConversations}`;
+        } else if (this.totalConversations === 0 && !this.error) {
+            infoText = "0 conversations";
+        } else {
+            infoText = "Ready";
+        }
         this.updateListInfo(infoText);
 
-        if (this.totalPages > 1 && !this.isLoading && !this.error) {
+        if (this.totalPages > 1 && !this.error) {
             const prevButton = this.createButton(
                 "<",
                 () => this.changePage(this.currentPage - 1),
                 this.currentPage <= 1 || isActionInProgress,
             );
+
             prevButton.style.padding = theme.spacing.xsmall;
             prevButton.style.minWidth = "30px";
             prevButton.title = "Previous Page";
@@ -412,8 +446,7 @@ export class ConversationCleanupTab {
             this.paginationContainer.appendChild(prevButton);
             this.paginationContainer.appendChild(pageIndicator);
             this.paginationContainer.appendChild(nextButton);
-        } else if (this.totalPages <= 1) {
-
+        } else {
             this.paginationContainer.innerHTML = "";
         }
 
@@ -423,6 +456,7 @@ export class ConversationCleanupTab {
             this.refreshButton.style.cursor = isActionInProgress
                 ? "not-allowed"
                 : "pointer";
+
             if (isActionInProgress) {
                 this.refreshButton.style.backgroundColor = "transparent";
                 this.refreshButton.style.color = theme.colors.textSecondary;
@@ -434,6 +468,8 @@ export class ConversationCleanupTab {
         this.toggleSelectAllEnabled(
             !isActionInProgress && this.conversations.length > 0,
         );
+
+        this.updateDeleteButtonState();
     }
 
     private createButton(
@@ -494,25 +530,33 @@ export class ConversationCleanupTab {
 
         if (!disabled) {
             button.addEventListener("mouseenter", () => {
-                button.style.backgroundColor = hoverBgColor;
-                button.style.color = hoverTextColor;
-                button.style.borderColor = hoverBorderColor;
-            });
-            button.addEventListener("mouseleave", () => {
-                Object.assign(button.style, baseStyles);
-            });
-            button.addEventListener("mousedown", () => {
-                button.style.backgroundColor = activeBgColor;
-                button.style.color = activeTextColor;
-                button.style.borderColor = activeBorderColor;
-            });
-            button.addEventListener("mouseup", () => {
-                if (button.matches(":hover")) {
+                if (!button.disabled) {
                     button.style.backgroundColor = hoverBgColor;
                     button.style.color = hoverTextColor;
                     button.style.borderColor = hoverBorderColor;
-                } else {
+                }
+            });
+            button.addEventListener("mouseleave", () => {
+                if (!button.disabled) {
                     Object.assign(button.style, baseStyles);
+                }
+            });
+            button.addEventListener("mousedown", () => {
+                if (!button.disabled) {
+                    button.style.backgroundColor = activeBgColor;
+                    button.style.color = activeTextColor;
+                    button.style.borderColor = activeBorderColor;
+                }
+            });
+            button.addEventListener("mouseup", () => {
+                if (!button.disabled) {
+                    if (button.matches(":hover")) {
+                        button.style.backgroundColor = hoverBgColor;
+                        button.style.color = hoverTextColor;
+                        button.style.borderColor = hoverBorderColor;
+                    } else {
+                        Object.assign(button.style, baseStyles);
+                    }
                 }
             });
         }
@@ -525,18 +569,37 @@ export class ConversationCleanupTab {
 
         this.isLoading = true;
         this.error = null;
+        this.displayFeedback("", "loading", 0);
         this.renderConversationList();
         this.renderPagination();
         this.updateDeleteButtonState();
 
         try {
             const offset = (this.currentPage - 1) * ITEMS_PER_PAGE;
+            console.log(
+                `ConversationCleanupTab: Fetching conversations - offset: ${offset}, limit: ${ITEMS_PER_PAGE}`,
+            );
             const response = await fetchConversations(
                 { offset, limit: ITEMS_PER_PAGE, order: "updated" },
                 this.sendMessage,
             );
+            console.log("ConversationCleanupTab: Received response", response);
 
-            this.conversations = response.items.map((item) => ({
+            if (
+                !response ||
+                !Array.isArray(response.items) ||
+                typeof response.total !== "number"
+            ) {
+                console.error(
+                    "ConversationCleanupTab: Invalid response structure received",
+                    response,
+                );
+                throw new Error(
+                    "Received invalid data structure for conversations.",
+                );
+            }
+
+            this.conversations = response.items.map((item: any) => ({
                 id: item.id,
                 title: item.title,
             }));
@@ -545,22 +608,37 @@ export class ConversationCleanupTab {
             this.error = null;
 
             if (this.currentPage > this.totalPages) {
+                console.log(
+                    `ConversationCleanupTab: Current page ${this.currentPage} exceeds total pages ${this.totalPages}, resetting to ${this.totalPages}`,
+                );
                 this.currentPage = this.totalPages;
             }
+
             this.selectedConversationIds.clear();
+            this.displayFeedback(
+                `✓ Loaded ${this.conversations.length} conversations.`,
+                "success",
+                4000,
+            );
         } catch (err: unknown) {
-            console.error("Failed to fetch conversations:", err);
+            console.error(
+                "ConversationCleanupTab: Failed to fetch conversations:",
+                err,
+            );
             if (err instanceof Error) {
                 this.error = err.message;
             } else {
                 this.error = "An unknown error occurred while fetching.";
             }
+
             this.conversations = [];
             this.totalConversations = 0;
             this.totalPages = 1;
             this.currentPage = 1;
+            this.displayFeedback(`❌ Error: ${this.error}`, "error");
         } finally {
             this.isLoading = false;
+
             this.renderConversationList();
             this.renderPagination();
             this.updateDeleteButtonState();
@@ -585,16 +663,16 @@ export class ConversationCleanupTab {
 
     private handleSelectAllChange(event: Event): void {
         const isChecked = (event.target as HTMLInputElement).checked;
-        const currentConversationIds = this.conversations.map(
+        const currentConversationIdsOnPage = this.conversations.map(
             (c: ConversationSummary) => c.id,
         );
 
         if (isChecked) {
-            currentConversationIds.forEach((id: string) =>
+            currentConversationIdsOnPage.forEach((id: string) =>
                 this.selectedConversationIds.add(id),
             );
         } else {
-            currentConversationIds.forEach((id: string) =>
+            currentConversationIdsOnPage.forEach((id: string) =>
                 this.selectedConversationIds.delete(id),
             );
         }
@@ -613,14 +691,22 @@ export class ConversationCleanupTab {
     private handleConversationCheckboxChange(
         conversationId: string,
         isChecked: boolean,
-        checkboxElement: HTMLInputElement,
     ): void {
-        checkboxElement.checked = isChecked;
-
         if (isChecked) {
             this.selectedConversationIds.add(conversationId);
         } else {
             this.selectedConversationIds.delete(conversationId);
+        }
+
+        const checkbox = this.rootElement.querySelector<HTMLInputElement>(
+            `#conv-checkbox-${conversationId}`,
+        );
+        if (checkbox) {
+            checkbox.checked = isChecked;
+        } else {
+            console.warn(
+                `Checkbox for ID ${conversationId} not found during update.`,
+            );
         }
 
         this.updateSelectAllState();
@@ -628,18 +714,34 @@ export class ConversationCleanupTab {
     }
 
     private updateSelectAllState(): void {
-        if (!this.selectAllCheckbox || this.conversations.length === 0) {
-            if (this.selectAllCheckbox) this.selectAllCheckbox.checked = false;
+        if (
+            !this.selectAllCheckbox ||
+            this.conversations.length === 0 ||
+            this.isLoading ||
+            this.isDeleting
+        ) {
+            if (this.selectAllCheckbox) {
+                this.selectAllCheckbox.checked = false;
+                this.selectAllCheckbox.indeterminate = false;
+            }
             this.toggleSelectAllEnabled(false);
             return;
         }
-        const allVisibleSelected = this.conversations.every(
+
+        const selectedOnPageCount = this.conversations.filter(
             (conv: ConversationSummary) =>
                 this.selectedConversationIds.has(conv.id),
-        );
-        this.selectAllCheckbox.checked = allVisibleSelected;
+        ).length;
 
-        this.toggleSelectAllEnabled(true);
+        const allVisibleSelected =
+            selectedOnPageCount === this.conversations.length;
+        const someVisibleSelected =
+            selectedOnPageCount > 0 && !allVisibleSelected;
+
+        this.selectAllCheckbox.checked = allVisibleSelected;
+        this.selectAllCheckbox.indeterminate = someVisibleSelected;
+
+        this.toggleSelectAllEnabled(!this.isLoading && !this.isDeleting);
     }
 
     private toggleSelectAllEnabled(enabled: boolean): void {
@@ -660,9 +762,28 @@ export class ConversationCleanupTab {
         }
 
         this.deleteButton.disabled = count === 0 || isActionInProgress;
+
         this.deleteButton.style.opacity = this.deleteButton.disabled
             ? "0.6"
             : "1";
+
+        this.deleteButton.style.cursor = this.deleteButton.disabled
+            ? "not-allowed"
+            : "pointer";
+
+        if (this.deleteButton.disabled) {
+            const baseStyles = this.createButton(
+                "",
+                () => {},
+                true,
+                "danger",
+            ).style;
+            Object.assign(this.deleteButton.style, {
+                backgroundColor: baseStyles.backgroundColor,
+                color: baseStyles.color,
+                borderColor: baseStyles.borderColor,
+            });
+        }
     }
 
     private async handleDeleteSelected(): Promise<void> {
@@ -674,7 +795,11 @@ export class ConversationCleanupTab {
             return;
         }
         const countToDelete = this.selectedConversationIds.size;
-        if (!confirm(`Delete ${countToDelete} conversation(s)?`)) {
+        if (
+            !confirm(
+                `Are you sure you want to delete ${countToDelete} conversation(s)? This action cannot be undone.`,
+            )
+        ) {
             return;
         }
 
@@ -682,18 +807,26 @@ export class ConversationCleanupTab {
         this.error = null;
         this.renderPagination();
         this.updateDeleteButtonState();
-        this.displayFeedback(`Deleting ${countToDelete} items...`, "loading");
+        this.displayFeedback(
+            `⏳ Deleting ${countToDelete} conversation(s)...`,
+            "loading",
+        );
 
         const idsToDelete = Array.from(this.selectedConversationIds);
         let successCount = 0;
         let failureCount = 0;
+        const failedIds: string[] = [];
 
         const deletePromises = idsToDelete.map(async (id) => {
             try {
                 await deleteConversationById(id, this.sendMessage);
                 return { id, success: true };
             } catch (err: unknown) {
-                console.error(`Failed to delete conversation ${id}:`, err);
+                console.error(
+                    `ConversationCleanupTab: Failed to delete conversation ${id}:`,
+                    err,
+                );
+                failedIds.push(id);
                 return { id, success: false };
             }
         });
@@ -706,6 +839,7 @@ export class ConversationCleanupTab {
             } else {
                 failureCount++;
             }
+
             this.selectedConversationIds.delete(result.id);
         });
 
@@ -716,10 +850,10 @@ export class ConversationCleanupTab {
         if (failureCount === 0) {
             feedbackMessage = `✅ Successfully deleted ${successCount} conversation(s).`;
         } else if (successCount === 0) {
-            feedbackMessage = `❌ Failed to delete ${failureCount} conversation(s).`;
+            feedbackMessage = `❌ Failed to delete all ${failureCount} selected conversation(s). Check console for details.`;
             feedbackType = "error";
         } else {
-            feedbackMessage = `⚠️ Completed: ${successCount} deleted, ${failureCount} failed.`;
+            feedbackMessage = `⚠️ Completed: ${successCount} deleted, ${failureCount} failed. Check console for details on failed IDs.`;
             feedbackType = "warning";
         }
         this.displayFeedback(feedbackMessage, feedbackType, 8000);
@@ -771,7 +905,9 @@ export class ConversationCleanupTab {
         const existingTimeout = Number(
             this.feedbackArea.dataset.hideTimeoutId || 0,
         );
-        if (existingTimeout) clearTimeout(existingTimeout);
+        if (existingTimeout) {
+            clearTimeout(existingTimeout);
+        }
         this.feedbackArea.dataset.hideTimeoutId = "";
 
         if (autoHideDelay && autoHideDelay > 0) {
@@ -785,7 +921,7 @@ export class ConversationCleanupTab {
             }, autoHideDelay);
             this.feedbackArea.dataset.hideTimeoutId = String(timeoutId);
         } else if (type === "loading") {
-
+            this.feedbackArea.style.display = "block";
         }
     }
 }

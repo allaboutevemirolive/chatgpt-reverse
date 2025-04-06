@@ -114,26 +114,28 @@ export class MarkdownExportTab {
             document.head.appendChild(styleSheet);
             this.animationStylesInjected = true;
         } else {
-
             const inject = () => {
                 if (document.head && !document.getElementById(styleSheetId)) {
                     document.head.appendChild(styleSheet);
                     this.animationStylesInjected = true;
                 }
 
-                document.removeEventListener('DOMContentLoaded', inject);
+                document.removeEventListener("DOMContentLoaded", inject);
             };
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', inject);
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", inject);
             } else {
-
                 if (document.head) {
                     inject();
                 } else {
-                    console.error("MarkdownExportTab: document.head not available for style injection even after DOM loaded.");
+                    console.error(
+                        "MarkdownExportTab: document.head not available for style injection even after DOM loaded.",
+                    );
                 }
             }
-            console.warn("MarkdownExportTab: document.head not immediately available for style injection, attempting fallback.");
+            console.warn(
+                "MarkdownExportTab: document.head not immediately available for style injection, attempting fallback.",
+            );
         }
     }
 
@@ -142,9 +144,7 @@ export class MarkdownExportTab {
     }
 
     public updateConversationId(id: string | null): void {
-
         if (!this.idInput || !this.filenameInput || !this.idStatusElement) {
-
             console.warn(
                 "MarkdownExportTab: UI elements not ready for updateConversationId (likely called too early). Retrying.",
             );
@@ -167,8 +167,7 @@ export class MarkdownExportTab {
                 </svg>
                 <span style="color: ${theme.colors.textSecondary};">ID auto-detected.</span>
             `;
-            this.idStatusElement.style.display = 'flex';
-
+            this.idStatusElement.style.display = "flex";
         } else if (!id) {
             if (this.idInput.value === previousId) {
                 this.idInput.value = "";
@@ -183,7 +182,7 @@ export class MarkdownExportTab {
                     </svg>
                     <span style="color: ${theme.colors.textTertiary}; font-style: italic;">No ID detected.</span>
                 `;
-                this.idStatusElement.style.display = 'flex';
+                this.idStatusElement.style.display = "flex";
                 if (!this.userModifiedFilename) {
                     this.filenameInput.value = "";
                     this.defaultFilename = "";
@@ -239,7 +238,6 @@ export class MarkdownExportTab {
         ];
 
         fields.forEach((field) => {
-
             const fieldGroup = this.createFormField(
                 field.label,
                 field.name,
@@ -283,7 +281,9 @@ export class MarkdownExportTab {
 
                 this.filenameInput.addEventListener("input", () => {
                     const currentVal = this.filenameInput.value.trim();
-                    this.userModifiedFilename = currentVal !== "" && currentVal !== this.defaultFilename;
+                    this.userModifiedFilename =
+                        currentVal !== "" &&
+                        currentVal !== this.defaultFilename;
                 });
             }
         });
@@ -304,7 +304,7 @@ export class MarkdownExportTab {
                  </svg>
                  <span style="color: ${theme.colors.textSecondary};">ID auto-detected.</span>
              `;
-            this.idStatusElement.style.display = 'flex';
+            this.idStatusElement.style.display = "flex";
         } else if (manualId && detectedId && manualId !== detectedId) {
             this.idStatusElement.innerHTML = `
                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="${theme.colors.warning}" viewBox="0 0 16 16" style="flex-shrink: 0;">
@@ -312,7 +312,7 @@ export class MarkdownExportTab {
                  </svg>
                  <span style="color: ${theme.colors.textSecondary};">Manual ID (differs).</span>
              `;
-            this.idStatusElement.style.display = 'flex';
+            this.idStatusElement.style.display = "flex";
         } else if (manualId && !detectedId) {
             this.idStatusElement.innerHTML = `
                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="${theme.colors.textSecondary}" viewBox="0 0 16 16" style="flex-shrink: 0;">
@@ -321,7 +321,7 @@ export class MarkdownExportTab {
                  </svg>
                  <span style="color: ${theme.colors.textSecondary};">Using manual ID.</span>
              `;
-            this.idStatusElement.style.display = 'flex';
+            this.idStatusElement.style.display = "flex";
         } else if (!manualId && detectedId) {
             this.idStatusElement.innerHTML = `
                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="${theme.colors.warning}" viewBox="0 0 16 16" style="flex-shrink: 0;">
@@ -329,7 +329,7 @@ export class MarkdownExportTab {
                  </svg>
                  <span style="color: ${theme.colors.textSecondary};">Enter or paste an ID.</span>
              `;
-            this.idStatusElement.style.display = 'flex';
+            this.idStatusElement.style.display = "flex";
         } else {
             this.idStatusElement.innerHTML = `
                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="${theme.colors.textTertiary}" viewBox="0 0 16 16" style="flex-shrink: 0;">
@@ -339,7 +339,7 @@ export class MarkdownExportTab {
                  </svg>
                  <span style="color: ${theme.colors.textTertiary}; font-style: italic;">No ID detected.</span>
              `;
-            this.idStatusElement.style.display = 'flex';
+            this.idStatusElement.style.display = "flex";
         }
     }
 
@@ -367,7 +367,6 @@ export class MarkdownExportTab {
         input.id = `adv-input-${name}`;
 
         if (type === "checkbox") {
-
             Object.assign(container.style, {
                 display: "flex",
                 flexDirection: "row",
@@ -395,7 +394,6 @@ export class MarkdownExportTab {
             container.appendChild(labelElement);
             container.appendChild(input);
         } else {
-
             Object.assign(container.style, {
                 display: "flex",
                 flexDirection: "column",
@@ -451,7 +449,6 @@ export class MarkdownExportTab {
     }
 
     private setupActionSidebar(): void {
-
         const actionSections: Record<string, SidebarActionConfig[]> = {
             "Data Operations": [
                 {
@@ -463,8 +460,8 @@ export class MarkdownExportTab {
                     label: "Copy Text",
                     handler: () => this.handleCopyToClipboardClick(),
                 },
-            ]
-        }
+            ],
+        };
 
         const sidebarElement = this.actionSidebar.getElement();
 
@@ -484,8 +481,8 @@ export class MarkdownExportTab {
 
         this.idStatusElement = document.createElement("div");
         Object.assign(this.idStatusElement.style, {
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: theme.spacing.xsmall,
             padding: `${theme.spacing.small} ${theme.spacing.medium}`,
             fontSize: theme.typography.fontSize.small,
@@ -493,7 +490,7 @@ export class MarkdownExportTab {
             borderRadius: theme.borderRadius.small,
             backgroundColor: theme.colors.backgroundSecondary,
             border: `1px solid ${theme.colors.borderSecondary}`,
-            minHeight: '36px',
+            minHeight: "36px",
             marginTop: theme.spacing.xxsmall,
         });
         sidebarElement.appendChild(this.idStatusElement);
@@ -511,15 +508,15 @@ export class MarkdownExportTab {
             textAlign: "center",
             opacity: "0",
             transition: `all ${theme.transitions.duration.normal} ${theme.transitions.easing}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             gap: theme.spacing.xsmall,
             marginTop: theme.spacing.medium,
             flexShrink: "0",
-            wordBreak: 'break-word',
+            wordBreak: "break-word",
         });
-        this.feedbackArea.style.display = 'none';
+        this.feedbackArea.style.display = "none";
         sidebarElement.appendChild(this.feedbackArea);
     }
 
@@ -537,8 +534,8 @@ export class MarkdownExportTab {
             letterSpacing: "0.5px",
         });
 
-        if (!this.actionSidebar.getElement().querySelector('h3')) {
-            header.style.marginTop = '0';
+        if (!this.actionSidebar.getElement().querySelector("h3")) {
+            header.style.marginTop = "0";
         }
         header.textContent = title;
         return header;
@@ -557,7 +554,10 @@ export class MarkdownExportTab {
         this.filenameInput.disabled = true;
 
         try {
-            const exportData = await fetchMarkdownExportData(conversationId, this.sendMessageToSW);
+            const exportData = await fetchMarkdownExportData(
+                conversationId,
+                this.sendMessageToSW,
+            );
             this.defaultFilename = generateMarkdownFileName(
                 exportData.createTime,
                 exportData.title,
@@ -578,13 +578,15 @@ export class MarkdownExportTab {
                 this.filenameInput.value = this.defaultFilename;
             }
             if (document.body.contains(this.filenameInput)) {
-                this.filenameInput.placeholder = "Defaults to ChatGPT_conv_Date.md";
+                this.filenameInput.placeholder =
+                    "Defaults to ChatGPT_conv_Date.md";
             }
         } finally {
             if (document.body.contains(this.filenameInput)) {
                 this.filenameInput.disabled = false;
                 if (this.filenameInput.value) {
-                    this.filenameInput.placeholder = "Defaults to ChatGPT_Title_Date.md";
+                    this.filenameInput.placeholder =
+                        "Defaults to ChatGPT_Title_Date.md";
                 } else {
                     this.filenameInput.placeholder = originalPlaceholder;
                 }
@@ -593,7 +595,8 @@ export class MarkdownExportTab {
     }
 
     private getFinalFilename(): string {
-        if (!this.filenameInput) return generateMarkdownFileName(Date.now() / 1000) + '.md';
+        if (!this.filenameInput)
+            return generateMarkdownFileName(Date.now() / 1000) + ".md";
 
         let finalName = this.filenameInput.value.trim();
 
@@ -610,7 +613,9 @@ export class MarkdownExportTab {
         finalName = finalName.replace(/[/\\?%*:|"<>]/g, "-");
         finalName = finalName.replace(/^\.+/, "").trim();
         if (!finalName || finalName === ".md") {
-            finalName = this.defaultFilename || generateMarkdownFileName(Date.now() / 1000);
+            finalName =
+                this.defaultFilename ||
+                generateMarkdownFileName(Date.now() / 1000);
             if (!finalName.toLowerCase().endsWith(".md")) finalName += ".md";
         }
         return finalName;
@@ -620,9 +625,11 @@ export class MarkdownExportTab {
         const hasId = this.idInput && this.idInput.value.trim().length > 0;
         const isDisabled = !hasId || this.isProcessing;
 
-        const buttons = this.actionSidebar.getElement().querySelectorAll<HTMLButtonElement>('button');
+        const buttons = this.actionSidebar
+            .getElement()
+            .querySelectorAll<HTMLButtonElement>("button");
 
-        buttons.forEach(button => {
+        buttons.forEach((button) => {
             const wasDisabled = button.disabled;
             button.disabled = isDisabled;
 
@@ -634,9 +641,8 @@ export class MarkdownExportTab {
                     button.innerHTML = button.dataset.originalHtml;
                     delete button.dataset.originalHtml;
                 } else if (isDisabled && !button.dataset.originalHtml) {
-                    const span = button.querySelector('span');
-                    if (span && span.textContent?.endsWith('...')) {
-
+                    const span = button.querySelector("span");
+                    if (span && span.textContent?.endsWith("...")) {
                     }
                 }
             }
@@ -649,19 +655,25 @@ export class MarkdownExportTab {
         triggeredButtonText?: string,
     ): void {
         this.isProcessing = isProcessing;
-        const buttons = this.actionSidebar.getElement().querySelectorAll<HTMLButtonElement>('button');
+        const buttons = this.actionSidebar
+            .getElement()
+            .querySelectorAll<HTMLButtonElement>("button");
 
         const spinnerSvg = `
             <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" style="margin-right: ${theme.spacing.xsmall}; flex-shrink: 0;">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.3" stroke-width="4"></circle>
               <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>`;
-        const spinnerHtml = (text: string) => `${spinnerSvg}<span>${text}...</span>`;
+        const spinnerHtml = (text: string) =>
+            `${spinnerSvg}<span>${text}...</span>`;
 
-        buttons.forEach(button => {
-            const buttonSpan = button.querySelector('span');
-            const buttonLabel = buttonSpan?.textContent || button.textContent || "";
-            const isTriggered = triggeredButtonText && buttonLabel.includes(triggeredButtonText);
+        buttons.forEach((button) => {
+            const buttonSpan = button.querySelector("span");
+            const buttonLabel =
+                buttonSpan?.textContent || button.textContent || "";
+            const isTriggered =
+                triggeredButtonText &&
+                buttonLabel.includes(triggeredButtonText);
 
             if (isProcessing) {
                 if (isTriggered && !button.dataset.originalHtml) {
@@ -694,7 +706,10 @@ export class MarkdownExportTab {
         }
 
         try {
-            const response = await fetchMarkdownExportData(conversationId, this.sendMessageToSW);
+            const response = await fetchMarkdownExportData(
+                conversationId,
+                this.sendMessageToSW,
+            );
             return response;
         } catch (error) {
             this.setProcessingState(false);
@@ -708,7 +723,8 @@ export class MarkdownExportTab {
         if (!conversationId || this.isProcessing) return;
 
         try {
-            const exportData = await this.fetchExportDataInternal(conversationId);
+            const exportData =
+                await this.fetchExportDataInternal(conversationId);
 
             if (exportData) {
                 const finalFilename = this.getFinalFilename();
@@ -720,23 +736,30 @@ export class MarkdownExportTab {
 
                 this.displayResults(`Exported: ${finalFilename}`);
 
-                if (this.filenameInput && this.filenameInput.value === this.defaultFilename) {
+                if (
+                    this.filenameInput &&
+                    this.filenameInput.value === this.defaultFilename
+                ) {
                     this.userModifiedFilename = false;
                     this.suggestFilename(conversationId);
                 }
-
             }
         } catch (error) {
-
-            if (!(error instanceof Error && error.message.includes("Conversation fetch error"))) {
-
-                this.displayFeedback("Error during file preparation or download.", "error");
+            if (
+                !(
+                    error instanceof Error &&
+                    error.message.includes("Conversation fetch error")
+                )
+            ) {
+                this.displayFeedback(
+                    "Error during file preparation or download.",
+                    "error",
+                );
                 console.error("File export process error:", error);
             }
         } finally {
             setTimeout(() => {
                 this.setProcessingState(false);
-
             }, 100);
         }
     }
@@ -897,7 +920,6 @@ export class MarkdownExportTab {
         let displayText = "";
 
         if (typeof response === "object" && response !== null) {
-
             displayText = String(response ?? "No data received.");
         } else {
             displayText = String(response ?? "No data received.");
@@ -907,7 +929,6 @@ export class MarkdownExportTab {
         content.appendChild(pre);
         document.body.appendChild(this.resultsPanel);
         requestAnimationFrame(() => {
-
             if (this.resultsPanel) this.resultsPanel.style.opacity = "1";
         });
 
@@ -926,7 +947,6 @@ export class MarkdownExportTab {
 
         setTimeout(() => {
             if (this.feedbackContainer.textContent === message) {
-
                 this.feedbackContainer.textContent =
                     "Action feedback will appear here briefly.";
                 this.feedbackContainer.style.color = theme.colors.textSecondary;
@@ -940,26 +960,35 @@ export class MarkdownExportTab {
         if (!conversationId || this.isProcessing) return;
 
         try {
-            const exportData = await this.fetchExportDataInternal(conversationId);
+            const exportData =
+                await this.fetchExportDataInternal(conversationId);
 
             if (exportData) {
                 await navigator.clipboard.writeText(exportData.markdownContent);
 
                 this.displayResults("Copied Markdown to clipboard!");
-
             }
         } catch (error) {
-
-            if (error instanceof DOMException && error.name === 'NotAllowedError') {
-                this.displayFeedback("Clipboard write permission denied.", "error");
-            } else if (!(error instanceof Error && error.message.includes("Conversation fetch error"))) {
+            if (
+                error instanceof DOMException &&
+                error.name === "NotAllowedError"
+            ) {
+                this.displayFeedback(
+                    "Clipboard write permission denied.",
+                    "error",
+                );
+            } else if (
+                !(
+                    error instanceof Error &&
+                    error.message.includes("Conversation fetch error")
+                )
+            ) {
                 this.displayFeedback("Failed to copy to clipboard.", "error");
                 console.error("Clipboard write error:", error);
             }
         } finally {
             setTimeout(() => {
                 this.setProcessingState(false);
-
             }, 100);
         }
     }
@@ -970,7 +999,9 @@ export class MarkdownExportTab {
         autoHideDelay?: number,
     ): void {
         if (!this.feedbackArea) {
-            console.error("Feedback area not initialized in MarkdownExportTab.");
+            console.error(
+                "Feedback area not initialized in MarkdownExportTab.",
+            );
             return;
         }
 
@@ -987,7 +1018,8 @@ export class MarkdownExportTab {
             if (message.message.includes("Conversation not found")) {
                 messageText = "Error: Conversation not found (invalid ID?).";
             } else if (message.message.includes("Failed to fetch")) {
-                messageText = "Error: Network request failed. Check connection or service status.";
+                messageText =
+                    "Error: Network request failed. Check connection or service status.";
             } else {
                 messageText = `Error: ${messageText}`;
             }
@@ -1009,19 +1041,19 @@ export class MarkdownExportTab {
             }
         }
 
-        const spanElement = document.createElement('span');
+        const spanElement = document.createElement("span");
         spanElement.textContent = messageText;
         Object.assign(spanElement.style, {
-            overflowWrap: 'break-word',
-            wordWrap: 'break-word',
-            textAlign: 'left',
-            flexGrow: '1',
+            overflowWrap: "break-word",
+            wordWrap: "break-word",
+            textAlign: "left",
+            flexGrow: "1",
         });
 
         this.feedbackArea.innerHTML = iconHtml;
         this.feedbackArea.appendChild(spanElement);
         this.feedbackArea.style.display = messageText ? "flex" : "none";
-        this.feedbackArea.style.justifyContent = 'flex-start';
+        this.feedbackArea.style.justifyContent = "flex-start";
 
         let bgColor = theme.colors.backgroundSecondary;
         let textColor = theme.colors.textSecondary;
@@ -1055,10 +1087,10 @@ export class MarkdownExportTab {
         this.feedbackArea.style.color = textColor;
         this.feedbackArea.style.borderColor = borderColor;
 
-        const svgIcon = this.feedbackArea.querySelector('svg');
+        const svgIcon = this.feedbackArea.querySelector("svg");
         if (svgIcon) {
             svgIcon.style.fill = textColor;
-            svgIcon.style.flexShrink = '0';
+            svgIcon.style.flexShrink = "0";
         }
 
         requestAnimationFrame(() => {
@@ -1072,7 +1104,9 @@ export class MarkdownExportTab {
         this.feedbackArea.dataset.hideTimeoutId = "";
 
         if (autoHideDelay && autoHideDelay > 0 && effectiveType !== "loading") {
-            const fadeDuration = parseInt(theme.transitions.duration.normal || '300');
+            const fadeDuration = parseInt(
+                theme.transitions.duration.normal || "300",
+            );
             const timeoutId = setTimeout(() => {
                 const currentSpanContent =
                     this.feedbackArea.querySelector("span")?.textContent;

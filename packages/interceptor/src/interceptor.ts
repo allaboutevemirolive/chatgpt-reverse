@@ -154,8 +154,3 @@ window.fetch = async function (
 
     return response;
 };
-
-// Export the stored headers getter
-export function getStoredHeaders(): RequestHeaders {
-    return { ...storedHeaders };
-}

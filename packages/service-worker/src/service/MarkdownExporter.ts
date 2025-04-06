@@ -11,7 +11,6 @@ export async function exportConversationAsMarkdown(
     conversationId: string,
 ): Promise<{ markdownContent: string; createTime: number; title: string }> {
     try {
-        // Get the ChatGptApiClient instance (initialized in the Service Worker)
         const apiClient = ChatGptApiClient.getInstance();
         const response = await apiClient.getConversation(conversationId);
 
@@ -20,7 +19,6 @@ export async function exportConversationAsMarkdown(
             conversationId,
         );
 
-        // Rest of the function remains the same...
         const { title, mapping, create_time, update_time } = response;
 
         if (!mapping || typeof mapping !== "object") {
@@ -37,7 +35,6 @@ export async function exportConversationAsMarkdown(
                 "Service Worker: Conversation data might be missing title or timestamps.",
                 { title, create_time, update_time },
             );
-            // Proceed anyway, but log the warning
         }
 
         const markdownContent = generateMarkdown(
@@ -47,18 +44,17 @@ export async function exportConversationAsMarkdown(
             update_time || 0,
         );
 
-        // Return the content and necessary metadata for the content script
         return {
             markdownContent,
-            createTime: create_time || Date.now() / 1000, // Provide fallback createTime
-            title: title || "Untitled Conversation", // Provide fallback title
+            createTime: create_time || Date.now() / 1000,
+            title: title || "Untitled Conversation",
         };
     } catch (error) {
         console.error(
             `Service Worker: Failed to fetch/format conversation ${conversationId} for Markdown:`,
             error,
         );
-        // Re-throw the error so the calling function in the SW can handle it
+
         throw error;
     }
 }
@@ -186,6 +182,7 @@ function capitalizeFirstLetter(text: string): string {
  * @param title - Optional title to include in the filename.
  * @returns A formatted filename string.
  */
+// FIXME: Duplicate
 export function generateMarkdownFileName(
     create_time: number,
     title?: string,

@@ -10,12 +10,10 @@ export function triggerAudioDownload(
     format: string,
     customFilename?: string,
 ): void {
-
     const filename = customFilename || `chatgpt_audio_${messageId}.${format}`;
 
     let anchor: HTMLAnchorElement | null = null;
     try {
-
         anchor = document.createElement("a");
         anchor.href = dataUrl;
         anchor.download = filename;
@@ -27,11 +25,9 @@ export function triggerAudioDownload(
     } catch (error) {
         console.error("Error triggering audio download via Data URL:", error);
     } finally {
-
         if (anchor) {
             document.body.removeChild(anchor);
         }
-
     }
 }
 

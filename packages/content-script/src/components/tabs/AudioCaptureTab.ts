@@ -139,7 +139,6 @@ export class AudioCaptureTab {
         leftGroup.appendChild(this.convIdDisplay);
 
         this.loadButton = this.createActionButton(
-
             `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: ${theme.spacing.xsmall};"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg> Load Messages`,
             () => this.loadMessages(),
             true,
@@ -281,7 +280,6 @@ export class AudioCaptureTab {
                 button.style.boxShadow = theme.shadows.small;
             });
             button.addEventListener("mouseup", () => {
-
                 if (button.matches(":hover")) {
                     button.style.backgroundColor = hoverBgColor;
                     if (type === "primary")
@@ -546,7 +544,6 @@ export class AudioCaptureTab {
             });
             downloadButton.addEventListener("mouseup", () => {
                 if (!downloadButton.disabled) {
-
                     if (downloadButton.matches(":hover")) {
                         downloadButton.style.backgroundColor =
                             theme.colors.accentPrimary;
@@ -555,7 +552,6 @@ export class AudioCaptureTab {
                         downloadButton.style.borderColor =
                             theme.colors.accentPrimary;
                     } else {
-
                         downloadButton.style.backgroundColor = "transparent";
                         downloadButton.style.color = theme.colors.textSecondary;
                         downloadButton.style.borderColor =
@@ -622,11 +618,7 @@ export class AudioCaptureTab {
                 response.messageId,
                 response.format,
             );
-            this.displayFeedback(
-                `✅ Audio download started`,
-                "success",
-                5000,
-            );
+            this.displayFeedback(`✅ Audio download started`, "success", 5000);
         } catch (error) {
             this.displayFeedback(error as Error, "error");
         } finally {
@@ -705,7 +697,6 @@ export class AudioCaptureTab {
             }, autoHideDelay);
             this.feedbackArea.dataset.hideTimeoutId = String(timeoutId);
         } else if (effectiveType === "loading") {
-
         }
     }
 }

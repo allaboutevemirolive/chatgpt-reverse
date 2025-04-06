@@ -18,7 +18,6 @@ const WINDOW_MAIN_ID = "chrome-ext-window-main";
 const WINDOW_MAIN_OVERLAY_ID = "chrome-ext-window-main-overlay";
 
 export class WindowMain {
-
     private modal!: HTMLDivElement;
     private content!: HTMLDivElement;
     private sidebar!: HTMLDivElement;
@@ -41,7 +40,6 @@ export class WindowMain {
     private static instance: WindowMain | null = null;
 
     private constructor() {
-
         if (document.getElementById(WINDOW_MAIN_ID)) {
             if (WindowMain.instance) {
                 console.warn(
@@ -188,7 +186,6 @@ export class WindowMain {
                 container: tabContentContainer,
             });
         }
-
     }
 
     private switchTab(tabNameToActivate: TabName): void {
@@ -212,7 +209,6 @@ export class WindowMain {
     }
 
     private updateTabConversationContext(): void {
-
         const activeTabInstance = this.getActiveTabInstance();
         if (
             activeTabInstance &&

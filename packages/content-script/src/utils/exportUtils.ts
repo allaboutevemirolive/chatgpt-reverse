@@ -22,11 +22,11 @@ export function generateMarkdownFileName(
     // Sanitize title part if provided
     const sanitizedTitle = title
         ? title
-            .replace(/[/\\?%*:|"<>]/g, "-") // Remove illegal FS characters
-            .replace(/\s+/g, "_") // Replace spaces with underscores
-            .replace(/_+$/, "") // Remove trailing underscores
-            .substring(0, 50) // Limit title part length
-            .trim() // Trim leading/trailing whitespace just in case
+              .replace(/[/\\?%*:|"<>]/g, "-") // Remove illegal FS characters
+              .replace(/\s+/g, "_") // Replace spaces with underscores
+              .replace(/_+$/, "") // Remove trailing underscores
+              .substring(0, 50) // Limit title part length
+              .trim() // Trim leading/trailing whitespace just in case
         : "";
 
     const datePart = `${year}${month}${day}-${hours}${minutes}${seconds}`;

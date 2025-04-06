@@ -80,7 +80,6 @@ export class AdvanceTab {
         if (convoIdInput) {
             convoIdInput.value = conversationId ?? "";
         }
-
     }
 
     private createMainPanel(): HTMLDivElement {
@@ -97,7 +96,6 @@ export class AdvanceTab {
     }
 
     private createInputFields(): void {
-
         const formContainer = document.createElement("div");
         Object.assign(formContainer.style, {
             display: "grid",
@@ -216,7 +214,6 @@ export class AdvanceTab {
         input.id = `adv-input-${name}`;
 
         if (type === "checkbox") {
-
             Object.assign(container.style, {
                 display: "flex",
                 flexDirection: "row",
@@ -244,7 +241,6 @@ export class AdvanceTab {
             container.appendChild(labelElement);
             container.appendChild(input);
         } else {
-
             Object.assign(container.style, {
                 display: "flex",
                 flexDirection: "column",
@@ -437,7 +433,6 @@ export class AdvanceTab {
     }
 
     private displayLoading(): void {
-
         this.feedbackContainer.textContent = "⏳ Loading...";
         this.feedbackContainer.style.color = theme.colors.textSecondary;
         this.feedbackContainer.style.fontStyle = "normal";
@@ -478,7 +473,6 @@ export class AdvanceTab {
         content.appendChild(pre);
         document.body.appendChild(this.resultsPanel);
         requestAnimationFrame(() => {
-
             if (this.resultsPanel) this.resultsPanel.style.opacity = "1";
         });
 
@@ -512,7 +506,6 @@ export class AdvanceTab {
         content.appendChild(errorDiv);
         document.body.appendChild(this.resultsPanel);
         requestAnimationFrame(() => {
-
             if (this.resultsPanel) this.resultsPanel.style.opacity = "1";
         });
 
@@ -531,7 +524,6 @@ export class AdvanceTab {
 
         setTimeout(() => {
             if (this.feedbackContainer.textContent === message) {
-
                 this.feedbackContainer.textContent =
                     "Action feedback will appear here briefly.";
                 this.feedbackContainer.style.color = theme.colors.textSecondary;
@@ -541,7 +533,6 @@ export class AdvanceTab {
     }
 
     private setupActionButtons(): void {
-
         const actionSections: Record<string, SidebarActionConfig[]> = {
             "Data Operations": [
                 {
@@ -616,7 +607,6 @@ export class AdvanceTab {
         for (const sectionTitle in actionSections) {
             this.addSectionHeader(sectionTitle);
             actionSections[sectionTitle].forEach((action) => {
-
                 this.actionSidebar.addAction(
                     action.label,
                     action.handler.bind(this),
@@ -627,7 +617,6 @@ export class AdvanceTab {
     }
 
     private addSectionHeader(title: string): void {
-
         const header = document.createElement("h3");
         Object.assign(header.style, {
             fontSize: theme.typography.fontSize.small,
@@ -645,7 +634,6 @@ export class AdvanceTab {
     }
 
     private getFormValues(): Record<string, string | boolean> {
-
         const formValues: Record<string, string | boolean> = {};
         this.mainPanel.querySelectorAll("input").forEach((input) => {
             if (input.name) {
@@ -891,9 +879,7 @@ export class AdvanceTab {
                 messageId: messageid as string,
                 conversationId: conversationid as string,
             });
-            this.updateResultsFeedback(
-                `Marked helpful: ${messageid}.`,
-            );
+            this.updateResultsFeedback(`Marked helpful: ${messageid}.`);
             this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);
@@ -907,9 +893,7 @@ export class AdvanceTab {
                 messageId: messageid as string,
                 conversationId: conversationid as string,
             });
-            this.updateResultsFeedback(
-                `Marked unhelpful: ${messageid}.`,
-            );
+            this.updateResultsFeedback(`Marked unhelpful: ${messageid}.`);
             this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);
