@@ -53,25 +53,36 @@ export class MarkdownExportTab {
         Object.assign(container.style, {
             display: "flex",
             flexDirection: "column",
-            gap: theme.spacing.large,
+            gap: theme.spacing.medium, // Main gap between sections
             padding: theme.spacing.large,
             boxSizing: "border-box",
             height: "100%",
+            backgroundColor: theme.colors.backgroundSecondary, // Set base background
         });
 
-        // 1. Header Section
-        const header = document.createElement("h2");
-        Object.assign(header.style, {
-            margin: "0",
-            fontSize: theme.typography.fontSize.large,
-            fontWeight: theme.typography.fontWeight.semibold,
-            color: theme.colors.textPrimary,
-            borderBottom: `1px solid ${theme.colors.borderSecondary}`,
-            paddingBottom: theme.spacing.medium,
-            flexShrink: "0",
-        });
-        header.textContent = MarkdownExport.label;
-        container.appendChild(header);
+        // const container = document.createElement("div");
+        // Object.assign(container.style, {
+        //     display: "flex",
+        //     flexDirection: "column",
+        //     gap: theme.spacing.large,
+        //     padding: theme.spacing.large,
+        //     boxSizing: "border-box",
+        //     height: "100%",
+        // });
+
+        // // 1. Header Section
+        // const header = document.createElement("h2");
+        // Object.assign(header.style, {
+        //     margin: "0",
+        //     fontSize: theme.typography.fontSize.large,
+        //     fontWeight: theme.typography.fontWeight.semibold,
+        //     color: theme.colors.textPrimary,
+        //     borderBottom: `1px solid ${theme.colors.borderSecondary}`,
+        //     paddingBottom: theme.spacing.medium,
+        //     flexShrink: "0",
+        // });
+        // header.textContent = MarkdownExport.label;
+        // container.appendChild(header);
 
         // 2. Main Content Area (Scrollable)
         const mainArea = document.createElement("div");
@@ -85,17 +96,17 @@ export class MarkdownExportTab {
         });
         container.appendChild(mainArea);
 
-        // Description
-        const description = document.createElement("p");
-        Object.assign(description.style, {
-            color: theme.colors.textSecondary,
-            fontSize: theme.typography.fontSize.small,
-            lineHeight: theme.typography.lineHeight.medium,
-            margin: "0",
-            flexShrink: "0",
-        });
-        description.innerHTML = `Export the specified conversation to a <code>.md</code> file. The ID is usually detected automatically from the URL, but you can also paste one manually below.`;
-        mainArea.appendChild(description);
+        // // Description
+        // const description = document.createElement("p");
+        // Object.assign(description.style, {
+        //     color: theme.colors.textSecondary,
+        //     fontSize: theme.typography.fontSize.small,
+        //     lineHeight: theme.typography.lineHeight.medium,
+        //     margin: "0",
+        //     flexShrink: "0",
+        // });
+        // description.innerHTML = `Export the specified conversation to a <code>.md</code> file. The ID is usually detected automatically from the URL, but you can also paste one manually below.`;
+        // mainArea.appendChild(description);
 
         // 3. Action Group (Input + Button)
         const actionGroup = document.createElement("div");

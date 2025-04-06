@@ -314,18 +314,18 @@ export class WindowMain {
             gap: theme.spacing.xsmall,
             overflowY: "auto",
         });
-        const title = document.createElement("h2");
-        Object.assign(title.style, {
-            margin: `0 0 ${theme.spacing.medium} 0`,
-            fontSize: theme.typography.fontSize.medium,
-            fontWeight: theme.typography.fontWeight.semibold,
-            color: theme.colors.textPrimary,
-            paddingBottom: theme.spacing.small,
-            borderBottom: `1px solid ${theme.colors.borderSecondary}`,
-            textAlign: "center",
-        });
-        title.textContent = "Extension Tools";
-        sidebar.appendChild(title);
+        // const title = document.createElement("h2");
+        // Object.assign(title.style, {
+        //     margin: `0 0 ${theme.spacing.medium} 0`,
+        //     fontSize: theme.typography.fontSize.medium,
+        //     fontWeight: theme.typography.fontWeight.semibold,
+        //     color: theme.colors.textPrimary,
+        //     paddingBottom: theme.spacing.small,
+        //     borderBottom: `1px solid ${theme.colors.borderSecondary}`,
+        //     textAlign: "center",
+        // });
+        // title.textContent = "Extension Tools";
+        // sidebar.appendChild(title);
         return sidebar;
     }
     /** Creates the main content area where tab content is displayed */

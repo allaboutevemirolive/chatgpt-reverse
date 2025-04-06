@@ -1,57 +1,832 @@
 // packages/content-script/src/components/tabs/ConversationCleanupTab.ts
-import type { SendMessageToSW } from "../../utils/swMessenger"; // Adjust path if needed
+import { theme } from "@shared"; // Ensure this path resolves correctly in your build setup
+import { fetchConversations, deleteConversationById } from "@/utils/apiUtils";
+import type { SendMessageToSW } from "@/utils/swMessenger";
+import { ConversationCleanup } from "@/constants/tabConfig";
 
-// Placeholder for the Conversation Cleanup Tab UI and Logic
+// Define the structure for conversation summary used within this component
+interface ConversationSummary {
+    id: string;
+    title: string;
+}
+
+const ITEMS_PER_PAGE = 28;
+
 export class ConversationCleanupTab {
-    private element: HTMLDivElement;
+    private rootElement: HTMLDivElement;
     private sendMessage: SendMessageToSW;
 
+    // --- Add Class Property Declarations ---
+    private conversations: ConversationSummary[] = [];
+    private selectedConversationIds: Set<string> = new Set();
+    private currentPage: number = 1;
+    private totalPages: number = 1;
+    private totalConversations: number = 0;
+    private isLoading: boolean = false;
+    private isDeleting: boolean = false;
+    private error: string | null = null;
+    // --------------------------------------
+
+    // UI Elements (These are initialized in buildUI)
+    private selectAllCheckbox!: HTMLInputElement;
+    private listContainer!: HTMLDivElement;
+    private paginationContainer!: HTMLDivElement;
+    private deleteButton!: HTMLButtonElement;
+    private refreshButton!: HTMLButtonElement;
+    private feedbackArea!: HTMLDivElement;
+    private listInfoArea!: HTMLParagraphElement;
+
     constructor(sendMessage: SendMessageToSW) {
-        console.log("Placeholder ConversationCleanupTab initialized");
-        this.sendMessage = sendMessage; // Store the function if needed for cleanup actions
-
-        this.element = document.createElement("div");
-        this.element.innerHTML = `
-            <div style="padding: 20px; color: #ccc; height: 100%; display: flex; flex-direction: column;">
-                <h2>Conversation Cleanup (Placeholder)</h2>
-                <p>UI for managing/deleting multiple conversations will be here.</p>
-                <button id="cleanup-btn" style="padding: 8px 12px; margin-top: 15px; cursor: pointer;">Start Cleanup (Placeholder)</button>
-                 <div style="flex-grow: 1; border: 1px dashed #555; margin-top: 15px; display: flex; align-items: center; justify-content: center;">Conversation List Area</div>
-            </div>
-        `;
-        // Add basic styling or structure needed
-        Object.assign(this.element.style, {
-            width: "100%",
-            height: "100%",
-            overflowY: "auto", // Allow scrolling
-            boxSizing: "border-box",
-        });
-
-        // Example button listener
-        const btn =
-            this.element.querySelector<HTMLButtonElement>("#cleanup-btn");
-        btn?.addEventListener("click", () => {
-            console.log("Placeholder: Cleanup button clicked.");
-            // Example: this.sendMessage({ type: "START_CLEANUP", payload: { options: {} } });
-            alert("Cleanup action placeholder triggered.");
-        });
+        this.sendMessage = sendMessage;
+        this.rootElement = this.buildUI();
+        this.fetchDataForCurrentPage(); // Initial data fetch
     }
 
-    /**
-     * Returns the root HTML element for this tab's UI.
-     */
-    getElement(): HTMLDivElement {
-        return this.element;
+    public getElement(): HTMLDivElement {
+        return this.rootElement;
     }
 
-    /**
-     * Called when the active conversation ID changes in the main window.
-     * This tab might not need to react to specific conversation changes.
-     */
-    updateConversationId(conversationId: string | null): void {
+    public updateConversationId(conversationId: string | null): void {
         console.log(
-            `Placeholder ConversationCleanupTab: Conversation ID updated to: ${conversationId} (likely ignored by this tab)`,
+            `ConversationCleanupTab: Ignoring Conversation ID update: ${conversationId}`,
         );
-        // Usually, cleanup operates on the list, not a single conversation.
+    }
+
+    // --- UI Building ---
+
+    private buildUI(): HTMLDivElement {
+        const container = document.createElement("div");
+        Object.assign(container.style, {
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.medium, // Main gap between sections
+            padding: theme.spacing.large,
+            boxSizing: "border-box",
+            height: "100%",
+            backgroundColor: theme.colors.backgroundSecondary, // Set base background
+        });
+        // const container = document.createElement("div");
+        // Object.assign(container.style, {
+        //     display: "flex",
+        //     flexDirection: "column",
+        //     gap: theme.spacing.small, // Reduced gap between main sections
+        //     padding: `${theme.spacing.medium} ${theme.spacing.large}`, // Adjusted padding
+        //     boxSizing: "border-box",
+        //     height: "100%",
+        //     overflow: "hidden",
+        //     backgroundColor: theme.colors.backgroundSecondary,
+        // });
+
+        // // --- Header ---
+        // const header = document.createElement("h2");
+        // Object.assign(header.style, {
+        //     margin: `0 0 ${theme.spacing.medium} 0`, // Increased margin below header
+        //     fontSize: theme.typography.fontSize.large,
+        //     fontWeight: theme.typography.fontWeight.semibold,
+        //     color: theme.colors.textPrimary,
+        //     paddingBottom: theme.spacing.medium,
+        //     borderBottom: `1px solid ${theme.colors.borderPrimary}`,
+        //     flexShrink: "0",
+        //     textAlign: "center",
+        // });
+        // header.textContent = ConversationCleanup.label;
+        // container.appendChild(header);
+
+        // --- Top Bar (Controls & Info) ---
+        const topBarContainer = document.createElement("div");
+        Object.assign(topBarContainer.style, {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: `0 0 ${theme.spacing.small} 0`, // Only padding bottom
+            flexShrink: "0",
+            gap: theme.spacing.medium,
+            // Removed bottom border here
+        });
+        container.appendChild(topBarContainer);
+
+        // --- Left Controls (Select All & Refresh) ---
+        const leftControls = document.createElement("div");
+        Object.assign(leftControls.style, {
+            display: "flex",
+            alignItems: "center",
+            gap: theme.spacing.medium, // Gap between Select All and Refresh
+        });
+        topBarContainer.appendChild(leftControls);
+
+        // Select All Label + Checkbox
+        const selectAllLabel = document.createElement("label");
+        Object.assign(selectAllLabel.style, {
+            display: "flex",
+            alignItems: "center",
+            cursor: "pointer",
+            fontSize: theme.typography.fontSize.small,
+            color: theme.colors.textPrimary,
+            fontWeight: theme.typography.fontWeight.medium,
+            gap: theme.spacing.small,
+            // Removed paddingLeft, rely on container padding/gap
+        });
+        leftControls.appendChild(selectAllLabel);
+
+        this.selectAllCheckbox = document.createElement("input");
+        this.selectAllCheckbox.type = "checkbox";
+        this.selectAllCheckbox.id = "cleanup-select-all";
+        Object.assign(this.selectAllCheckbox.style, {
+            cursor: "pointer",
+            width: "16px",
+            height: "16px",
+            accentColor: theme.colors.accentPrimary,
+            margin: "0",
+            flexShrink: "0", // Prevent shrinking
+        });
+        this.selectAllCheckbox.addEventListener("change", (e) =>
+            this.handleSelectAllChange(e),
+        );
+        selectAllLabel.appendChild(this.selectAllCheckbox);
+        selectAllLabel.appendChild(
+            document.createTextNode("Select All"), // Shortened text
+        );
+
+        // Refresh Button (with text and icon)
+        const refreshIconSvg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>';
+        this.refreshButton = this.createButton(
+            `${refreshIconSvg}<span>Refresh</span>`, // Combined HTML
+            () => this.fetchDataForCurrentPage(),
+            false, // Start enabled, will be disabled during load
+            "default",
+        );
+        // Make refresh button less prominent
+        this.refreshButton.style.padding = `${theme.spacing.xxsmall} ${theme.spacing.small}`;
+        this.refreshButton.style.backgroundColor = "transparent";
+        this.refreshButton.style.borderColor = theme.colors.borderSecondary;
+        this.refreshButton.style.color = theme.colors.textSecondary;
+        // Adjust hover/active for subtle button
+        this.refreshButton.addEventListener("mouseenter", () => {
+            if (!this.refreshButton.disabled) {
+                this.refreshButton.style.backgroundColor =
+                    theme.colors.backgroundHover;
+                this.refreshButton.style.color = theme.colors.textPrimary;
+                this.refreshButton.style.borderColor =
+                    theme.colors.accentPrimary;
+            }
+        });
+        this.refreshButton.addEventListener("mouseleave", () => {
+            if (!this.refreshButton.disabled) {
+                this.refreshButton.style.backgroundColor = "transparent";
+                this.refreshButton.style.color = theme.colors.textSecondary;
+                this.refreshButton.style.borderColor =
+                    theme.colors.borderSecondary;
+            }
+        });
+
+        leftControls.appendChild(this.refreshButton);
+
+        // --- List Info Area (Centered in Top Bar) ---
+        this.listInfoArea = document.createElement("p");
+        Object.assign(this.listInfoArea.style, {
+            fontSize: theme.typography.fontSize.small,
+            color: theme.colors.textSecondary,
+            margin: "0", // Reset margin
+            textAlign: "center", // Center align text
+            flexGrow: "1", // Allow it to take up space if needed, but centered
+            whiteSpace: "nowrap",
+        });
+        topBarContainer.appendChild(this.listInfoArea);
+
+        // Placeholder for right side if needed, ensures info stays centered
+        const rightPlaceholder = document.createElement("div");
+        // Use requestAnimationFrame to measure after initial render potentially
+        requestAnimationFrame(() => {
+            Object.assign(rightPlaceholder.style, {
+                width: `${leftControls.offsetWidth}px`, // Measure actual width
+                flexShrink: "0",
+                visibility: "hidden",
+            });
+        });
+        // Initial estimate if needed before RAF
+        rightPlaceholder.style.width = "150px";
+        rightPlaceholder.style.flexShrink = "0";
+        rightPlaceholder.style.visibility = "hidden";
+
+        topBarContainer.appendChild(rightPlaceholder);
+
+        // --- List Container ---
+        this.listContainer = document.createElement("div");
+        Object.assign(this.listContainer.style, {
+            flexGrow: "1",
+            overflowY: "auto",
+            border: `1px solid ${theme.colors.borderPrimary}`,
+            borderRadius: theme.borderRadius.medium,
+            backgroundColor: theme.colors.backgroundPrimary,
+            position: "relative",
+            boxShadow: theme.shadows.small,
+        });
+        container.appendChild(this.listContainer);
+
+        // --- Feedback Area ---
+        this.feedbackArea = document.createElement("div");
+        this.feedbackArea.id = "cleanup-feedback-area";
+        Object.assign(this.feedbackArea.style, {
+            padding: `${theme.spacing.small} ${theme.spacing.medium}`,
+            borderRadius: theme.borderRadius.small,
+            border: `1px solid transparent`,
+            color: theme.colors.textSecondary,
+            fontSize: theme.typography.fontSize.small,
+            minHeight: "24px",
+            textAlign: "center",
+            display: "none",
+            transition: `all ${theme.transitions.duration.fast} ${theme.transitions.easing}`,
+            flexShrink: "0",
+            marginTop: theme.spacing.xsmall,
+        });
+        container.appendChild(this.feedbackArea);
+
+        // --- Bottom Actions (Pagination & Delete Button) ---
+        const bottomActionsContainer = document.createElement("div");
+        Object.assign(bottomActionsContainer.style, {
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: theme.spacing.medium,
+            borderTop: `1px solid ${theme.colors.borderPrimary}`,
+            flexShrink: "0",
+            gap: theme.spacing.medium,
+            marginTop: "auto",
+        });
+        container.appendChild(bottomActionsContainer);
+
+        // Delete Button
+        this.deleteButton = this.createButton(
+            "", // Text set later
+            () => this.handleDeleteSelected(),
+            true,
+            "danger",
+        );
+        this.deleteButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: ${theme.spacing.xsmall};">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+            </svg>
+            <span>Delete Selected (0)</span>
+        `;
+        this.deleteButton.style.display = "flex";
+        this.deleteButton.style.alignItems = "center";
+        bottomActionsContainer.appendChild(this.deleteButton);
+
+        // Pagination
+        this.paginationContainer = document.createElement("div");
+        Object.assign(this.paginationContainer.style, {
+            display: "flex",
+            alignItems: "center",
+            gap: theme.spacing.xsmall,
+        });
+        bottomActionsContainer.appendChild(this.paginationContainer);
+
+        this.renderPagination();
+
+        return container;
+    }
+
+    private renderConversationList(): void {
+        this.listContainer.innerHTML = "";
+
+        if (this.isLoading) {
+            this.listContainer.appendChild(
+                this.createStatusMessage("⏳ Loading conversations..."),
+            );
+            return;
+        }
+        if (this.error) {
+            this.listContainer.appendChild(
+                this.createStatusMessage(`❌ Error: ${this.error}`, true),
+            );
+            return;
+        }
+        if (this.conversations.length === 0) {
+            this.listContainer.appendChild(
+                this.createStatusMessage("🗑️ No conversations found."),
+            );
+            this.updateListInfo("0 conversations"); // Update info when list is empty
+            return;
+        }
+
+        // Update info (only if not loading/error and conversations exist)
+        this.updateListInfo(
+            `Showing ${this.conversations.length} of ${this.totalConversations}`,
+        );
+
+        // Use DocumentFragment for performance when adding many items
+        const fragment = document.createDocumentFragment();
+        this.conversations.forEach((conv: ConversationSummary, index: number) => {
+            const item = document.createElement("div");
+            Object.assign(item.style, {
+                display: "flex",
+                alignItems: "center",
+                gap: theme.spacing.medium,
+                padding: `${theme.spacing.small} ${theme.spacing.medium}`,
+                borderBottom:
+                    index < this.conversations.length - 1
+                        ? `1px solid ${theme.colors.borderSecondary}`
+                        : "none",
+                cursor: "pointer",
+                transition: "background-color 0.1s ease-in-out",
+                boxSizing: "border-box",
+                backgroundColor: theme.colors.backgroundPrimary,
+            });
+            item.addEventListener("mouseenter", () => {
+                item.style.backgroundColor = theme.colors.backgroundHover;
+            });
+            item.addEventListener("mouseout", () => {
+                item.style.backgroundColor = theme.colors.backgroundPrimary;
+            });
+            item.addEventListener("click", (e) => {
+                if ((e.target as HTMLElement).tagName !== "INPUT") {
+                    const checkbox =
+                        item.querySelector<HTMLInputElement>("input");
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        this.handleConversationCheckboxChange(
+                            conv.id,
+                            checkbox.checked,
+                            checkbox,
+                        );
+                    }
+                }
+            });
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = conv.id;
+            checkbox.checked = this.selectedConversationIds.has(conv.id);
+            checkbox.id = `conv-checkbox-${conv.id}`;
+            Object.assign(checkbox.style, {
+                cursor: "pointer",
+                width: "16px",
+                height: "16px",
+                accentColor: theme.colors.accentPrimary,
+                flexShrink: "0",
+                margin: "0",
+            });
+            checkbox.addEventListener("change", (e) => {
+                const target = e.target as HTMLInputElement;
+                this.handleConversationCheckboxChange(
+                    conv.id,
+                    target.checked,
+                    target,
+                );
+            });
+
+            const titleLabel = document.createElement("label");
+            titleLabel.htmlFor = checkbox.id;
+            titleLabel.textContent = conv.title || "(Untitled Conversation)";
+            Object.assign(titleLabel.style, {
+                flexGrow: "1",
+                fontSize: theme.typography.fontSize.small,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.textPrimary,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                cursor: "pointer",
+                lineHeight: "1.3",
+            });
+            titleLabel.title = conv.title || "(Untitled Conversation)";
+
+            item.appendChild(checkbox);
+            item.appendChild(titleLabel);
+            fragment.appendChild(item); // Add to fragment
+        });
+        this.listContainer.appendChild(fragment); // Append fragment once
+
+        this.updateSelectAllState();
+    }
+
+    private updateListInfo(text: string): void {
+        this.listInfoArea.textContent = text;
+    }
+
+    private createStatusMessage(
+        text: string,
+        isError: boolean = false,
+    ): HTMLParagraphElement {
+        const message = document.createElement("p");
+        Object.assign(message.style, {
+            textAlign: "center",
+            padding: theme.spacing.large,
+            color: isError ? theme.colors.error : theme.colors.textSecondary,
+            fontSize: theme.typography.fontSize.medium,
+            fontStyle: "italic",
+            margin: "auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+        });
+        message.textContent = text;
+        return message;
+    }
+
+    private renderPagination(): void {
+        this.paginationContainer.innerHTML = "";
+
+        const isActionInProgress = this.isLoading || this.isDeleting;
+
+        const prevButton = this.createButton(
+            "< Prev",
+            () => this.changePage(this.currentPage - 1),
+            this.currentPage <= 1 || isActionInProgress,
+        );
+        prevButton.style.padding = `${theme.spacing.xsmall} ${theme.spacing.small}`;
+
+        const pageIndicator = document.createElement("span");
+        pageIndicator.textContent =
+            this.totalConversations > 0
+                ? `Page ${this.currentPage} of ${this.totalPages}`
+                : `Page 1 of 1`;
+        Object.assign(pageIndicator.style, {
+            fontSize: theme.typography.fontSize.small,
+            color: theme.colors.textSecondary,
+            minWidth: "80px",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+        });
+
+        const nextButton = this.createButton(
+            "Next >",
+            () => this.changePage(this.currentPage + 1),
+            this.currentPage >= this.totalPages || isActionInProgress,
+        );
+        nextButton.style.padding = `${theme.spacing.xsmall} ${theme.spacing.small}`;
+
+        // Update Refresh button state
+        if (this.refreshButton) {
+            this.refreshButton.disabled = isActionInProgress;
+            this.refreshButton.style.opacity = isActionInProgress ? "0.6" : "1";
+            this.refreshButton.style.cursor = isActionInProgress
+                ? "not-allowed"
+                : "pointer";
+            if (isActionInProgress) {
+                this.refreshButton.style.backgroundColor = "transparent";
+                this.refreshButton.style.color = theme.colors.textSecondary;
+                this.refreshButton.style.borderColor =
+                    theme.colors.borderSecondary;
+            }
+        }
+
+        this.paginationContainer.appendChild(prevButton);
+        this.paginationContainer.appendChild(pageIndicator);
+        this.paginationContainer.appendChild(nextButton);
+    }
+
+    private createButton(
+        textOrHtml: string,
+        onClick: () => void,
+        disabled: boolean = false,
+        type: "default" | "danger" = "default",
+    ): HTMLButtonElement {
+        const button = document.createElement("button");
+        if (textOrHtml.includes("<svg") || textOrHtml.includes("<span")) {
+            button.innerHTML = textOrHtml;
+        } else {
+            button.textContent = textOrHtml;
+        }
+        button.disabled = disabled;
+        button.addEventListener("click", onClick);
+
+        const baseStyles: Partial<CSSStyleDeclaration> = {
+            padding: `${theme.spacing.small} ${theme.spacing.medium}`,
+            border: `1px solid ${theme.colors.borderPrimary}`,
+            borderRadius: theme.borderRadius.small,
+            fontSize: theme.typography.fontSize.small,
+            fontWeight: theme.typography.fontWeight.medium,
+            cursor: disabled ? "not-allowed" : "pointer",
+            transition: `all ${theme.transitions.duration.fast} ${theme.transitions.easing}`,
+            backgroundColor: theme.colors.backgroundSecondary,
+            color: theme.colors.textPrimary,
+            opacity: disabled ? "0.6" : "1",
+            whiteSpace: "nowrap",
+            lineHeight: "1.3",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: theme.spacing.xsmall,
+        };
+
+        let hoverBgColor = theme.colors.backgroundHover;
+        let activeBgColor = theme.colors.backgroundActive;
+        let hoverTextColor = theme.colors.textPrimary;
+        let activeTextColor = theme.colors.textPrimary;
+        let hoverBorderColor = theme.colors.accentPrimary;
+        let activeBorderColor = theme.colors.accentActive;
+
+        if (type === "danger") {
+            baseStyles.color = theme.colors.error;
+            baseStyles.borderColor = theme.colors.error;
+            hoverBgColor = `${theme.colors.error}1A`;
+            activeBgColor = `${theme.colors.error}33`;
+            hoverTextColor = theme.colors.error;
+            activeTextColor = theme.colors.error;
+            hoverBorderColor = theme.colors.error;
+            activeBorderColor = theme.colors.error;
+        }
+
+        Object.assign(button.style, baseStyles);
+
+        if (!disabled) {
+            button.addEventListener("mouseenter", () => {
+                button.style.backgroundColor = hoverBgColor;
+                button.style.color = hoverTextColor;
+                button.style.borderColor = hoverBorderColor;
+                button.style.boxShadow = theme.shadows.small;
+            });
+            button.addEventListener("mouseleave", () => {
+                Object.assign(button.style, baseStyles);
+                button.style.boxShadow = "none";
+            });
+            button.addEventListener("mousedown", () => {
+                button.style.backgroundColor = activeBgColor;
+                button.style.color = activeTextColor;
+                button.style.borderColor = activeBorderColor;
+                button.style.boxShadow = "none";
+            });
+            button.addEventListener("mouseup", () => {
+                if (button.matches(":hover")) {
+                    button.style.backgroundColor = hoverBgColor;
+                    button.style.color = hoverTextColor;
+                    button.style.borderColor = hoverBorderColor;
+                    button.style.boxShadow = theme.shadows.small;
+                } else {
+                    Object.assign(button.style, baseStyles);
+                    button.style.boxShadow = "none";
+                }
+            });
+        }
+
+        return button;
+    }
+
+    // --- Data Fetching & State Update ---
+    private async fetchDataForCurrentPage(): Promise<void> {
+        if (this.isLoading || this.isDeleting) return;
+
+        this.isLoading = true;
+        this.error = null;
+        this.renderConversationList();
+        this.updateListInfo(
+            this.totalConversations > 0 ? `Refreshing...` : `Loading...`,
+        );
+        this.renderPagination();
+        this.updateDeleteButtonState();
+
+        try {
+            const offset = (this.currentPage - 1) * ITEMS_PER_PAGE;
+            const response = await fetchConversations(
+                { offset, limit: ITEMS_PER_PAGE, order: "updated" },
+                this.sendMessage,
+            );
+
+            this.conversations = response.items.map((item) => ({
+                id: item.id,
+                title: item.title,
+            }));
+            this.totalConversations = response.total;
+            this.totalPages = Math.ceil(response.total / ITEMS_PER_PAGE) || 1;
+            this.error = null;
+
+            if (this.currentPage > this.totalPages) {
+                this.currentPage = this.totalPages;
+            }
+            this.selectedConversationIds.clear();
+        } catch (err: unknown) { // Use unknown for better type safety
+            console.error("Failed to fetch conversations:", err);
+            // Type guard for Error object
+            if (err instanceof Error) {
+                this.error = err.message;
+            } else {
+                this.error = "An unknown error occurred while fetching.";
+            }
+            this.conversations = [];
+            this.totalConversations = 0;
+            this.totalPages = 1;
+            this.currentPage = 1;
+            this.updateListInfo("Error loading");
+        } finally {
+            this.isLoading = false;
+            this.renderConversationList();
+            this.renderPagination();
+            this.updateDeleteButtonState();
+            this.updateSelectAllState();
+        }
+    }
+
+    // --- Event Handlers ---
+    private changePage(newPage: number): void {
+        if (
+            newPage >= 1 &&
+            newPage <= this.totalPages &&
+            newPage !== this.currentPage &&
+            !this.isLoading &&
+            !this.isDeleting
+        ) {
+            this.currentPage = newPage;
+            this.selectedConversationIds.clear();
+            if (this.selectAllCheckbox) this.selectAllCheckbox.checked = false; // Ensure checkbox is defined
+            this.fetchDataForCurrentPage();
+        }
+    }
+
+    private handleSelectAllChange(event: Event): void {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        const currentConversationIds = this.conversations.map((c: ConversationSummary) => c.id); // Add type
+
+        if (isChecked) {
+            currentConversationIds.forEach((id: string) => // Add type
+                this.selectedConversationIds.add(id),
+            );
+        } else {
+            currentConversationIds.forEach((id: string) => // Add type
+                this.selectedConversationIds.delete(id),
+            );
+        }
+
+        this.listContainer
+            .querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+            .forEach((checkbox) => {
+                checkbox.checked = this.selectedConversationIds.has(
+                    checkbox.value,
+                );
+            });
+
+        this.updateDeleteButtonState();
+    }
+
+    private handleConversationCheckboxChange(
+        conversationId: string,
+        isChecked: boolean,
+        checkboxElement: HTMLInputElement,
+    ): void {
+        checkboxElement.checked = isChecked;
+
+        if (isChecked) {
+            this.selectedConversationIds.add(conversationId);
+        } else {
+            this.selectedConversationIds.delete(conversationId);
+        }
+
+        this.updateSelectAllState();
+        this.updateDeleteButtonState();
+    }
+
+    private updateSelectAllState(): void {
+        if (!this.selectAllCheckbox || this.conversations.length === 0) {
+            if (this.selectAllCheckbox) this.selectAllCheckbox.checked = false;
+            return;
+        }
+        const allVisibleSelected = this.conversations.every((conv: ConversationSummary) => // Add type
+            this.selectedConversationIds.has(conv.id),
+        );
+        this.selectAllCheckbox.checked = allVisibleSelected;
+    }
+
+    private updateDeleteButtonState(): void {
+        const count = this.selectedConversationIds.size;
+        const isActionInProgress = this.isLoading || this.isDeleting;
+
+        const textSpan = this.deleteButton.querySelector("span");
+        if (textSpan) {
+            textSpan.textContent = `Delete Selected (${count})`;
+        }
+
+        this.deleteButton.disabled = count === 0 || isActionInProgress;
+        this.deleteButton.style.opacity = this.deleteButton.disabled
+            ? "0.6"
+            : "1";
+    }
+
+    // --- Deletion Logic ---
+    private async handleDeleteSelected(): Promise<void> {
+        if (
+            this.isDeleting ||
+            this.isLoading ||
+            this.selectedConversationIds.size === 0
+        ) {
+            return;
+        }
+        const countToDelete = this.selectedConversationIds.size;
+        if (!confirm(`Delete ${countToDelete} conversation(s)?`)) {
+            return;
+        }
+
+        this.isDeleting = true;
+        this.error = null;
+        this.renderPagination();
+        this.updateDeleteButtonState();
+        this.displayFeedback(`Deleting ${countToDelete} items...`, "loading");
+
+        const idsToDelete = Array.from(this.selectedConversationIds);
+        let successCount = 0;
+        let failureCount = 0;
+
+        const deletePromises = idsToDelete.map(async (id) => { // Remove unused index
+            try {
+                await deleteConversationById(id, this.sendMessage);
+                return { id, success: true };
+            } catch (err: unknown) { // Use unknown
+                console.error(`Failed to delete conversation ${id}:`, err);
+                return { id, success: false };
+            }
+        });
+
+        const results = await Promise.all(deletePromises);
+
+        results.forEach((result) => {
+            if (result.success) {
+                successCount++;
+            } else {
+                failureCount++;
+            }
+            this.selectedConversationIds.delete(result.id);
+        });
+
+        this.isDeleting = false;
+
+        let feedbackMessage = "";
+        let feedbackType: "success" | "error" | "warning" = "success";
+        if (failureCount === 0) {
+            feedbackMessage = `✅ Successfully deleted ${successCount} conversation(s).`;
+        } else if (successCount === 0) {
+            feedbackMessage = `❌ Failed to delete ${failureCount} conversation(s).`;
+            feedbackType = "error";
+        } else {
+            feedbackMessage = `⚠️ Completed: ${successCount} deleted, ${failureCount} failed.`;
+            feedbackType = "warning";
+        }
+        this.displayFeedback(feedbackMessage, feedbackType, 8000);
+
+        await this.fetchDataForCurrentPage();
+    }
+
+    // --- Feedback Display ---
+    private displayFeedback(
+        message: string,
+        type: "success" | "error" | "loading" | "info" | "warning",
+        autoHideDelay?: number,
+    ): void {
+        if (!this.feedbackArea) return;
+
+        this.feedbackArea.textContent = message;
+        this.feedbackArea.style.display = message ? "block" : "none";
+
+        this.feedbackArea.style.borderColor = "transparent";
+        this.feedbackArea.style.backgroundColor = "transparent";
+        this.feedbackArea.style.color = theme.colors.textSecondary;
+
+        switch (type) {
+            case "success":
+                this.feedbackArea.style.color = theme.colors.success;
+                this.feedbackArea.style.borderColor = theme.colors.success;
+                this.feedbackArea.style.backgroundColor = `${theme.colors.success}1A`;
+                break;
+            case "error":
+                this.feedbackArea.style.color = theme.colors.error;
+                this.feedbackArea.style.borderColor = theme.colors.error;
+                this.feedbackArea.style.backgroundColor = `${theme.colors.error}1A`;
+                break;
+            case "warning":
+                this.feedbackArea.style.color = theme.colors.warning;
+                this.feedbackArea.style.borderColor = theme.colors.warning;
+                this.feedbackArea.style.backgroundColor = `${theme.colors.warning}1A`;
+                break;
+            case "loading":
+            case "info":
+            default:
+                this.feedbackArea.style.color = theme.colors.textSecondary;
+                this.feedbackArea.style.borderColor =
+                    theme.colors.borderSecondary;
+                this.feedbackArea.style.backgroundColor =
+                    theme.colors.backgroundSecondary;
+                break;
+        }
+
+        const existingTimeout = Number(
+            this.feedbackArea.dataset.hideTimeoutId || 0,
+        );
+        if (existingTimeout) clearTimeout(existingTimeout);
+        this.feedbackArea.dataset.hideTimeoutId = "";
+
+        if (autoHideDelay && autoHideDelay > 0) {
+            const timeoutId = setTimeout(() => {
+                if (
+                    this.feedbackArea &&
+                    this.feedbackArea.textContent === message
+                ) {
+                    this.feedbackArea.style.display = "none";
+                }
+            }, autoHideDelay);
+            this.feedbackArea.dataset.hideTimeoutId = String(timeoutId);
+        } else if (type === "loading") {
+            // Keep loading message
+        }
     }
 }
