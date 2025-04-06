@@ -81,7 +81,7 @@ export const sendMessageToSW: SendMessageToSW = async (message) => {
                 // If the SW responded but indicated failure, construct and throw the error. Don't retry logical errors.
                 const error = new Error(
                     response.error?.message ||
-                    "Unknown error from service worker.",
+                        "Unknown error from service worker.",
                 );
                 error.name = response.error?.name || "ServiceWorkerError";
                 if (response.error?.stack) {

@@ -18,7 +18,6 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            // Only include if shared is a dependency
             // '@shared': path.resolve(__dirname, '../shared/src'),
         },
     },

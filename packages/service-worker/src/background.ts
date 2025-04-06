@@ -1,25 +1,6 @@
 // packages/service-worker/src/background.ts
 import { VERSION } from "@shared";
-
-// chrome.runtime.onInstalled.addListener(() => {
-//     console.log('Extension installed!');
-// });
-
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//     console.log('Message received in background:', message);
-//     // Handle messages from content scripts or popup
-//     if (message.type === 'GREETING') {
-//         sendResponse({ farewell: 'Goodbye from background!' });
-//     }
-//     return true; // Indicates asynchronous response potentially
-// });
-
-// src/background.ts
-
-// --- Core Dependencies ---
 import { ChatGptApiClient } from "@/service/ChatGptApiClient";
-
-// --- Service Function Imports (Corrected Paths) ---
 import {
     fetchConversations,
     deleteConversation,
@@ -33,30 +14,20 @@ import {
     markMessageAsThumbsUp,
     markMessageAsThumbsDown,
 } from "@/service/ChatGptService";
-
 import {
     fetchConversationMessageIds,
     fetchConversationMessages,
     fetchConversationContext,
     fetchConversationAuthorCounts,
 } from "@/service/ConversationProcessor";
-
 import { exportConversationAsMarkdown } from "@/service/MarkdownExporter";
-
 import { countConversationTokens } from "@/service/ConversationTokens";
 
-// --- Initialization & Logging ---
-// Optionally include shared version if needed, ensure '@shared' path is configured correctly
-// import { VERSION } from '@shared';
 console.log("Shared Version:", VERSION);
 console.log("Service Worker starting...");
 
-// --- Initialize ChatGptApiClient ---
-// Wrap initialization in an async IIFE
 (async () => {
     try {
-        // Initialize the singleton instance and load initial headers from storage.
-        // ChatGptApiClient.initialize() handles getting the instance and calling setHeaders internally.
         await ChatGptApiClient.initialize();
         console.log(
             "Service Worker: ChatGptApiClient initialized successfully.",
@@ -69,8 +40,6 @@ console.log("Service Worker starting...");
     }
 })();
 
-// --- State Management (Headers/Tokens) ---
-// Store headers in chrome.storage.local
 async function storeHeaders(headers: any): Promise<void> {
     try {
         const currentData = await chrome.storage.local.get("apiHeaders");
@@ -78,25 +47,12 @@ async function storeHeaders(headers: any): Promise<void> {
         await chrome.storage.local.set({ apiHeaders: mergedHeaders });
         console.log("Service Worker: Headers stored", mergedHeaders);
 
-        // Update the ChatGptApiClient singleton instance
-        await ChatGptApiClient.getInstance().setHeaders(mergedHeaders);
+        ChatGptApiClient.getInstance().setHeaders(mergedHeaders);
     } catch (error) {
         console.error("Service Worker: Error storing/updating headers", error);
     }
 }
 
-// // Retrieve headers from storage
-// async function getStoredHeaders(): Promise<any> {
-//     try {
-//         const data = await chrome.storage.local.get("apiHeaders");
-//         return data.apiHeaders || {};
-//     } catch (error) {
-//         console.error("Service Worker: Error retrieving headers", error);
-//         return {};
-//     }
-// }
-
-// --- Message Listener ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log(
         `Service Worker received message: ${message.type}`,
@@ -104,10 +60,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         `From: ${sender.tab ? `Tab ${sender.tab.id}` : sender.id || "Unknown"}`,
     );
 
-    // --- Interceptor Data Handling ---
     if (message.type === "HEADERS_RECEIVED") {
         storeHeaders(message.data).then(() => sendResponse({ success: true }));
-        return true; // Indicates async response
+        return true;
     }
     if (message.type === "AUTH_RECEIVED") {
         storeHeaders({
@@ -116,7 +71,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             chrome.storage.local.set({ authData: message.data });
             sendResponse({ success: true });
         });
-        return true; // Indicates async response
+        return true;
     }
     if (
         message.type === "ACCOUNT_RECEIVED" ||
@@ -137,15 +92,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse({ success: true });
             }
         });
-        return true; // Storage set is async
+        return true;
     }
 
-    // --- Content Script/Popup Action Handling ---
     const handleAsync = async (asyncFn: () => Promise<any>) => {
         try {
-            // Optional: Refresh headers from storage before critical operations if needed.
-            // await ChatGptApiClient.getInstance().refreshHeadersFromStorage(); // Use renamed class
-
             const result = await asyncFn();
             sendResponse({ success: true, data: result });
         } catch (error: any) {
@@ -158,15 +109,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 error: {
                     message: error.message || "An unknown error occurred",
                     name: error.name,
-                    stack: error.stack, // Useful for debugging
+                    stack: error.stack,
                 },
             });
         }
     };
 
-    // Route messages to appropriate handlers
     switch (message.type) {
-        // --- Data Fetching/Manipulation ---
         case "FETCH_CONVERSATIONS":
             handleAsync(() =>
                 fetchConversations(
@@ -278,7 +227,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             );
             break;
 
-        // --- Conversation Processing/Analysis (from conversationUtils) ---
         case "FETCH_CONVERSATION_MESSAGE_IDS":
             handleAsync(() =>
                 fetchConversationMessageIds(message.payload.conversationId),
@@ -300,7 +248,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             );
             break;
 
-        // --- Exporting (from markdownExporter) ---
         case "EXPORT_CONVERSATION_MARKDOWN":
             handleAsync(async () => {
                 const exportData = await exportConversationAsMarkdown(
@@ -314,7 +261,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             });
             break;
 
-        // --- Token Counting (from conversationTokenCounter) ---
         case "COUNT_CONVERSATION_TOKENS":
             handleAsync(() =>
                 countConversationTokens(
@@ -324,7 +270,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             );
             break;
 
-        // --- Browser API Interaction ---
         case "GET_COOKIE":
             chrome.cookies.get(
                 {
@@ -351,50 +296,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     }
                 },
             );
-            return true; // Indicates async response
+            return true;
 
-        // --- Default ---
         default:
             console.warn(
                 "Service Worker received unknown message type:",
                 message.type,
             );
-            // Optionally send a response for unknown types
+
             sendResponse({
                 success: false,
                 error: {
                     message: `Unknown message type '${message.type}' received by service worker.`,
                 },
             });
-            // Return false as we handled it synchronously (by sending an error response)
-            // and are not waiting for any further async operation for this unknown type.
+
             return false;
     }
 
-    // Return true for all cases handled by handleAsync,
-    // as it manages the asynchronous response sending.
     return true;
 });
 
-// --- Service Worker Lifecycle Listeners ---
 chrome.runtime.onInstalled.addListener((details) => {
     console.log(
         `Extension ${details.reason}. Previous version: ${details.previousVersion}. Service worker active.`,
     );
-    // Example: Clear storage on install or update if needed
-    // if (details.reason === "install" || details.reason === "update") {
-    //     chrome.storage.local.clear(() => {
-    //         console.log("Cleared local storage on install/update.");
-    //     });
-    // }
 });
 
 chrome.runtime.onStartup.addListener(async () => {
     console.log("Browser startup detected. Service worker activating.");
-    // Ensure headers are loaded into the ChatGptApiClient instance
+
     try {
-        // Re-initialize to load fresh headers from storage,
-        // ensuring the singleton instance is up-to-date.
         await ChatGptApiClient.initialize();
         console.log(
             "Service Worker: ChatGptApiClient headers refreshed on browser startup.",

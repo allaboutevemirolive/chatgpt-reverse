@@ -14,8 +14,6 @@ export default defineConfig({
             input: {
                 popup: path.resolve(__dirname, "index.html"),
             },
-            // Output options are usually handled correctly by setting base: './'
-            // You likely don't need to override entryFileNames etc. for popup build
         },
     },
     resolve: {

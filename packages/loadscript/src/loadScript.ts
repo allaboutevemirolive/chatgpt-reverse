@@ -1,35 +1,31 @@
 // packages/loadscript/src/loadScript.ts
 
-// --- Corrected & Added Type Definitions ---
 type AuthEventResponse = CustomEvent<{ accessToken: string }>;
-type AccountEventResponse = CustomEvent<{ accounts: any[] }>; // Added
-type ConversationLimitEventResponse = CustomEvent<{ message_cap: any }>; // Added
-type ModelsEventResponse = CustomEvent<{ models: any[] }>; // Added
+type AccountEventResponse = CustomEvent<{ accounts: any[] }>;
+type ConversationLimitEventResponse = CustomEvent<{ message_cap: any }>;
+type ModelsEventResponse = CustomEvent<{ models: any[] }>;
 type HeadersEventResponse = CustomEvent<{
     "OAI-Language"?: string;
     "OAI-Device-Id"?: string;
     Authorization?: string;
 }>;
-// --- End Type Definitions ---
 
 console.log("LoadScript script executing...");
 
-// --- Retry Configuration ---
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 300;
-// --- END Retry Configuration ---
 
-// --- Delay Helper ---
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-// --- END Delay Helper ---
-
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Safely sends a message to the service worker with retry logic for connection errors.
  * This version is fire-and-forget, it doesn't wait for or process the SW response.
  * @param message The message object { type: string; data: any } to send.
  */
-async function safeSendMessage(message: { type: string; data: any }): Promise<void> {
+async function safeSendMessage(message: {
+    type: string;
+    data: any;
+}): Promise<void> {
     console.log(
         `LoadScript: Attempting to send message -> Type: ${message.type}`,
     );
@@ -44,12 +40,20 @@ async function safeSendMessage(message: { type: string; data: any }): Promise<vo
                             `LoadScript: chrome.runtime.lastError on attempt ${attempt + 1}/${MAX_RETRIES + 1} sending ${message.type}:`,
                             chrome.runtime.lastError.message,
                         );
-                        if (chrome.runtime.lastError.message?.includes("Receiving end does not exist")) {
-                            return reject(new Error(chrome.runtime.lastError.message));
+                        if (
+                            chrome.runtime.lastError.message?.includes(
+                                "Receiving end does not exist",
+                            )
+                        ) {
+                            return reject(
+                                new Error(chrome.runtime.lastError.message),
+                            );
                         }
-                        console.error("LoadScript: Unhandled runtime.lastError:", chrome.runtime.lastError.message);
+                        console.error(
+                            "LoadScript: Unhandled runtime.lastError:",
+                            chrome.runtime.lastError.message,
+                        );
                         resolve(); // Resolve for other lastErrors in fire-and-forget
-
                     } else {
                         // Optional: Log successful send
                         // console.log(`LoadScript: Message ${message.type} sent successfully (Attempt ${attempt + 1}).`);
@@ -58,17 +62,23 @@ async function safeSendMessage(message: { type: string; data: any }): Promise<vo
                 });
             });
 
-            console.log(`LoadScript: Message ${message.type} sent successfully (or non-connection error occurred) on attempt ${attempt + 1}.`);
+            console.log(
+                `LoadScript: Message ${message.type} sent successfully (or non-connection error occurred) on attempt ${attempt + 1}.`,
+            );
             return; // Exit loop on success or non-retried error
-
         } catch (error: any) {
             console.warn(
                 `LoadScript: Error during sendMessage attempt ${attempt + 1}/${MAX_RETRIES + 1} for ${message.type}:`,
                 error.message,
             );
 
-            if (error.message?.includes("Receiving end does not exist") && attempt < MAX_RETRIES) {
-                console.warn(`LoadScript: Connection error on attempt ${attempt + 1}. Retrying after ${RETRY_DELAY_MS}ms...`);
+            if (
+                error.message?.includes("Receiving end does not exist") &&
+                attempt < MAX_RETRIES
+            ) {
+                console.warn(
+                    `LoadScript: Connection error on attempt ${attempt + 1}. Retrying after ${RETRY_DELAY_MS}ms...`,
+                );
                 await delay(RETRY_DELAY_MS);
                 // Continue to next loop iteration
             } else {
@@ -80,9 +90,10 @@ async function safeSendMessage(message: { type: string; data: any }): Promise<vo
             }
         }
     }
-    console.error(`LoadScript: Exhausted all ${MAX_RETRIES + 1} attempts to send message ${message.type}.`);
+    console.error(
+        `LoadScript: Exhausted all ${MAX_RETRIES + 1} attempts to send message ${message.type}.`,
+    );
 }
-
 
 // Helper function to inject the interceptor script
 function injectScript(scriptUrl: string): void {
@@ -91,10 +102,14 @@ function injectScript(scriptUrl: string): void {
         return;
     }
     try {
-        const newScriptElement: HTMLScriptElement = document.createElement("script");
+        const newScriptElement: HTMLScriptElement =
+            document.createElement("script");
         newScriptElement.setAttribute("src", scriptUrl);
         newScriptElement.setAttribute("type", "text/javascript");
-        newScriptElement.onload = function(this: GlobalEventHandlers, _ev: Event): void {
+        newScriptElement.onload = function (
+            this: GlobalEventHandlers,
+            _ev: Event,
+        ): void {
             console.log("LoadScript: Interceptor script loaded successfully.");
             (this as HTMLScriptElement)?.remove();
         };
@@ -104,21 +119,29 @@ function injectScript(scriptUrl: string): void {
         document.documentElement.prepend(newScriptElement);
         console.log("LoadScript: Injecting interceptor script:", scriptUrl);
     } catch (e) {
-        console.error("LoadScript: Error creating or injecting script element:", e);
+        console.error(
+            "LoadScript: Error creating or injecting script element:",
+            e,
+        );
     }
 }
 
 // Main initialization function
 function initialize(): void {
     try {
-        const interceptorScriptUrl: string = chrome.runtime.getURL("interceptor.js");
+        const interceptorScriptUrl: string =
+            chrome.runtime.getURL("interceptor.js");
         injectScript(interceptorScriptUrl);
 
-        // Add listeners with the updated safeSendMessage wrapper and correct types
-        window.addEventListener("headersReceived", ((event: HeadersEventResponse) => {
+        window.addEventListener("headersReceived", ((
+            event: HeadersEventResponse,
+        ) => {
             if (event.detail) {
                 console.log("LoadScript: Event 'headersReceived' caught.");
-                safeSendMessage({ type: "HEADERS_RECEIVED", data: event.detail });
+                safeSendMessage({
+                    type: "HEADERS_RECEIVED",
+                    data: event.detail,
+                });
             }
         }) as EventListener);
 
@@ -129,31 +152,45 @@ function initialize(): void {
             }
         }) as EventListener);
 
-        // --- Use Corrected Types ---
-        window.addEventListener("accountReceived", ((event: AccountEventResponse) => {
+        window.addEventListener("accountReceived", ((
+            event: AccountEventResponse,
+        ) => {
             if (event.detail?.accounts) {
                 console.log("LoadScript: Event 'accountReceived' caught.");
-                safeSendMessage({ type: "ACCOUNT_RECEIVED", data: event.detail });
+                safeSendMessage({
+                    type: "ACCOUNT_RECEIVED",
+                    data: event.detail,
+                });
             }
         }) as EventListener);
 
-        window.addEventListener("conversationLimitReceived", ((event: ConversationLimitEventResponse) => {
+        window.addEventListener("conversationLimitReceived", ((
+            event: ConversationLimitEventResponse,
+        ) => {
             if (event.detail?.message_cap) {
-                console.log("LoadScript: Event 'conversationLimitReceived' caught.");
-                safeSendMessage({ type: "CONVERSATION_LIMIT_RECEIVED", data: event.detail });
+                console.log(
+                    "LoadScript: Event 'conversationLimitReceived' caught.",
+                );
+                safeSendMessage({
+                    type: "CONVERSATION_LIMIT_RECEIVED",
+                    data: event.detail,
+                });
             }
         }) as EventListener);
 
-        window.addEventListener("modelsReceived", ((event: ModelsEventResponse) => {
+        window.addEventListener("modelsReceived", ((
+            event: ModelsEventResponse,
+        ) => {
             if (event.detail?.models) {
                 console.log("LoadScript: Event 'modelsReceived' caught.");
-                safeSendMessage({ type: "MODELS_RECEIVED", data: event.detail });
+                safeSendMessage({
+                    type: "MODELS_RECEIVED",
+                    data: event.detail,
+                });
             }
         }) as EventListener);
-        // --- End Corrected Types ---
 
         console.log("LoadScript: Event listeners added.");
-
     } catch (initError) {
         console.error("LoadScript: Error during initialization:", initError);
     }

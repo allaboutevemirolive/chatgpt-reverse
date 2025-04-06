@@ -5,10 +5,10 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
     plugins: [react()],
     test: {
-        globals: true, // Use global APIs (describe, it, expect)
-        environment: "jsdom", // Simulate DOM environment for React components
-        setupFiles: "./tests/setup.ts", // Optional setup file (see below)
-        include: ["packages/**/*.{test,spec}.?(c|m)[jt]s?(x)"], // Look for tests in all packages
+        globals: true,
+        environment: "jsdom",
+        setupFiles: "./tests/setup.ts",
+        include: ["packages/**/*.{test,spec}.?(c|m)[jt]s?(x)"],
     },
     // Optional: Alias resolution matching our Vite configs
     // resolve: {
