@@ -16,7 +16,7 @@
         "coverage": "vitest run --coverage"
     },
     "keywords": [],
-    "author": "",
+    "author": "Akmal Firdaus <https://x.com/akmalfirdxus>",
     "license": "ISC",
     "devDependencies": {
         "@biomejs/biome": "^1.9.4",
