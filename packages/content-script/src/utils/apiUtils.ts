@@ -1,5 +1,4 @@
 // packages/content-script/src/utils/apiUtils.ts
-
 import { sendMessageToSW, SendMessageToSW } from "./swMessenger";
 
 // --- Generic API Action Caller ---
@@ -122,7 +121,7 @@ interface ShareConversationParams {
     conversationId: string;
     currentNodeId: string;
 }
-type ShareResponse = { share_url?: string; [key: string]: any };
+type ShareResponse = { share_url?: string;[key: string]: any };
 
 export async function shareConversation(
     params: ShareConversationParams,
@@ -183,7 +182,7 @@ interface AutocompletionsParams {
     numCompletions?: number | string;
     inSearchMode?: boolean | string;
 }
-type AutocompletionsResponse = { completions?: string[]; [key: string]: any };
+type AutocompletionsResponse = { completions?: string[];[key: string]: any };
 
 export async function generateAutocompletions(
     params: AutocompletionsParams,
@@ -396,5 +395,3 @@ export async function fetchConversationAuthorCounts(
         messageSender,
     );
 }
-
-// Add other specific wrappers as needed...

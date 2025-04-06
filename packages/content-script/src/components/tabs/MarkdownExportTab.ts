@@ -3,17 +3,15 @@ import { theme } from "@shared";
 import { downloadTextFile } from "@/utils/downloadUtils";
 import { generateMarkdownFileName } from "@/utils/exportUtils";
 import { SendMessageToSW } from "@/utils/swMessenger";
-import { fetchMarkdownExportData } from "@/utils/apiUtils"; // Import fetch function
-import { ActionSidebar } from "../ActionSidebar"; // Import ActionSidebar
+import { fetchMarkdownExportData } from "@/utils/apiUtils";
+import { ActionSidebar } from "../ActionSidebar";
 
-// Type for the data returned by the service worker
 interface ExportData {
     markdownContent: string;
     createTime: number;
     title: string;
 }
 
-// --- Type Definitions ---
 type SidebarActionType = "primary" | "danger" | "default";
 interface SidebarActionConfig {
     label: string;
@@ -22,32 +20,30 @@ interface SidebarActionConfig {
 }
 
 export class MarkdownExportTab {
-    private rootElement: HTMLDivElement; // Main container (flex row: sidebar + mainPanel)
-    private actionSidebar: ActionSidebar; // The sidebar component instance
-    private mainPanel: HTMLDivElement; // Area for form inputs
+    private rootElement: HTMLDivElement;
+    private actionSidebar: ActionSidebar;
+    private mainPanel: HTMLDivElement;
 
-    // Form Elements (in mainPanel)
     private idInput!: HTMLInputElement;
     private filenameInput!: HTMLInputElement;
 
-    // Sidebar Elements
-    private idStatusElement!: HTMLDivElement; // Displays "ID auto-detected" status in sidebar
-    private feedbackArea!: HTMLDivElement; // Feedback area now part of the sidebar
+    private resultsPanel: HTMLDivElement | null = null;
+    private feedbackContainer!: HTMLDivElement;
 
-    // State
+    private idStatusElement!: HTMLDivElement;
+    private feedbackArea!: HTMLDivElement;
+
     private sendMessageToSW: SendMessageToSW;
     private isProcessing: boolean = false;
     private defaultFilename: string = "";
     private userModifiedFilename: boolean = false;
-    private currentConversationId: string | null = null; // Track current ID locally
+    private currentConversationId: string | null = null;
 
-    // Static flag for style injection
     private static animationStylesInjected = false;
 
     constructor(sendMessageFunction: SendMessageToSW) {
         this.sendMessageToSW = sendMessageFunction;
 
-        // Create main container
         this.rootElement = document.createElement("div");
         Object.assign(this.rootElement.style, {
             display: "flex",
@@ -56,30 +52,48 @@ export class MarkdownExportTab {
             overflow: "hidden",
         });
 
-        // Create Sidebar
         this.actionSidebar = new ActionSidebar();
         this.rootElement.appendChild(this.actionSidebar.getElement());
 
-        // Create Main Panel (for inputs)
         this.mainPanel = this.createMainPanel();
         this.rootElement.appendChild(this.mainPanel);
 
-        // Create Input Fields within Main Panel
-        this.createInputFields(); // Assigns this.idInput and this.filenameInput
+        this.feedbackContainer = this.createFeedbackContainer();
 
-        // Setup Action Buttons and Feedback Area on the Sidebar
-        this.setupActionSidebar(); // Assigns this.idStatusElement and this.feedbackArea
+        this.createInputFields();
 
-        // Inject animation styles safely
+        this.setupActionSidebar();
+
         MarkdownExportTab.injectAnimationStyles();
 
-        // Defer initial update to ensure DOM elements are ready
         requestAnimationFrame(() => {
-            this.updateConversationId(null); // Initialize UI state based on initial ID
+            this.updateConversationId(null);
         });
     }
 
-    // Static method to inject styles only once
+    private createFeedbackContainer(): HTMLDivElement {
+        const feedbackDiv = document.createElement("div");
+        feedbackDiv.id = "advance-tab-feedback";
+        Object.assign(feedbackDiv.style, {
+            marginTop: theme.spacing.medium,
+            padding: theme.spacing.medium,
+            backgroundColor: theme.colors.backgroundPrimary,
+            borderRadius: theme.borderRadius.small,
+            border: `1px solid ${theme.colors.borderSecondary}`,
+            minHeight: "40px",
+            color: theme.colors.textSecondary,
+            fontSize: theme.typography.fontSize.small,
+            fontStyle: "italic",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            transition: "color 0.3s ease",
+        });
+        feedbackDiv.textContent = "Action feedback will appear here briefly.";
+        return feedbackDiv;
+    }
+
     private static injectAnimationStyles(): void {
         if (this.animationStylesInjected) return;
 
@@ -87,7 +101,6 @@ export class MarkdownExportTab {
         const spinClass = `.animate-spin { animation: spin 1s linear infinite; }`;
         const styleSheetId = "markdown-export-animations";
 
-        // Check if the style element already exists
         if (document.getElementById(styleSheetId)) {
             this.animationStylesInjected = true;
             return;
@@ -97,25 +110,24 @@ export class MarkdownExportTab {
         styleSheet.id = styleSheetId;
         styleSheet.textContent = spinKeyframes + spinClass;
 
-        // Ensure document.head exists before appending
         if (document.head) {
             document.head.appendChild(styleSheet);
             this.animationStylesInjected = true;
         } else {
-            // Fallback: Wait for DOMContentLoaded if head is not available
+
             const inject = () => {
                 if (document.head && !document.getElementById(styleSheetId)) {
                     document.head.appendChild(styleSheet);
                     this.animationStylesInjected = true;
                 }
-                // Remove listener after trying to inject
+
                 document.removeEventListener('DOMContentLoaded', inject);
             };
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', inject);
             } else {
-                // DOM already loaded, but head wasn't found initially? Try immediate injection.
-                if (document.head) { // Check again just in case
+
+                if (document.head) {
                     inject();
                 } else {
                     console.error("MarkdownExportTab: document.head not available for style injection even after DOM loaded.");
@@ -125,15 +137,14 @@ export class MarkdownExportTab {
         }
     }
 
-
     public getElement(): HTMLDivElement {
         return this.rootElement;
     }
 
     public updateConversationId(id: string | null): void {
-        // Ensure elements are ready (important check!)
+
         if (!this.idInput || !this.filenameInput || !this.idStatusElement) {
-            // It's possible this gets called by requestAnimationFrame before elements are fully ready
+
             console.warn(
                 "MarkdownExportTab: UI elements not ready for updateConversationId (likely called too early). Retrying.",
             );
@@ -142,7 +153,7 @@ export class MarkdownExportTab {
         }
 
         const previousId = this.currentConversationId;
-        this.currentConversationId = id; // Update local tracker
+        this.currentConversationId = id;
 
         if (id && id !== previousId && this.idInput.value !== id) {
             if (!this.idInput.value || this.idInput.value === previousId) {
@@ -187,8 +198,6 @@ export class MarkdownExportTab {
         this.updateButtonStates();
     }
 
-    // --- UI Creation Methods ---
-
     private createMainPanel(): HTMLDivElement {
         const panel = document.createElement("div");
         Object.assign(panel.style, {
@@ -204,7 +213,6 @@ export class MarkdownExportTab {
         return panel;
     }
 
-    /** Creates the form input fields in the main panel */
     private createInputFields(): void {
         const formContainer = document.createElement("div");
         Object.assign(formContainer.style, {
@@ -213,26 +221,25 @@ export class MarkdownExportTab {
             gap: theme.spacing.large,
         });
 
-        // Define field configurations
         const fields = [
             {
                 label: "Conversation ID",
                 name: "conversationid",
-                type: "text", // Corrected type
-                defaultValue: "", // Let placeholder handle default text
+                type: "text",
+                defaultValue: "",
                 placeholder: "Conversation ID (auto-detected or paste)",
             },
             {
                 label: "Filename",
                 name: "filename",
-                type: "text", // Corrected type
-                defaultValue: "", // Let placeholder handle default text
+                type: "text",
+                defaultValue: "",
                 placeholder: "Defaults to ChatGPT_Title_Date.md",
             },
         ];
 
         fields.forEach((field) => {
-            // Call createFormField and get the object back
+
             const fieldGroup = this.createFormField(
                 field.label,
                 field.name,
@@ -240,18 +247,15 @@ export class MarkdownExportTab {
                 field.defaultValue,
             );
 
-            // Set placeholder if provided in config
             if (field.placeholder) {
                 fieldGroup.input.placeholder = field.placeholder;
             }
 
-            // Now append the container element correctly
-            formContainer.appendChild(fieldGroup.container); // <--- CORRECTED: Use fieldGroup.container
+            formContainer.appendChild(fieldGroup.container);
 
-            // Assign class properties to the input element correctly
             if (field.name === "conversationid") {
-                this.idInput = fieldGroup.input; // <--- CORRECTED: Use fieldGroup.input
-                // Attach event listeners specific to idInput
+                this.idInput = fieldGroup.input;
+
                 this.idInput.addEventListener("input", () => {
                     this.updateButtonStates();
                     this.updateIdStatusOnManualInput();
@@ -275,8 +279,8 @@ export class MarkdownExportTab {
                     this.updateIdStatusOnManualInput();
                 });
             } else if (field.name === "filename") {
-                this.filenameInput = fieldGroup.input; // <--- CORRECTED: Use fieldGroup.input
-                // Attach event listeners specific to filenameInput
+                this.filenameInput = fieldGroup.input;
+
                 this.filenameInput.addEventListener("input", () => {
                     const currentVal = this.filenameInput.value.trim();
                     this.userModifiedFilename = currentVal !== "" && currentVal !== this.defaultFilename;
@@ -284,10 +288,9 @@ export class MarkdownExportTab {
             }
         });
 
-        this.mainPanel.appendChild(formContainer); // Add the form fields to the main panel
+        this.mainPanel.appendChild(formContainer);
     }
 
-    /** Updates the ID status element in the sidebar based on manual input vs detected ID */
     private updateIdStatusOnManualInput(): void {
         if (!this.idStatusElement || !this.idInput) return;
 
@@ -327,7 +330,7 @@ export class MarkdownExportTab {
                  <span style="color: ${theme.colors.textSecondary};">Enter or paste an ID.</span>
              `;
             this.idStatusElement.style.display = 'flex';
-        } else { // !manualId && !detectedId
+        } else {
             this.idStatusElement.innerHTML = `
                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="${theme.colors.textTertiary}" viewBox="0 0 16 16" style="flex-shrink: 0;">
                    <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -340,21 +343,16 @@ export class MarkdownExportTab {
         }
     }
 
-    /**
-     * Creates a labeled form field (container + input).
-     * @returns An object containing the container div and the input element.
-     */
     private createFormField(
         label: string,
         name: string,
         type: string,
         defaultValue?: string,
-    ): { container: HTMLDivElement; input: HTMLInputElement } { // <--- CORRECTED: Return type
+    ): { container: HTMLDivElement; input: HTMLInputElement } {
         const container = document.createElement("div");
         const labelElement = document.createElement("label");
-        const input = document.createElement("input"); // Input element
+        const input = document.createElement("input");
 
-        // --- Common Label Styling ---
         Object.assign(labelElement.style, {
             fontSize: theme.typography.fontSize.small,
             color: theme.colors.textSecondary,
@@ -364,13 +362,12 @@ export class MarkdownExportTab {
         labelElement.textContent = label;
         labelElement.htmlFor = `adv-input-${name}`;
 
-        // --- Input Setup ---
         input.type = type;
         input.name = name;
         input.id = `adv-input-${name}`;
 
         if (type === "checkbox") {
-            // --- Checkbox Specific Styling & Layout ---
+
             Object.assign(container.style, {
                 display: "flex",
                 flexDirection: "row",
@@ -398,7 +395,7 @@ export class MarkdownExportTab {
             container.appendChild(labelElement);
             container.appendChild(input);
         } else {
-            // --- Text/Number/Other Input Styling & Layout ---
+
             Object.assign(container.style, {
                 display: "flex",
                 flexDirection: "column",
@@ -419,7 +416,6 @@ export class MarkdownExportTab {
                 width: "100%",
             });
             input.value = defaultValue || "";
-            // Placeholder is set in createInputFields now
 
             input.addEventListener("focus", () => {
                 input.style.borderColor = theme.colors.accentPrimary;
@@ -434,8 +430,7 @@ export class MarkdownExportTab {
             container.appendChild(input);
         }
 
-        // Return an object containing both elements
-        return { container, input }; // <--- CORRECTED: Return object
+        return { container, input };
     }
 
     private addSectionHeader(title: string): void {
@@ -455,7 +450,6 @@ export class MarkdownExportTab {
         this.actionSidebar.getElement().appendChild(header);
     }
 
-    /** Adds buttons, status, and feedback area to the ActionSidebar */
     private setupActionSidebar(): void {
 
         const actionSections: Record<string, SidebarActionConfig[]> = {
@@ -485,11 +479,9 @@ export class MarkdownExportTab {
             });
         }
 
-        // --- Section Header: Status ---
         const statusHeader = this.createSectionHeader("Status");
         sidebarElement.appendChild(statusHeader);
 
-        // ID Status Element
         this.idStatusElement = document.createElement("div");
         Object.assign(this.idStatusElement.style, {
             display: 'flex',
@@ -506,7 +498,6 @@ export class MarkdownExportTab {
         });
         sidebarElement.appendChild(this.idStatusElement);
 
-        // Feedback Area (also in sidebar)
         this.feedbackArea = document.createElement("div");
         this.feedbackArea.id = "markdown-export-feedback";
         Object.assign(this.feedbackArea.style, {
@@ -532,7 +523,6 @@ export class MarkdownExportTab {
         sidebarElement.appendChild(this.feedbackArea);
     }
 
-    /** Helper to create styled section headers for the sidebar */
     private createSectionHeader(title: string): HTMLHeadingElement {
         const header = document.createElement("h3");
         Object.assign(header.style, {
@@ -546,7 +536,7 @@ export class MarkdownExportTab {
             textTransform: "uppercase",
             letterSpacing: "0.5px",
         });
-        // Remove top margin for the very first header added to the sidebar
+
         if (!this.actionSidebar.getElement().querySelector('h3')) {
             header.style.marginTop = '0';
         }
@@ -554,10 +544,6 @@ export class MarkdownExportTab {
         return header;
     }
 
-
-    // --- Action Handlers and Helpers (Adapted) ---
-
-    /** Suggests a filename based on conversation ID, requires fetching title/time */
     private async suggestFilename(conversationId: string): Promise<void> {
         if (!conversationId || !this.filenameInput) {
             if (this.filenameInput) this.filenameInput.value = "";
@@ -578,7 +564,7 @@ export class MarkdownExportTab {
             );
             if (
                 !this.userModifiedFilename &&
-                document.body.contains(this.filenameInput) // Check if element still exists
+                document.body.contains(this.filenameInput)
             ) {
                 this.filenameInput.value = this.defaultFilename;
             }
@@ -606,7 +592,6 @@ export class MarkdownExportTab {
         }
     }
 
-    /** Gets the final filename, using user input or default, ensuring .md extension */
     private getFinalFilename(): string {
         if (!this.filenameInput) return generateMarkdownFileName(Date.now() / 1000) + '.md';
 
@@ -631,8 +616,6 @@ export class MarkdownExportTab {
         return finalName;
     }
 
-
-    /** Updates the enabled/disabled state of sidebar action buttons */
     private updateButtonStates(): void {
         const hasId = this.idInput && this.idInput.value.trim().length > 0;
         const isDisabled = !hasId || this.isProcessing;
@@ -653,14 +636,13 @@ export class MarkdownExportTab {
                 } else if (isDisabled && !button.dataset.originalHtml) {
                     const span = button.querySelector('span');
                     if (span && span.textContent?.endsWith('...')) {
-                        // Rely on setProcessingState(false) to restore content
+
                     }
                 }
             }
         });
     }
 
-    /** Sets the visual state for processing (loading) */
     private setProcessingState(
         isProcessing: boolean,
         actionText: string = "Processing",
@@ -703,8 +685,6 @@ export class MarkdownExportTab {
         }
     }
 
-
-    /** Fetches export data from the service worker */
     private async fetchExportDataInternal(
         conversationId: string,
     ): Promise<ExportData | null> {
@@ -717,19 +697,15 @@ export class MarkdownExportTab {
             const response = await fetchMarkdownExportData(conversationId, this.sendMessageToSW);
             return response;
         } catch (error) {
-            this.setProcessingState(false); // Ensure buttons reset before showing error
+            this.setProcessingState(false);
             this.displayFeedback(error as Error, "error");
             return null;
         }
     }
 
-    /** Handles the Export button click */
     private async handleExportClick(): Promise<void> {
         const conversationId = this.idInput?.value.trim();
         if (!conversationId || this.isProcessing) return;
-
-        this.setProcessingState(true, "Exporting", "Export File");
-        // Success variable removed - not used
 
         try {
             const exportData = await this.fetchExportDataInternal(conversationId);
@@ -741,54 +717,239 @@ export class MarkdownExportTab {
                     finalFilename,
                     "text/markdown;charset=utf-8",
                 );
-                this.displayFeedback(
-                    `✅ Exported: ${finalFilename}`,
-                    "success",
-                    7000,
-                );
+
+                this.displayResults(`Exported: ${finalFilename}`);
+
                 if (this.filenameInput && this.filenameInput.value === this.defaultFilename) {
                     this.userModifiedFilename = false;
                     this.suggestFilename(conversationId);
                 }
-                // Success assignment removed
+
             }
         } catch (error) {
-            // Error display is handled within fetchExportDataInternal or here for download errors
+
             if (!(error instanceof Error && error.message.includes("Conversation fetch error"))) {
-                // Only display this generic error if it wasn't already handled by fetch
+
                 this.displayFeedback("Error during file preparation or download.", "error");
                 console.error("File export process error:", error);
             }
         } finally {
             setTimeout(() => {
                 this.setProcessingState(false);
-                // updateButtonStates is called within setProcessingState(false)
-            }, 100); // Small delay for visual feedback
+
+            }, 100);
         }
     }
 
-    /** Handles the Copy button click */
+    private closeResultsPanel(): void {
+        if (this.resultsPanel) {
+            const panel = this.resultsPanel;
+            this.resultsPanel = null;
+
+            const handleTransitionEnd = (event: TransitionEvent) => {
+                if (
+                    event.propertyName === "opacity" &&
+                    event.target === panel
+                ) {
+                    panel.remove();
+                    panel.removeEventListener(
+                        "transitionend",
+                        handleTransitionEnd,
+                    );
+                }
+            };
+            panel.style.opacity = "0";
+            panel.addEventListener("transitionend", handleTransitionEnd);
+
+            setTimeout(() => {
+                if (document.body.contains(panel)) {
+                    panel.remove();
+                    panel.removeEventListener(
+                        "transitionend",
+                        handleTransitionEnd,
+                    );
+                }
+            }, 500);
+        }
+    }
+
+    private createResultsHeader(): HTMLDivElement {
+        const header = document.createElement("div");
+        Object.assign(header.style, {
+            padding: theme.spacing.medium,
+            borderBottom: `1px solid ${theme.colors.borderPrimary}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexShrink: "0",
+        });
+        const title = document.createElement("h3");
+        Object.assign(title.style, {
+            margin: "0",
+            fontSize: theme.typography.fontSize.medium,
+            fontWeight: theme.typography.fontWeight.semibold,
+            color: theme.colors.textPrimary,
+        });
+        title.textContent = "Action Result";
+        header.appendChild(title);
+        header.appendChild(
+            this.createCloseButton(() => this.closeResultsPanel()),
+        );
+        return header;
+    }
+
+    private createCloseButton(handler: () => void): HTMLButtonElement {
+        const button = document.createElement("button");
+        Object.assign(button.style, {
+            backgroundColor: "transparent",
+            border: "none",
+            padding: "0",
+            cursor: "pointer",
+            color: theme.colors.textSecondary,
+            width: "28px",
+            height: "28px",
+            borderRadius: theme.borderRadius.small,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "18px",
+            transition: `all ${theme.transitions.duration.fast} ${theme.transitions.easing}`,
+        });
+        button.innerHTML = "✕";
+        button.title = "Close Results";
+        button.addEventListener("click", handler);
+        button.addEventListener("mouseover", () =>
+            Object.assign(button.style, {
+                backgroundColor: theme.colors.backgroundHover,
+                color: theme.colors.textPrimary,
+            }),
+        );
+        button.addEventListener("mouseout", () =>
+            Object.assign(button.style, {
+                backgroundColor: "transparent",
+                color: theme.colors.textSecondary,
+            }),
+        );
+        return button;
+    }
+
+    private createResultsContent(): HTMLDivElement {
+        const content = document.createElement("div");
+        content.id = "advancetab-results-content";
+        Object.assign(content.style, {
+            padding: theme.spacing.medium,
+            overflowY: "auto",
+            flexGrow: "1",
+            maxHeight: "calc(80vh - 60px)",
+            minHeight: "100px",
+        });
+        return content;
+    }
+
+    private createResultsPanel(): HTMLDivElement {
+        const panel = document.createElement("div");
+        panel.id = "advancetab-results-panel";
+        Object.assign(panel.style, {
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(800px, 90vw)",
+            maxHeight: "80vh",
+            backgroundColor: theme.colors.backgroundPrimary,
+            borderRadius: theme.borderRadius.medium,
+            boxShadow: theme.shadows.xlarge,
+            zIndex: "10001",
+            border: `1px solid ${theme.colors.borderPrimary}`,
+            display: "flex",
+            flexDirection: "column",
+            opacity: "0",
+            transition: `opacity ${theme.transitions.duration.normal} ${theme.transitions.easing}`,
+        });
+        panel.appendChild(this.createResultsHeader());
+        panel.appendChild(this.createResultsContent());
+        return panel;
+    }
+
+    private displayResults(response: any): void {
+        this.closeResultsPanel();
+        this.resultsPanel = this.createResultsPanel();
+        const content = this.resultsPanel.querySelector(
+            "#advancetab-results-content",
+        ) as HTMLDivElement;
+        if (!content) return;
+
+        const pre = document.createElement("pre");
+        Object.assign(pre.style, {
+            margin: 0,
+            padding: theme.spacing.medium,
+            backgroundColor: theme.colors.backgroundSecondary,
+            borderRadius: theme.borderRadius.small,
+            color: theme.colors.success,
+            fontSize: theme.typography.fontSize.small,
+            lineHeight: theme.typography.lineHeight.medium,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            overflow: "auto",
+            maxHeight: "calc(80vh - 100px)",
+        });
+
+        let displayText = "";
+
+        if (typeof response === "object" && response !== null) {
+
+            displayText = String(response ?? "No data received.");
+        } else {
+            displayText = String(response ?? "No data received.");
+        }
+        pre.textContent = `${displayText}`;
+
+        content.appendChild(pre);
+        document.body.appendChild(this.resultsPanel);
+        requestAnimationFrame(() => {
+
+            if (this.resultsPanel) this.resultsPanel.style.opacity = "1";
+        });
+
+        this.updateResultsFeedback("Action completed successfully.", false);
+    }
+
+    private updateResultsFeedback(
+        message: string,
+        isError: boolean = false,
+    ): void {
+        this.feedbackContainer.textContent = message;
+        this.feedbackContainer.style.color = isError
+            ? theme.colors.error
+            : theme.colors.success;
+        this.feedbackContainer.style.fontStyle = "normal";
+
+        setTimeout(() => {
+            if (this.feedbackContainer.textContent === message) {
+
+                this.feedbackContainer.textContent =
+                    "Action feedback will appear here briefly.";
+                this.feedbackContainer.style.color = theme.colors.textSecondary;
+                this.feedbackContainer.style.fontStyle = "italic";
+            }
+        }, 5000);
+    }
+
     private async handleCopyToClipboardClick(): Promise<void> {
         const conversationId = this.idInput?.value.trim();
         if (!conversationId || this.isProcessing) return;
-
-        this.setProcessingState(true, "Copying", "Copy Text");
-        // Success variable removed - not used
 
         try {
             const exportData = await this.fetchExportDataInternal(conversationId);
 
             if (exportData) {
                 await navigator.clipboard.writeText(exportData.markdownContent);
-                this.displayFeedback(
-                    `✅ Copied Markdown to clipboard!`,
-                    "success",
-                    5000,
-                );
-                // Success assignment removed
+
+                this.displayResults("Copied Markdown to clipboard!");
+
             }
         } catch (error) {
-            // Display specific clipboard error, otherwise rely on fetchExportDataInternal
+
             if (error instanceof DOMException && error.name === 'NotAllowedError') {
                 this.displayFeedback("Clipboard write permission denied.", "error");
             } else if (!(error instanceof Error && error.message.includes("Conversation fetch error"))) {
@@ -798,12 +959,11 @@ export class MarkdownExportTab {
         } finally {
             setTimeout(() => {
                 this.setProcessingState(false);
-                // updateButtonStates is called within setProcessingState(false)
-            }, 100); // Small delay
+
+            }, 100);
         }
     }
 
-    /** Displays feedback messages in the sidebar's feedback area */
     private displayFeedback(
         message: string | Error,
         type: "success" | "error" | "loading" | "info" | "warning",
@@ -821,15 +981,15 @@ export class MarkdownExportTab {
         if (message instanceof Error) {
             effectiveType = "error";
             iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16" style="flex-shrink: 0;"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/></svg>`;
-            // Try to extract a meaningful message, default if none
+
             messageText = message.message || "An unknown error occurred.";
-            // Be more specific for common errors if needed
+
             if (message.message.includes("Conversation not found")) {
                 messageText = "Error: Conversation not found (invalid ID?).";
             } else if (message.message.includes("Failed to fetch")) {
                 messageText = "Error: Network request failed. Check connection or service status.";
             } else {
-                messageText = `Error: ${messageText}`; // Prefix generic errors
+                messageText = `Error: ${messageText}`;
             }
         } else {
             messageText = message;

@@ -17,38 +17,31 @@ import { sendMessageToSW, SendMessageToSW } from "../utils/swMessenger";
 const WINDOW_MAIN_ID = "chrome-ext-window-main";
 const WINDOW_MAIN_OVERLAY_ID = "chrome-ext-window-main-overlay";
 
-/**
- * Manages the main floating window UI for the extension within the content script.
- * Handles tab switching, visibility toggling, and communication setup for tab components.
- */
 export class WindowMain {
-    // Core UI Elements
+
     private modal!: HTMLDivElement;
     private content!: HTMLDivElement;
     private sidebar!: HTMLDivElement;
     private mainContent!: HTMLDivElement;
     private overlay!: HTMLDivElement;
 
-    // Tab Component Instances
     private advanceTab!: AdvanceTab;
     private markdownTab!: MarkdownExportTab;
     private audioTab!: AudioCaptureTab;
     private cleanupTab!: ConversationCleanupTab;
 
-    // State and Management
     private tabs: Map<
         TabName,
         { button: HTMLButtonElement; container: HTMLDivElement }
     > = new Map();
-    private activeTabName: TabName = Advances.name; // Default tab
+    private activeTabName: TabName = Advances.name;
     private isVisible: boolean = false;
-    private currentConversationId: string | null = null; // Track current ChatGPT convo ID
+    private currentConversationId: string | null = null;
 
-    // Singleton instance
     private static instance: WindowMain | null = null;
 
     private constructor() {
-        // Singleton Check
+
         if (document.getElementById(WINDOW_MAIN_ID)) {
             if (WindowMain.instance) {
                 console.warn(
@@ -61,30 +54,25 @@ export class WindowMain {
             );
         }
 
-        // Create Core UI Elements
         this.overlay = this.createOverlay();
         this.modal = this.createModal();
         this.content = this.createContent();
         this.sidebar = this.createSidebar();
         this.mainContent = this.createMainContent();
 
-        // Instantiate Tab Components
         const sharedSendMessageFn: SendMessageToSW = sendMessageToSW;
-        this.advanceTab = new AdvanceTab(/* sharedSendMessageFn */); // Pass fn if needed
+        this.advanceTab = new AdvanceTab();
         this.markdownTab = new MarkdownExportTab(sharedSendMessageFn);
         this.audioTab = new AudioCaptureTab(sharedSendMessageFn);
         this.cleanupTab = new ConversationCleanupTab(sharedSendMessageFn);
 
-        // Assemble UI and Initialize State
         this.initializeLayout();
         this.initializeTabs();
         this.hide();
 
-        // Append to DOM
         document.body.appendChild(this.overlay);
         document.body.appendChild(this.modal);
 
-        // Setup Event Listeners
         this.setupKeyboardListener();
         this.setupUrlChangeListener();
 
@@ -92,21 +80,17 @@ export class WindowMain {
         console.log("WindowMain initialized.");
     }
 
-    // --- Initialization Methods ---
-
-    /** Assembles the main layout structure */
     private initializeLayout(): void {
         this.content.appendChild(this.sidebar);
         this.content.appendChild(this.mainContent);
         this.modal.appendChild(this.content);
     }
 
-    /** Creates tab buttons and content areas, sets the initial active tab */
     private initializeTabs(): void {
         this.currentConversationId = this.detectConversationIdFromUrl();
         this.activeTabName = this.currentConversationId
-            ? AudioCapture.name // Default to Audio if on a conversation page
-            : Advances.name; // Default to Advances/Advance otherwise
+            ? AudioCapture.name
+            : Advances.name;
 
         tabsConfig.forEach(({ name, icon, label }) => {
             this.createTab(name, icon, label);
@@ -115,9 +99,6 @@ export class WindowMain {
         this.switchTab(this.activeTabName);
     }
 
-    // --- Tab Creation and Switching ---
-
-    /** Creates the button and content container for a single tab */
     private createTab(name: TabName, icon: string, label: string): void {
         const tabButton = this.createTabButton(name, icon, label);
         this.sidebar.appendChild(tabButton);
@@ -163,14 +144,14 @@ export class WindowMain {
                 });
                 allowContainerScroll = false;
                 break;
-            // *** ADD CASE for ConversationCleanup ***
+
             case ConversationCleanup.name:
                 contentElement = this.cleanupTab.getElement();
                 Object.assign(contentElement.style, {
                     width: "100%",
                     height: "100%",
                 });
-                allowContainerScroll = true; // Assume the cleanup tab's content might scroll
+                allowContainerScroll = true;
                 break;
             default:
                 const knownTab = tabsConfig.find((t) => t.name === name);
@@ -186,13 +167,12 @@ export class WindowMain {
                     console.error(
                         `Unknown tab name encountered during creation: ${name}`,
                     );
-                    // Avoid adding an empty container for unknown tabs
-                    return; // Exit createTab early
+
+                    return;
                 }
                 break;
         }
 
-        // Only proceed if we have a valid content element
         if (contentElement) {
             if (allowContainerScroll) {
                 tabContentContainer.style.overflowY = "auto";
@@ -208,10 +188,9 @@ export class WindowMain {
                 container: tabContentContainer,
             });
         }
-        // No else needed here due to the early return/error log in the default case for unknown tabs
+
     }
 
-    /** Activates the specified tab and deactivates others */
     private switchTab(tabNameToActivate: TabName): void {
         if (!this.tabs.has(tabNameToActivate)) {
             console.warn(
@@ -221,7 +200,7 @@ export class WindowMain {
         }
         this.activeTabName = tabNameToActivate;
 
-        this.updateTabConversationContext(); // Update context based on the *new* active tab
+        this.updateTabConversationContext();
 
         this.tabs.forEach((tabData, name) => {
             const isActive = name === this.activeTabName;
@@ -232,9 +211,8 @@ export class WindowMain {
         console.log(`Switched to tab: ${this.activeTabName}`);
     }
 
-    /** Notifies active tab (if applicable) about the current conversation ID */
     private updateTabConversationContext(): void {
-        // Call the update method only on the *currently active* tab instance
+
         const activeTabInstance = this.getActiveTabInstance();
         if (
             activeTabInstance &&
@@ -244,7 +222,6 @@ export class WindowMain {
         }
     }
 
-    /** Helper to get the instance of the currently active tab component */
     private getActiveTabInstance(): {
         updateConversationId?: (id: string | null) => void;
     } | null {
@@ -257,15 +234,12 @@ export class WindowMain {
                 return this.advanceTab;
             case ConversationCleanup.name:
                 return this.cleanupTab;
-            // Add other cases here
+
             default:
                 return null;
         }
     }
 
-    // --- Core UI Element Creation Methods ---
-
-    /** Creates the main modal window element */
     private createModal(): HTMLDivElement {
         const modal = document.createElement("div");
         modal.id = WINDOW_MAIN_ID;
@@ -289,7 +263,7 @@ export class WindowMain {
         });
         return modal;
     }
-    /** Creates the inner container holding sidebar and main content */
+
     private createContent(): HTMLDivElement {
         const content = document.createElement("div");
         Object.assign(content.style, {
@@ -300,7 +274,7 @@ export class WindowMain {
         });
         return content;
     }
-    /** Creates the left sidebar for navigation tabs */
+
     private createSidebar(): HTMLDivElement {
         const sidebar = document.createElement("div");
         Object.assign(sidebar.style, {
@@ -314,21 +288,10 @@ export class WindowMain {
             gap: theme.spacing.xsmall,
             overflowY: "auto",
         });
-        // const title = document.createElement("h2");
-        // Object.assign(title.style, {
-        //     margin: `0 0 ${theme.spacing.medium} 0`,
-        //     fontSize: theme.typography.fontSize.medium,
-        //     fontWeight: theme.typography.fontWeight.semibold,
-        //     color: theme.colors.textPrimary,
-        //     paddingBottom: theme.spacing.small,
-        //     borderBottom: `1px solid ${theme.colors.borderSecondary}`,
-        //     textAlign: "center",
-        // });
-        // title.textContent = "Extension Tools";
-        // sidebar.appendChild(title);
+
         return sidebar;
     }
-    /** Creates the main content area where tab content is displayed */
+
     private createMainContent(): HTMLDivElement {
         const mainContent = document.createElement("div");
         Object.assign(mainContent.style, {
@@ -339,7 +302,7 @@ export class WindowMain {
         });
         return mainContent;
     }
-    /** Creates the background overlay */
+
     private createOverlay(): HTMLDivElement {
         const overlay = document.createElement("div");
         overlay.id = WINDOW_MAIN_OVERLAY_ID;
@@ -356,7 +319,7 @@ export class WindowMain {
         overlay.addEventListener("click", () => this.hide());
         return overlay;
     }
-    /** Creates a button element for the sidebar */
+
     private createTabButton(
         name: TabName,
         icon: string,
@@ -403,7 +366,7 @@ export class WindowMain {
         this.setupTabButtonListeners(button, name);
         return button;
     }
-    /** Creates placeholder content for tabs without specific components */
+
     private createPlaceholderContent(label: string): HTMLDivElement {
         const container = document.createElement("div");
         Object.assign(container.style, {
@@ -439,9 +402,6 @@ export class WindowMain {
         return container;
     }
 
-    // --- URL Detection & Handling ---
-
-    /** Extracts ChatGPT conversation ID from the current URL */
     private detectConversationIdFromUrl(): string | null {
         try {
             const url = new URL(window.location.href);
@@ -456,7 +416,7 @@ export class WindowMain {
         }
         return null;
     }
-    /** Handles URL changes to update the current conversation ID and notify active tab */
+
     private handleUrlChange(): void {
         const newId = this.detectConversationIdFromUrl();
         if (newId !== this.currentConversationId) {
@@ -464,10 +424,10 @@ export class WindowMain {
                 `WindowMain: Conversation ID changed from ${this.currentConversationId} to ${newId}`,
             );
             this.currentConversationId = newId;
-            this.updateTabConversationContext(); // Update the currently active tab
+            this.updateTabConversationContext();
         }
     }
-    /** Sets up listeners for URL changes (SPA navigation) */
+
     private setupUrlChangeListener(): void {
         if ("navigation" in window) {
             (window as any).navigation.addEventListener("navigate", () => {
@@ -479,12 +439,9 @@ export class WindowMain {
                 "WindowMain: Navigation API not supported, URL detection relies on popstate.",
             );
         }
-        this.handleUrlChange(); // Initial check
+        this.handleUrlChange();
     }
 
-    // --- Event Listeners and Helpers ---
-
-    /** Adds click and hover listeners to a tab button */
     private setupTabButtonListeners(
         button: HTMLButtonElement,
         tabName: TabName,
@@ -498,12 +455,7 @@ export class WindowMain {
             this.updateTabButtonStyle(button, this.activeTabName === tabName),
         );
     }
-    // formatTabName is likely unused now with direct labels
-    /** Finds the button element for a given tab name */
-    private findTabButton(name: TabName): HTMLButtonElement | null {
-        return this.tabs.get(name)?.button ?? null;
-    }
-    /** Updates the visual style of a tab button based on active/hover state */
+
     private updateTabButtonStyle(
         button: HTMLButtonElement,
         isActive: boolean,
@@ -529,7 +481,7 @@ export class WindowMain {
             });
         }
     }
-    /** Sets up the global keyboard listener for toggling and closing the window */
+
     private setupKeyboardListener(): void {
         document.addEventListener(
             "keydown",
@@ -548,18 +500,14 @@ export class WindowMain {
         );
     }
 
-    // --- Visibility Control ---
-
-    /** Toggles the visibility of the modal window */
     private toggle(): void {
         this.isVisible ? this.hide() : this.show();
     }
-    /** Shows the modal window with transitions */
+
     public show(): void {
         if (this.isVisible) return;
         this.modal.style.display = "flex";
         this.overlay.style.display = "block";
-        const _ = this.modal.offsetHeight;
         requestAnimationFrame(() => {
             this.modal.style.opacity = "1";
             this.overlay.style.opacity = "1";
@@ -569,7 +517,7 @@ export class WindowMain {
         this.handleUrlChange();
         console.log("WindowMain shown.");
     }
-    /** Hides the modal window with transitions */
+
     public hide(): void {
         if (!this.isVisible) return;
         const modalElement = this.modal;
@@ -625,9 +573,6 @@ export class WindowMain {
         );
     }
 
-    // --- Singleton Accessor ---
-
-    /** Gets the singleton instance, initializing it if necessary */
     public static initialize(): WindowMain {
         if (!WindowMain.instance) {
             if (document.getElementById(WINDOW_MAIN_ID)) {

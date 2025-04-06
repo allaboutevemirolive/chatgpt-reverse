@@ -1,9 +1,7 @@
 // packages/content-script/src/components/tabs/AdvanceTab.ts
-
 import { theme } from "@shared";
 import { ActionSidebar } from "../ActionSidebar";
 
-// --- Import API Utils ---
 import {
     fetchConversations,
     fetchConversationDetail,
@@ -23,14 +21,12 @@ import {
     fetchConversationAuthorCounts,
 } from "../../utils/apiUtils";
 
-// --- Import Download & Filename Utils ---
 import {
     triggerAudioDownload,
     downloadTextFile,
 } from "../../utils/downloadUtils";
 import { generateMarkdownFileName } from "../../utils/exportUtils";
 
-// --- Type Definitions ---
 type SidebarActionType = "primary" | "danger" | "default";
 interface SidebarActionConfig {
     label: string;
@@ -39,11 +35,11 @@ interface SidebarActionConfig {
 }
 
 export class AdvanceTab {
-    private element: HTMLDivElement; // Main container for the tab (flex row: sidebar + mainPanel)
-    private actionSidebar: ActionSidebar; // The sidebar component instance
-    private mainPanel: HTMLDivElement; // Area for form inputs and brief feedback
-    private feedbackContainer: HTMLDivElement; // Area for brief feedback messages within mainPanel
-    private resultsPanel: HTMLDivElement | null = null; // The separate popup results panel
+    private element: HTMLDivElement;
+    private actionSidebar: ActionSidebar;
+    private mainPanel: HTMLDivElement;
+    private feedbackContainer: HTMLDivElement;
+    private resultsPanel: HTMLDivElement | null = null;
 
     constructor() {
         console.log("AdvanceTab initialized");
@@ -56,31 +52,24 @@ export class AdvanceTab {
             overflow: "hidden",
         });
 
-        // Create Sidebar
         this.actionSidebar = new ActionSidebar();
         this.element.appendChild(this.actionSidebar.getElement());
 
-        // Create Main Panel (for inputs and feedback area)
         this.mainPanel = this.createMainPanel();
         this.element.appendChild(this.mainPanel);
 
-        // Create Input Fields within Main Panel
         this.createInputFields();
 
-        // Create Feedback Area within Main Panel
         this.feedbackContainer = this.createFeedbackContainer();
         this.mainPanel.appendChild(this.feedbackContainer);
 
-        // Setup Action Buttons on the Sidebar
         this.setupActionButtons();
     }
 
-    /** Returns the root HTML element for this tab */
     getElement(): HTMLDivElement {
         return this.element;
     }
 
-    /** Updates context - currently logs and updates conversation ID input */
     updateConversationId(conversationId: string | null): void {
         console.log(
             `AdvanceTab: Conversation ID updated to: ${conversationId}`,
@@ -91,10 +80,8 @@ export class AdvanceTab {
         if (convoIdInput) {
             convoIdInput.value = conversationId ?? "";
         }
-        // Could potentially disable/enable some sidebar actions based on ID presence
-    }
 
-    // --- UI Creation Methods ---
+    }
 
     private createMainPanel(): HTMLDivElement {
         const panel = document.createElement("div");
@@ -110,7 +97,7 @@ export class AdvanceTab {
     }
 
     private createInputFields(): void {
-        // ... (Same implementation as before, creates the grid and fields) ...
+
         const formContainer = document.createElement("div");
         Object.assign(formContainer.style, {
             display: "grid",
@@ -215,59 +202,54 @@ export class AdvanceTab {
         const labelElement = document.createElement("label");
         const input = document.createElement("input");
 
-        // --- Common Label Styling ---
         Object.assign(labelElement.style, {
             fontSize: theme.typography.fontSize.small,
             color: theme.colors.textSecondary,
-            fontWeight: theme.typography.fontWeight.medium, // Default weight
-            flexShrink: "0", // Prevent label from shrinking
+            fontWeight: theme.typography.fontWeight.medium,
+            flexShrink: "0",
         });
         labelElement.textContent = label;
         labelElement.htmlFor = `adv-input-${name}`;
 
-        // --- Input Setup ---
         input.type = type;
         input.name = name;
         input.id = `adv-input-${name}`;
 
         if (type === "checkbox") {
-            // --- Checkbox Specific Styling & Layout ---
+
             Object.assign(container.style, {
                 display: "flex",
-                flexDirection: "row", // Label first, then checkbox
+                flexDirection: "row",
                 alignItems: "center",
-                gap: theme.spacing.small, // Increased gap
-                padding: theme.spacing.small, // Add padding around
-                backgroundColor: `${theme.colors.accentPrimary}15`, // Subtle accent background (15% opacity)
-                border: `1px solid ${theme.colors.accentPrimary}50`, // Subtle accent border (50% opacity)
-                borderRadius: theme.borderRadius.medium, // Rounded corners for the container
-                marginTop: theme.spacing.xsmall, // Add a bit of top margin to separate visually if needed
+                gap: theme.spacing.small,
+                padding: theme.spacing.small,
+                backgroundColor: `${theme.colors.accentPrimary}15`,
+                border: `1px solid ${theme.colors.accentPrimary}50`,
+                borderRadius: theme.borderRadius.medium,
+                marginTop: theme.spacing.xsmall,
             });
 
-            // Make label bold for checkboxes
             labelElement.style.fontWeight = theme.typography.fontWeight.bold;
-            labelElement.style.color = theme.colors.textPrimary; // Make label text darker for contrast
+            labelElement.style.color = theme.colors.textPrimary;
 
-            // Style the checkbox input itself
             Object.assign(input.style, {
                 accentColor: theme.colors.accentPrimary,
-                width: "20px", // Larger checkbox
-                height: "20px", // Larger checkbox
+                width: "20px",
+                height: "20px",
                 cursor: "pointer",
-                margin: "0", // Remove default margins if any
+                margin: "0",
             });
             (input as HTMLInputElement).checked = defaultValue === "true";
 
-            // Append in label -> input order
             container.appendChild(labelElement);
             container.appendChild(input);
         } else {
-            // --- Text/Number/Other Input Styling & Layout ---
+
             Object.assign(container.style, {
                 display: "flex",
-                flexDirection: "column", // Label on top
+                flexDirection: "column",
                 alignItems: "stretch",
-                gap: theme.spacing.xsmall, // Standard gap
+                gap: theme.spacing.xsmall,
             });
 
             Object.assign(input.style, {
@@ -285,7 +267,6 @@ export class AdvanceTab {
             input.value = defaultValue || "";
             input.placeholder = `Enter ${label}...`;
 
-            // Focus/Blur styling for non-checkbox inputs
             input.addEventListener("focus", () => {
                 input.style.borderColor = theme.colors.accentPrimary;
                 input.style.boxShadow = `0 0 0 1px ${theme.colors.accentPrimary}60`;
@@ -295,7 +276,6 @@ export class AdvanceTab {
                 input.style.boxShadow = "none";
             });
 
-            // Append in label -> input order
             container.appendChild(labelElement);
             container.appendChild(input);
         }
@@ -303,14 +283,13 @@ export class AdvanceTab {
         return container;
     }
 
-    /** Creates the area for brief inline feedback messages */
     private createFeedbackContainer(): HTMLDivElement {
         const feedbackDiv = document.createElement("div");
-        feedbackDiv.id = "advance-tab-feedback"; // Give it an ID
+        feedbackDiv.id = "advance-tab-feedback";
         Object.assign(feedbackDiv.style, {
             marginTop: theme.spacing.medium,
             padding: theme.spacing.medium,
-            backgroundColor: theme.colors.backgroundPrimary, // Slightly different BG maybe
+            backgroundColor: theme.colors.backgroundPrimary,
             borderRadius: theme.borderRadius.small,
             border: `1px solid ${theme.colors.borderSecondary}`,
             minHeight: "40px",
@@ -319,19 +298,17 @@ export class AdvanceTab {
             fontStyle: "italic",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center", // Center align text
+            justifyContent: "center",
             textAlign: "center",
-            transition: "color 0.3s ease", // Transition color change
+            transition: "color 0.3s ease",
         });
         feedbackDiv.textContent = "Action feedback will appear here briefly.";
         return feedbackDiv;
     }
 
-    // --- Results Popup Panel Methods (Adapted from old code) ---
-
     private createResultsPanel(): HTMLDivElement {
         const panel = document.createElement("div");
-        panel.id = "advancetab-results-panel"; // Unique ID
+        panel.id = "advancetab-results-panel";
         Object.assign(panel.style, {
             position: "fixed",
             top: "50%",
@@ -342,7 +319,7 @@ export class AdvanceTab {
             backgroundColor: theme.colors.backgroundPrimary,
             borderRadius: theme.borderRadius.medium,
             boxShadow: theme.shadows.xlarge,
-            zIndex: "10001", // Higher than main window overlay
+            zIndex: "10001",
             border: `1px solid ${theme.colors.borderPrimary}`,
             display: "flex",
             flexDirection: "column",
@@ -381,13 +358,13 @@ export class AdvanceTab {
 
     private createResultsContent(): HTMLDivElement {
         const content = document.createElement("div");
-        content.id = "advancetab-results-content"; // ID for easier targeting
+        content.id = "advancetab-results-content";
         Object.assign(content.style, {
             padding: theme.spacing.medium,
             overflowY: "auto",
             flexGrow: "1",
-            maxHeight: "calc(80vh - 60px)", // Adjust based on header height
-            minHeight: "100px", // Ensure some minimum content height
+            maxHeight: "calc(80vh - 60px)",
+            minHeight: "100px",
         });
         return content;
     }
@@ -409,7 +386,7 @@ export class AdvanceTab {
             fontSize: "18px",
             transition: `all ${theme.transitions.duration.fast} ${theme.transitions.easing}`,
         });
-        button.innerHTML = "✕"; // Cross symbol
+        button.innerHTML = "✕";
         button.title = "Close Results";
         button.addEventListener("click", handler);
         button.addEventListener("mouseover", () =>
@@ -430,24 +407,23 @@ export class AdvanceTab {
     private closeResultsPanel(): void {
         if (this.resultsPanel) {
             const panel = this.resultsPanel;
-            this.resultsPanel = null; // Clear reference
+            this.resultsPanel = null;
 
             const handleTransitionEnd = (event: TransitionEvent) => {
                 if (
                     event.propertyName === "opacity" &&
                     event.target === panel
                 ) {
-                    panel.remove(); // Remove from DOM after fade out
+                    panel.remove();
                     panel.removeEventListener(
                         "transitionend",
                         handleTransitionEnd,
                     );
                 }
             };
-            panel.style.opacity = "0"; // Start fade out
+            panel.style.opacity = "0";
             panel.addEventListener("transitionend", handleTransitionEnd);
 
-            // Fallback removal after timeout
             setTimeout(() => {
                 if (document.body.contains(panel)) {
                     panel.remove();
@@ -456,22 +432,20 @@ export class AdvanceTab {
                         handleTransitionEnd,
                     );
                 }
-            }, 500); // Slightly longer than transition
+            }, 500);
         }
     }
 
-    // --- Display Logic (Modified) ---
-
     private displayLoading(): void {
-        // Show loading in the *inline* feedback area
+
         this.feedbackContainer.textContent = "⏳ Loading...";
         this.feedbackContainer.style.color = theme.colors.textSecondary;
         this.feedbackContainer.style.fontStyle = "normal";
     }
 
     private displayResults(response: any): void {
-        this.closeResultsPanel(); // Close any previous popup
-        this.resultsPanel = this.createResultsPanel(); // Create the popup structure
+        this.closeResultsPanel();
+        this.resultsPanel = this.createResultsPanel();
         const content = this.resultsPanel.querySelector(
             "#advancetab-results-content",
         ) as HTMLDivElement;
@@ -483,38 +457,37 @@ export class AdvanceTab {
             padding: theme.spacing.medium,
             backgroundColor: theme.colors.backgroundSecondary,
             borderRadius: theme.borderRadius.small,
-            color: theme.colors.success, // Use success color for result text
+            color: theme.colors.success,
             fontSize: theme.typography.fontSize.small,
             lineHeight: theme.typography.lineHeight.medium,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
             overflow: "auto",
-            maxHeight: "calc(80vh - 100px)", // Ensure pre doesn't overflow content div
+            maxHeight: "calc(80vh - 100px)",
         });
 
         let displayText = "";
-        // Simplified display logic for the popup
+
         if (typeof response === "object" && response !== null) {
-            displayText = JSON.stringify(response, null, 2); // Pretty print JSON
+            displayText = JSON.stringify(response, null, 2);
         } else {
-            displayText = String(response ?? "No data received."); // Handle null/undefined
+            displayText = String(response ?? "No data received.");
         }
-        pre.textContent = `✅ Success:\n\n${displayText}`; // Add success prefix
+        pre.textContent = `✅ Success:\n\n${displayText}`;
 
         content.appendChild(pre);
-        document.body.appendChild(this.resultsPanel); // Add popup to body
+        document.body.appendChild(this.resultsPanel);
         requestAnimationFrame(() => {
-            // Start fade-in animation
+
             if (this.resultsPanel) this.resultsPanel.style.opacity = "1";
         });
 
-        // Clear the inline feedback area
         this.updateResultsFeedback("Action completed successfully.", false);
     }
 
     private displayError(error: Error): void {
-        this.closeResultsPanel(); // Close any previous popup
-        this.resultsPanel = this.createResultsPanel(); // Create the popup structure
+        this.closeResultsPanel();
+        this.resultsPanel = this.createResultsPanel();
         const content = this.resultsPanel.querySelector(
             "#advancetab-results-content",
         ) as HTMLDivElement;
@@ -532,22 +505,20 @@ export class AdvanceTab {
             overflow: "auto",
             fontFamily: "monospace",
             fontSize: theme.typography.fontSize.small,
-            maxHeight: "calc(80vh - 100px)", // Ensure div doesn't overflow content
+            maxHeight: "calc(80vh - 100px)",
         });
         errorDiv.textContent = `❌ Error: ${error.name || "Unknown Error"}\n\nMessage:\n${error.message || "No message provided."}${error.stack ? `\n\nStack Trace:\n${error.stack}` : ""}`;
 
         content.appendChild(errorDiv);
-        document.body.appendChild(this.resultsPanel); // Add popup to body
+        document.body.appendChild(this.resultsPanel);
         requestAnimationFrame(() => {
-            // Start fade-in animation
+
             if (this.resultsPanel) this.resultsPanel.style.opacity = "1";
         });
 
-        // Also show error briefly in the inline feedback
         this.updateResultsFeedback(`Error: ${error.message}`, true);
     }
 
-    /** Displays temporary feedback in the inline container */
     private updateResultsFeedback(
         message: string,
         isError: boolean = false,
@@ -555,24 +526,22 @@ export class AdvanceTab {
         this.feedbackContainer.textContent = message;
         this.feedbackContainer.style.color = isError
             ? theme.colors.error
-            : theme.colors.success; // Use appropriate color
+            : theme.colors.success;
         this.feedbackContainer.style.fontStyle = "normal";
 
-        // Optional: Clear feedback after a delay
         setTimeout(() => {
             if (this.feedbackContainer.textContent === message) {
-                // Avoid clearing newer messages
+
                 this.feedbackContainer.textContent =
                     "Action feedback will appear here briefly.";
                 this.feedbackContainer.style.color = theme.colors.textSecondary;
                 this.feedbackContainer.style.fontStyle = "italic";
             }
-        }, 5000); // Clear after 5 seconds
+        }, 5000);
     }
 
-    // --- Action Button Setup ---
     private setupActionButtons(): void {
-        // ... (actionSections definition remains the same) ...
+
         const actionSections: Record<string, SidebarActionConfig[]> = {
             "Data Operations": [
                 {
@@ -647,7 +616,7 @@ export class AdvanceTab {
         for (const sectionTitle in actionSections) {
             this.addSectionHeader(sectionTitle);
             actionSections[sectionTitle].forEach((action) => {
-                // Add action to the ActionSidebar instance, binding 'this'
+
                 this.actionSidebar.addAction(
                     action.label,
                     action.handler.bind(this),
@@ -658,7 +627,7 @@ export class AdvanceTab {
     }
 
     private addSectionHeader(title: string): void {
-        // ... (Same implementation as before) ...
+
         const header = document.createElement("h3");
         Object.assign(header.style, {
             fontSize: theme.typography.fontSize.small,
@@ -675,9 +644,8 @@ export class AdvanceTab {
         this.actionSidebar.getElement().appendChild(header);
     }
 
-    // --- Form Value Retrieval ---
     private getFormValues(): Record<string, string | boolean> {
-        // ... (Same implementation as before) ...
+
         const formValues: Record<string, string | boolean> = {};
         this.mainPanel.querySelectorAll("input").forEach((input) => {
             if (input.name) {
@@ -692,17 +660,15 @@ export class AdvanceTab {
         return formValues;
     }
 
-    // --- Action Handlers (Modified for separate results/feedback) ---
-
     private async handleFetchList(): Promise<void> {
-        this.displayLoading(); // Show inline loading
+        this.displayLoading();
         try {
             const { offset, limit, order } = this.getFormValues();
             const result = await fetchConversations({ offset, limit, order });
-            this.displayResults(result); // Show result in popup panel
+            this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);
-        } // Show error in popup panel
+        }
     }
 
     private async handleFetchOne(): Promise<void> {
@@ -712,10 +678,10 @@ export class AdvanceTab {
             const result = await fetchConversationDetail(
                 conversationid as string,
             );
-            this.displayResults(result); // Show result in popup
+            this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);
-        } // Show error in popup
+        }
     }
 
     private async handleDelete(): Promise<void> {
@@ -730,21 +696,19 @@ export class AdvanceTab {
             const result = await deleteConversationById(
                 conversationid as string,
             );
-            // Show brief feedback inline, potentially full result in popup
+
             this.updateResultsFeedback(
                 `Conversation ${conversationid} marked deleted.`,
             );
-            // Optionally display detailed 'result' object in popup if needed:
+
             this.displayResults({
                 message: `Conversation ${conversationid} marked deleted.`,
                 details: result,
             });
         } catch (error) {
             this.displayError(error as Error);
-        } // Show error in popup
+        }
     }
-
-    // ... Other handlers similarly adapted ...
 
     private async handleShare(): Promise<void> {
         const { conversationid, currentnodeid } = this.getFormValues();
@@ -754,7 +718,7 @@ export class AdvanceTab {
                 conversationId: conversationid as string,
                 currentNodeId: currentnodeid as string,
             });
-            this.displayResults(result); // Show share URL etc. in popup
+            this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);
         }
@@ -771,7 +735,7 @@ export class AdvanceTab {
             this.displayResults({
                 message: `Conversation ${conversationid} archived.`,
                 details: result,
-            }); // Optional popup
+            });
         } catch (error) {
             this.displayError(error as Error);
         }
@@ -791,7 +755,7 @@ export class AdvanceTab {
             this.displayResults({
                 message: `Conversation ${conversationid} renamed.`,
                 details: result,
-            }); // Optional popup
+            });
         } catch (error) {
             this.displayError(error as Error);
         }
@@ -807,7 +771,7 @@ export class AdvanceTab {
                 numCompletions: numcompletions,
                 inSearchMode: insearchmode,
             });
-            this.displayResults(result); // Show results in popup
+            this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);
         }
@@ -829,7 +793,7 @@ export class AdvanceTab {
             this.displayResults({
                 message: `Feedback sent for message ${messageid}.`,
                 details: result,
-            }); // Optional popup
+            });
         } catch (error) {
             this.displayError(error as Error);
         }
@@ -853,10 +817,10 @@ export class AdvanceTab {
             );
             this.updateResultsFeedback(
                 `Audio download initiated for ${audioData.messageId}.`,
-            ); // Inline feedback is sufficient
+            );
         } catch (error) {
             this.displayError(error as Error);
-        } // Show error in popup if fetch fails
+        }
     }
 
     private async handleExportConversationAsMarkdown(): Promise<void> {
@@ -877,10 +841,10 @@ export class AdvanceTab {
             );
             this.updateResultsFeedback(
                 `Markdown export '${fileName}' initiated.`,
-            ); // Inline feedback is sufficient
+            );
         } catch (error) {
             this.displayError(error as Error);
-        } // Show error in popup if fetch fails
+        }
     }
 
     private async handleConversationMessageIds(): Promise<void> {
@@ -929,7 +893,7 @@ export class AdvanceTab {
             });
             this.updateResultsFeedback(
                 `Marked helpful: ${messageid}.`,
-            ); /* Optional: this.displayResults(result); */
+            );
             this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);
@@ -945,7 +909,7 @@ export class AdvanceTab {
             });
             this.updateResultsFeedback(
                 `Marked unhelpful: ${messageid}.`,
-            ); /* Optional: this.displayResults(result); */
+            );
             this.displayResults(result);
         } catch (error) {
             this.displayError(error as Error);

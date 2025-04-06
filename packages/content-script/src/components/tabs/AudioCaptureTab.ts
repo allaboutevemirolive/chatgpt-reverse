@@ -1,5 +1,5 @@
 // packages/content-script/src/components/tabs/AudioCaptureTab.ts
-import { theme } from "@shared"; // Ensure this path resolves correctly
+import { theme } from "@shared";
 import { triggerAudioDownload } from "@/utils/downloadUtils";
 import { SendMessageToSW } from "@/utils/swMessenger";
 
@@ -48,8 +48,8 @@ export class AudioCaptureTab {
         }
 
         if (this.currentConversationId) {
-            this.convIdDisplay.textContent = `ID: ${this.currentConversationId}`; // Add prefix for context
-            this.convIdDisplay.title = this.currentConversationId; // Full ID on hover
+            this.convIdDisplay.textContent = `ID: ${this.currentConversationId}`;
+            this.convIdDisplay.title = this.currentConversationId;
             this.convIdDisplay.style.color = theme.colors.textPrimary;
             this.convIdDisplay.style.opacity = "1";
             this.loadButton.disabled = false;
@@ -80,65 +80,45 @@ export class AudioCaptureTab {
         }
     }
 
-    // --- Private Methods ---
-
     private buildUI(): HTMLDivElement {
         const container = document.createElement("div");
         Object.assign(container.style, {
             display: "flex",
             flexDirection: "column",
-            gap: theme.spacing.medium, // Main gap between sections
+            gap: theme.spacing.medium,
             padding: theme.spacing.large,
             boxSizing: "border-box",
             height: "100%",
-            backgroundColor: theme.colors.backgroundSecondary, // Set base background
+            backgroundColor: theme.colors.backgroundSecondary,
         });
 
-        // // 1. Header Section
-        // const header = document.createElement("h2");
-        // Object.assign(header.style, {
-        //     margin: "0",
-        //     fontSize: theme.typography.fontSize.large,
-        //     fontWeight: theme.typography.fontWeight.semibold,
-        //     color: theme.colors.textPrimary,
-        //     borderBottom: `1px solid ${theme.colors.borderPrimary}`,
-        //     paddingBottom: theme.spacing.medium,
-        //     flexShrink: "0",
-        //     textAlign: "center",
-        // });
-        // header.textContent = AudioCapture.label;
-        // container.appendChild(header);
-
-        // 2. Action Bar (Combined Controls: ID, Load, Options)
         const actionBar = document.createElement("div");
         Object.assign(actionBar.style, {
             display: "flex",
-            alignItems: "center", // Vertically center items in the bar
-            justifyContent: "space-between", // Space out left/right groups
+            alignItems: "center",
+            justifyContent: "space-between",
             gap: theme.spacing.medium,
             flexShrink: "0",
-            flexWrap: "wrap", // Allow wrapping on smaller screens
-            padding: `${theme.spacing.small} 0`, // Padding top/bottom for the bar
-            borderBottom: `1px solid ${theme.colors.borderPrimary}`, // Separator below action bar
+            flexWrap: "wrap",
+            padding: `${theme.spacing.small} 0`,
+            borderBottom: `1px solid ${theme.colors.borderPrimary}`,
         });
         container.appendChild(actionBar);
 
-        // --- Left Group: ID Display + Load Button ---
         const leftGroup = document.createElement("div");
         Object.assign(leftGroup.style, {
             display: "flex",
             alignItems: "center",
             gap: theme.spacing.medium,
-            flexWrap: "nowrap", // Prevent wrapping within this group initially
+            flexWrap: "nowrap",
         });
         actionBar.appendChild(leftGroup);
 
-        // Compact ID Display (No separate label)
         this.convIdDisplay = document.createElement("p");
         this.convIdDisplay.id = "audio-capture-conv-id";
         Object.assign(this.convIdDisplay.style, {
-            padding: `${theme.spacing.xsmall} ${theme.spacing.small}`, // Reduced padding
-            backgroundColor: theme.colors.backgroundPrimary, // Contrast bg
+            padding: `${theme.spacing.xsmall} ${theme.spacing.small}`,
+            backgroundColor: theme.colors.backgroundPrimary,
             border: `1px solid ${theme.colors.borderPrimary}`,
             borderRadius: theme.borderRadius.small,
             color: theme.colors.textSecondary,
@@ -148,9 +128,9 @@ export class AudioCaptureTab {
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            width: "350px", // Limit width
-            // minHeight: '32px', // Reduced height
-            lineHeight: "1.4", // Match button line height
+            width: "350px",
+
+            lineHeight: "1.4",
             display: "flex",
             alignItems: "center",
             transition: "color 0.2s, opacity 0.2s",
@@ -158,29 +138,26 @@ export class AudioCaptureTab {
         });
         leftGroup.appendChild(this.convIdDisplay);
 
-        // Load Button
         this.loadButton = this.createActionButton(
-            // Load icon + text
+
             `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: ${theme.spacing.xsmall};"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg> Load Messages`,
             () => this.loadMessages(),
-            true, // Start disabled
-            "primary", // Make it the primary action button
+            true,
+            "primary",
         );
-        // Adjust padding for slightly smaller button
+
         this.loadButton.style.padding = `${theme.spacing.xsmall} ${theme.spacing.medium}`;
         leftGroup.appendChild(this.loadButton);
 
-        // --- Right Group: Download Options ---
         const rightGroup = document.createElement("div");
         Object.assign(rightGroup.style, {
             display: "flex",
             alignItems: "center",
             gap: theme.spacing.medium,
-            flexWrap: "nowrap", // Prevent wrapping within this group initially
+            flexWrap: "nowrap",
         });
         actionBar.appendChild(rightGroup);
 
-        // Voice Select (Inline Label)
         const voiceGroup = this.createInlineSelectGroup(
             "Voice:",
             "audio-voice-select",
@@ -189,7 +166,6 @@ export class AudioCaptureTab {
         this.voiceSelect = voiceGroup.querySelector("select")!;
         rightGroup.appendChild(voiceGroup);
 
-        // Format Select (Inline Label)
         const formatGroup = this.createInlineSelectGroup(
             "Format:",
             "audio-format-select",
@@ -198,7 +174,6 @@ export class AudioCaptureTab {
         this.formatSelect = formatGroup.querySelector("select")!;
         rightGroup.appendChild(formatGroup);
 
-        // 3. Message List Container
         this.messageListContainer = document.createElement("div");
         this.messageListContainer.id = "audio-message-list";
         Object.assign(this.messageListContainer.style, {
@@ -206,39 +181,37 @@ export class AudioCaptureTab {
             overflowY: "auto",
             border: `1px solid ${theme.colors.borderPrimary}`,
             borderRadius: theme.borderRadius.medium,
-            backgroundColor: theme.colors.backgroundPrimary, // List background
-            // No internal padding needed if items handle it
-            minHeight: "150px", // Ensure visibility
-            marginTop: 0, // Remove top margin, rely on container gap
+            backgroundColor: theme.colors.backgroundPrimary,
+
+            minHeight: "150px",
+            marginTop: 0,
         });
         container.appendChild(this.messageListContainer);
         this.setPlaceholderMessage(
             "Navigate to a ChatGPT conversation page...",
-        ); // Initial placeholder
+        );
 
-        // 4. Feedback Area
         this.feedbackArea = document.createElement("div");
         this.feedbackArea.id = "audio-capture-feedback";
         Object.assign(this.feedbackArea.style, {
-            padding: `${theme.spacing.small} ${theme.spacing.medium}`, // Standard padding
+            padding: `${theme.spacing.small} ${theme.spacing.medium}`,
             borderRadius: theme.borderRadius.small,
-            border: `1px solid transparent`, // Border set based on type
+            border: `1px solid transparent`,
             color: theme.colors.textSecondary,
             fontSize: theme.typography.fontSize.small,
-            minHeight: "24px", // Reserve space
+            minHeight: "24px",
             textAlign: "center",
             display: "none",
             transition: `all ${theme.transitions.duration.fast} ${theme.transitions.easing}`,
             flexShrink: "0",
-            marginTop: "auto", // Push to bottom if list doesn't fill space
-            backgroundColor: theme.colors.backgroundSecondary, // Match container bg
+            marginTop: "auto",
+            backgroundColor: theme.colors.backgroundSecondary,
         });
         container.appendChild(this.feedbackArea);
 
         return container;
     }
 
-    /** Helper to create a primary action button */
     private createActionButton(
         htmlContent: string,
         onClick: () => void,
@@ -251,17 +224,17 @@ export class AudioCaptureTab {
         button.addEventListener("click", onClick);
 
         const baseStyles: Partial<CSSStyleDeclaration> = {
-            padding: `${theme.spacing.small} ${theme.spacing.large}`, // Default padding
+            padding: `${theme.spacing.small} ${theme.spacing.large}`,
             border: `1px solid ${theme.colors.borderPrimary}`,
             borderRadius: theme.borderRadius.small,
             fontSize: theme.typography.fontSize.small,
-            fontWeight: theme.typography.fontWeight.semibold, // Bolder for action buttons
+            fontWeight: theme.typography.fontWeight.semibold,
             cursor: disabled ? "not-allowed" : "pointer",
             transition: `all ${theme.transitions.duration.fast} ${theme.transitions.easing}`,
             textAlign: "center",
             backgroundColor: theme.colors.backgroundSecondary,
             color: theme.colors.textPrimary,
-            opacity: disabled ? "0.7" : "1", // Use opacity for disabled state
+            opacity: disabled ? "0.7" : "1",
             whiteSpace: "nowrap",
             lineHeight: "1.3",
             display: "inline-flex",
@@ -277,7 +250,7 @@ export class AudioCaptureTab {
 
         if (type === "primary") {
             baseStyles.backgroundColor = theme.colors.accentPrimary;
-            baseStyles.color = theme.colors.backgroundPrimary; // Use contrast color
+            baseStyles.color = theme.colors.backgroundPrimary;
             baseStyles.border = "none";
             hoverBgColor = theme.colors.accentHover;
             activeBgColor = theme.colors.accentActive;
@@ -297,7 +270,7 @@ export class AudioCaptureTab {
                 button.style.boxShadow = theme.shadows.medium;
             });
             button.addEventListener("mouseout", () => {
-                Object.assign(button.style, baseStyles); // Reset to original calculated base
+                Object.assign(button.style, baseStyles);
             });
             button.addEventListener("mousedown", () => {
                 button.style.backgroundColor = activeBgColor;
@@ -305,10 +278,10 @@ export class AudioCaptureTab {
                     button.style.color = theme.colors.backgroundPrimary;
                 if (activeBorderColor !== "none")
                     button.style.borderColor = activeBorderColor;
-                button.style.boxShadow = theme.shadows.small; // Less shadow when pressed
+                button.style.boxShadow = theme.shadows.small;
             });
             button.addEventListener("mouseup", () => {
-                // Revert to hover state if mouse is still over
+
                 if (button.matches(":hover")) {
                     button.style.backgroundColor = hoverBgColor;
                     if (type === "primary")
@@ -317,7 +290,7 @@ export class AudioCaptureTab {
                         button.style.borderColor = hoverBorderColor;
                     button.style.boxShadow = theme.shadows.medium;
                 } else {
-                    Object.assign(button.style, baseStyles); // Fully reset if mouse left
+                    Object.assign(button.style, baseStyles);
                 }
             });
         }
@@ -325,7 +298,6 @@ export class AudioCaptureTab {
         return button;
     }
 
-    /** Helper for inline label + select */
     private createInlineSelectGroup(
         labelText: string,
         id: string,
@@ -334,16 +306,16 @@ export class AudioCaptureTab {
         const group = document.createElement("div");
         Object.assign(group.style, {
             display: "flex",
-            alignItems: "center", // Align label and select vertically
-            gap: theme.spacing.xsmall, // Space between label and select
+            alignItems: "center",
+            gap: theme.spacing.xsmall,
         });
 
         const label = document.createElement("label");
         Object.assign(label.style, {
             fontSize: theme.typography.fontSize.small,
-            color: theme.colors.textSecondary, // Dimmer label text
+            color: theme.colors.textSecondary,
             fontWeight: theme.typography.fontWeight.medium,
-            whiteSpace: "nowrap", // Prevent label wrapping
+            whiteSpace: "nowrap",
         });
         label.textContent = labelText;
         label.htmlFor = id;
@@ -351,8 +323,8 @@ export class AudioCaptureTab {
         const select = document.createElement("select");
         select.id = id;
         Object.assign(select.style, {
-            padding: `${theme.spacing.xxsmall} ${theme.spacing.small}`, // Reduced padding
-            backgroundColor: theme.colors.backgroundPrimary, // Use primary bg for contrast
+            padding: `${theme.spacing.xxsmall} ${theme.spacing.small}`,
+            backgroundColor: theme.colors.backgroundPrimary,
             border: `1px solid ${theme.colors.borderPrimary}`,
             borderRadius: theme.borderRadius.small,
             color: theme.colors.textPrimary,
@@ -360,21 +332,21 @@ export class AudioCaptureTab {
             outline: "none",
             appearance: "none",
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23${theme.colors.textSecondary.substring(1)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
-            backgroundPosition: `right ${theme.spacing.small} center`, // Adjusted position
+            backgroundPosition: `right ${theme.spacing.small} center`,
             backgroundRepeat: "no-repeat",
-            backgroundSize: "0.8em 0.8em", // Smaller chevron
+            backgroundSize: "0.8em 0.8em",
             cursor: "pointer",
-            minWidth: "100px", // Give dropdown some base width
-            lineHeight: "1.3", // Match button
+            minWidth: "100px",
+            lineHeight: "1.3",
         });
         options.forEach((v) => {
-            const opt = new Option(v.charAt(0).toUpperCase() + v.slice(1), v); // Capitalize option text
+            const opt = new Option(v.charAt(0).toUpperCase() + v.slice(1), v);
             select.add(opt);
         });
 
         select.addEventListener("focus", () => {
             select.style.borderColor = theme.colors.accentPrimary;
-            select.style.boxShadow = `0 0 0 1px ${theme.colors.accentPrimary}60`; // Subtle focus ring
+            select.style.boxShadow = `0 0 0 1px ${theme.colors.accentPrimary}60`;
         });
         select.addEventListener("blur", () => {
             select.style.borderColor = theme.colors.borderPrimary;
@@ -403,7 +375,7 @@ export class AudioCaptureTab {
                 fontStyle: "italic",
                 textAlign: "center",
                 padding: theme.spacing.large,
-                // Center vertically using flex on parent
+
                 margin: "auto",
                 display: "flex",
                 alignItems: "center",
@@ -419,8 +391,8 @@ export class AudioCaptureTab {
         if (!this.currentConversationId || this.isLoadingMessages) return;
 
         this.isLoadingMessages = true;
-        this.setPlaceholderMessage("⏳ Loading messages..."); // Loading indicator
-        this.displayFeedback("Loading messages...", "loading", 0); // No auto-hide for loading
+        this.setPlaceholderMessage("⏳ Loading messages...");
+        this.displayFeedback("Loading messages...", "loading", 0);
         this.loadButton.disabled = true;
         const originalLoadHtml = this.loadButton.innerHTML;
         this.loadButton.innerHTML = `
@@ -446,7 +418,7 @@ export class AudioCaptureTab {
                 );
                 this.displayFeedback("No downloadable messages found.", "info");
             } else {
-                this.messageListContainer.innerHTML = ""; // Clear placeholder
+                this.messageListContainer.innerHTML = "";
                 this.displayMessages(
                     assistantMessages,
                     this.currentConversationId,
@@ -475,7 +447,7 @@ export class AudioCaptureTab {
         conversationId: string,
     ): void {
         if (!this.messageListContainer) return;
-        this.messageListContainer.innerHTML = ""; // Clear
+        this.messageListContainer.innerHTML = "";
 
         const fragment = document.createDocumentFragment();
         messages.forEach((message, index) => {
@@ -486,12 +458,12 @@ export class AudioCaptureTab {
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: theme.spacing.medium,
-                padding: `${theme.spacing.small} ${theme.spacing.medium}`, // Adjusted padding
+                padding: `${theme.spacing.small} ${theme.spacing.medium}`,
                 borderBottom:
-                    index < messages.length - 1 // No border on last item
+                    index < messages.length - 1
                         ? `1px solid ${theme.colors.borderSecondary}`
                         : "none",
-                backgroundColor: theme.colors.backgroundPrimary, // Match list container bg
+                backgroundColor: theme.colors.backgroundPrimary,
                 transition: "background-color 0.15s",
             });
             item.addEventListener("mouseenter", () => {
@@ -510,26 +482,26 @@ export class AudioCaptureTab {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                maxWidth: "calc(100% - 140px)", // Adjusted max width for smaller button
+                maxWidth: "calc(100% - 140px)",
                 lineHeight: theme.typography.lineHeight.small,
             });
             const previewText = message.parts.join(" ").trim();
             textPreview.textContent =
-                previewText.substring(0, 120) + // Slightly longer preview
+                previewText.substring(0, 120) +
                 (previewText.length > 120 ? "..." : "");
             textPreview.title = previewText;
 
             const downloadButton = document.createElement("button");
             Object.assign(downloadButton.style, {
-                padding: `${theme.spacing.xxsmall} ${theme.spacing.small}`, // Compact padding
-                border: `1px solid ${theme.colors.borderSecondary}`, // Subtle border
+                padding: `${theme.spacing.xxsmall} ${theme.spacing.small}`,
+                border: `1px solid ${theme.colors.borderSecondary}`,
                 borderRadius: theme.borderRadius.small,
                 fontSize: theme.typography.fontSize.small,
                 fontWeight: theme.typography.fontWeight.medium,
                 cursor: "pointer",
                 transition: `all ${theme.transitions.duration.fast} ${theme.transitions.easing}`,
-                backgroundColor: "transparent", // Transparent default
-                color: theme.colors.textSecondary, // Dimmer default text
+                backgroundColor: "transparent",
+                color: theme.colors.textSecondary,
                 flexShrink: "0",
                 whiteSpace: "nowrap",
                 display: "flex",
@@ -543,10 +515,9 @@ export class AudioCaptureTab {
                     <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
                  </svg>
                  <span>Download</span>
-            `; // Keep text for clarity
+            `;
             downloadButton.dataset.messageId = message.id;
 
-            // Refined Hover/Active states for download button
             downloadButton.addEventListener("mouseover", () => {
                 if (!downloadButton.disabled) {
                     downloadButton.style.backgroundColor =
@@ -575,7 +546,7 @@ export class AudioCaptureTab {
             });
             downloadButton.addEventListener("mouseup", () => {
                 if (!downloadButton.disabled) {
-                    // Revert to hover state if still hovering
+
                     if (downloadButton.matches(":hover")) {
                         downloadButton.style.backgroundColor =
                             theme.colors.accentPrimary;
@@ -584,7 +555,7 @@ export class AudioCaptureTab {
                         downloadButton.style.borderColor =
                             theme.colors.accentPrimary;
                     } else {
-                        // Reset completely if mouse left
+
                         downloadButton.style.backgroundColor = "transparent";
                         downloadButton.style.color = theme.colors.textSecondary;
                         downloadButton.style.borderColor =
@@ -605,7 +576,7 @@ export class AudioCaptureTab {
             item.appendChild(downloadButton);
             fragment.appendChild(item);
         });
-        this.messageListContainer.appendChild(fragment); // Append all at once
+        this.messageListContainer.appendChild(fragment);
     }
 
     private async handleDownloadClick(
@@ -615,7 +586,7 @@ export class AudioCaptureTab {
     ): Promise<void> {
         const originalContent = buttonElement.innerHTML;
         buttonElement.disabled = true;
-        // Use a simpler loading indicator for the small button
+
         buttonElement.innerHTML = `
              <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin: 0 auto;">
                <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41m-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9"/>
@@ -624,8 +595,8 @@ export class AudioCaptureTab {
         Object.assign(buttonElement.style, {
             opacity: "0.7",
             cursor: "wait",
-            color: theme.colors.accentPrimary, // Use accent color for spinner
-            backgroundColor: theme.colors.backgroundActive, // Darker bg while loading
+            color: theme.colors.accentPrimary,
+            backgroundColor: theme.colors.backgroundActive,
             borderColor: theme.colors.borderSecondary,
         });
         this.displayFeedback(
@@ -652,7 +623,7 @@ export class AudioCaptureTab {
                 response.format,
             );
             this.displayFeedback(
-                `✅ Audio download started`, // Simpler message
+                `✅ Audio download started`,
                 "success",
                 5000,
             );
@@ -662,7 +633,7 @@ export class AudioCaptureTab {
             if (document.body.contains(buttonElement)) {
                 buttonElement.disabled = false;
                 buttonElement.innerHTML = originalContent;
-                // Reset specific styles modified during loading
+
                 buttonElement.style.opacity = "1";
                 buttonElement.style.cursor = "pointer";
                 buttonElement.style.backgroundColor = "transparent";
@@ -683,7 +654,7 @@ export class AudioCaptureTab {
 
         if (message instanceof Error) {
             effectiveType = "error";
-            messageText = `❌ Error: ${message.name || "Unknown"} - ${message.message}`; // More compact error
+            messageText = `❌ Error: ${message.name || "Unknown"} - ${message.message}`;
         } else {
             messageText = message;
         }
@@ -691,7 +662,6 @@ export class AudioCaptureTab {
         this.feedbackArea.textContent = messageText;
         this.feedbackArea.style.display = messageText ? "block" : "none";
 
-        // Reset styles
         this.feedbackArea.style.borderColor = "transparent";
         this.feedbackArea.style.backgroundColor = "transparent";
         this.feedbackArea.style.color = theme.colors.textSecondary;
@@ -735,7 +705,7 @@ export class AudioCaptureTab {
             }, autoHideDelay);
             this.feedbackArea.dataset.hideTimeoutId = String(timeoutId);
         } else if (effectiveType === "loading") {
-            // Keep loading message displayed
+
         }
     }
 }

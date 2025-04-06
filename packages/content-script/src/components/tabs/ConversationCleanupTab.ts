@@ -1,9 +1,8 @@
 // packages/content-script/src/components/tabs/ConversationCleanupTab.ts
-import { theme } from "@shared"; // Ensure this path resolves correctly in your build setup
+import { theme } from "@shared";
 import { fetchConversations, deleteConversationById } from "@/utils/apiUtils";
 import type { SendMessageToSW } from "@/utils/swMessenger";
 
-// Define the structure for conversation summary used within this component
 interface ConversationSummary {
     id: string;
     title: string;
@@ -15,7 +14,6 @@ export class ConversationCleanupTab {
     private rootElement: HTMLDivElement;
     private sendMessage: SendMessageToSW;
 
-    // --- Add Class Property Declarations ---
     private conversations: ConversationSummary[] = [];
     private selectedConversationIds: Set<string> = new Set();
     private currentPage: number = 1;
@@ -24,11 +22,9 @@ export class ConversationCleanupTab {
     private isLoading: boolean = false;
     private isDeleting: boolean = false;
     private error: string | null = null;
-    // --------------------------------------
 
-    // UI Elements (These are initialized in buildUI)
     private selectAllCheckbox!: HTMLInputElement;
-    private selectAllLabel!: HTMLLabelElement; // Reference to the label for enabling/disabling
+    private selectAllLabel!: HTMLLabelElement;
     private listContainer!: HTMLDivElement;
     private paginationContainer!: HTMLDivElement;
     private deleteButton!: HTMLButtonElement;
@@ -39,7 +35,7 @@ export class ConversationCleanupTab {
     constructor(sendMessage: SendMessageToSW) {
         this.sendMessage = sendMessage;
         this.rootElement = this.buildUI();
-        this.fetchDataForCurrentPage(); // Initial data fetch
+        this.fetchDataForCurrentPage();
     }
 
     public getElement(): HTMLDivElement {
@@ -52,14 +48,12 @@ export class ConversationCleanupTab {
         );
     }
 
-    // --- UI Building ---
-
     private buildUI(): HTMLDivElement {
         const container = document.createElement("div");
         Object.assign(container.style, {
             display: "flex",
             flexDirection: "column",
-            gap: theme.spacing.medium, // Consistent gap
+            gap: theme.spacing.medium,
             padding: theme.spacing.large,
             boxSizing: "border-box",
             height: "100%",
@@ -67,36 +61,19 @@ export class ConversationCleanupTab {
             backgroundColor: theme.colors.backgroundSecondary,
         });
 
-        // // --- Header ---
-        // const header = document.createElement("h2");
-        // Object.assign(header.style, {
-        //     margin: `0 0 ${theme.spacing.medium} 0`, // Use medium margin below header
-        //     fontSize: theme.typography.fontSize.large,
-        //     fontWeight: theme.typography.fontWeight.semibold,
-        //     color: theme.colors.textPrimary,
-        //     paddingBottom: theme.spacing.medium,
-        //     borderBottom: `1px solid ${theme.colors.borderPrimary}`,
-        //     flexShrink: "0",
-        //     textAlign: "center",
-        // });
-        // header.textContent = ConversationCleanup.label;
-        // container.appendChild(header);
-
-        // --- List Container ---
         this.listContainer = document.createElement("div");
         Object.assign(this.listContainer.style, {
             flexGrow: "1",
-            overflowY: "auto", // List scrolls
+            overflowY: "auto",
             border: `1px solid ${theme.colors.borderPrimary}`,
             borderRadius: theme.borderRadius.medium,
             backgroundColor: theme.colors.backgroundPrimary,
             position: "relative",
             boxShadow: theme.shadows.small,
-            marginBottom: theme.spacing.small, // Add space below list before feedback/bottom bar
+            marginBottom: theme.spacing.small,
         });
         container.appendChild(this.listContainer);
 
-        // --- Feedback Area ---
         this.feedbackArea = document.createElement("div");
         this.feedbackArea.id = "cleanup-feedback-area";
         Object.assign(this.feedbackArea.style, {
@@ -113,7 +90,6 @@ export class ConversationCleanupTab {
         });
         container.appendChild(this.feedbackArea);
 
-        // --- Bottom Bar (All actions/info/pagination) ---
         const bottomBar = document.createElement("div");
         Object.assign(bottomBar.style, {
             display: "flex",
@@ -123,22 +99,20 @@ export class ConversationCleanupTab {
             borderTop: `1px solid ${theme.colors.borderPrimary}`,
             flexShrink: "0",
             gap: theme.spacing.medium,
-            marginTop: "auto", // Push bottom bar down
+            marginTop: "auto",
         });
         container.appendChild(bottomBar);
 
-        // --- Left Actions: Delete + Select All ---
         const leftActions = document.createElement("div");
         Object.assign(leftActions.style, {
             display: "flex",
             alignItems: "center",
-            gap: theme.spacing.medium, // Gap between Delete and Select All
+            gap: theme.spacing.medium,
         });
         bottomBar.appendChild(leftActions);
 
-        // Delete Button
         this.deleteButton = this.createButton(
-            "", // Text set later
+            "",
             () => this.handleDeleteSelected(),
             true,
             "danger",
@@ -152,25 +126,24 @@ export class ConversationCleanupTab {
         `;
         leftActions.appendChild(this.deleteButton);
 
-        // Select All Checkbox (Now in bottom bar)
-        this.selectAllLabel = document.createElement("label"); // Store label ref
+        this.selectAllLabel = document.createElement("label");
         Object.assign(this.selectAllLabel.style, {
             display: "flex",
             alignItems: "center",
             cursor: "pointer",
             fontSize: theme.typography.fontSize.small,
-            color: theme.colors.textSecondary, // Less prominent
+            color: theme.colors.textSecondary,
             fontWeight: theme.typography.fontWeight.medium,
             gap: theme.spacing.small,
-            whiteSpace: "nowrap", // Prevent wrapping
-            opacity: "0.6", // Start disabled visually
+            whiteSpace: "nowrap",
+            opacity: "0.6",
         });
         leftActions.appendChild(this.selectAllLabel);
 
         this.selectAllCheckbox = document.createElement("input");
         this.selectAllCheckbox.type = "checkbox";
         this.selectAllCheckbox.id = "cleanup-select-all";
-        this.selectAllCheckbox.disabled = true; // Start disabled
+        this.selectAllCheckbox.disabled = true;
         Object.assign(this.selectAllCheckbox.style, {
             cursor: "pointer",
             width: "16px",
@@ -185,30 +158,28 @@ export class ConversationCleanupTab {
         this.selectAllLabel.appendChild(this.selectAllCheckbox);
         this.selectAllLabel.appendChild(document.createTextNode("Select Page"));
 
-        // --- Right Actions: Refresh + Info + Pagination ---
         const rightActions = document.createElement("div");
         Object.assign(rightActions.style, {
             display: "flex",
             alignItems: "center",
-            gap: theme.spacing.medium, // Gap between elements
+            gap: theme.spacing.medium,
         });
         bottomBar.appendChild(rightActions);
 
-        // Refresh Button (with text)
         const refreshIconSvg =
             '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px; flex-shrink: 0;"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>';
         this.refreshButton = this.createButton(
             `${refreshIconSvg}<span>Refresh</span>`,
             () => this.fetchDataForCurrentPage(),
-            false, // Start enabled, disable during load
+            false,
             "default",
         );
-        // Make refresh less prominent than delete
-        this.refreshButton.style.padding = `${theme.spacing.xsmall} ${theme.spacing.small}`; // Compact padding
+
+        this.refreshButton.style.padding = `${theme.spacing.xsmall} ${theme.spacing.small}`;
         this.refreshButton.style.backgroundColor = "transparent";
         this.refreshButton.style.borderColor = theme.colors.borderSecondary;
         this.refreshButton.style.color = theme.colors.textSecondary;
-        // Adjust hover for this subtle button
+
         this.refreshButton.addEventListener("mouseenter", () => {
             if (!this.refreshButton.disabled) {
                 this.refreshButton.style.backgroundColor =
@@ -228,7 +199,6 @@ export class ConversationCleanupTab {
         });
         rightActions.appendChild(this.refreshButton);
 
-        // List Info Area
         this.listInfoArea = document.createElement("p");
         Object.assign(this.listInfoArea.style, {
             fontSize: theme.typography.fontSize.small,
@@ -238,7 +208,6 @@ export class ConversationCleanupTab {
         });
         rightActions.appendChild(this.listInfoArea);
 
-        // Pagination Container
         this.paginationContainer = document.createElement("div");
         Object.assign(this.paginationContainer.style, {
             display: "flex",
@@ -247,37 +216,36 @@ export class ConversationCleanupTab {
         });
         rightActions.appendChild(this.paginationContainer);
 
-        this.renderPagination(); // Initial render
+        this.renderPagination();
 
         return container;
     }
 
     private renderConversationList(): void {
-        this.listContainer.innerHTML = ""; // Clear previous content
+        this.listContainer.innerHTML = "";
         const hasContent = this.conversations && this.conversations.length > 0;
 
-        // Enable/Disable Select All based on content and loading state
         this.toggleSelectAllEnabled(hasContent && !this.isLoading);
 
         if (this.isLoading) {
             this.listContainer.appendChild(
                 this.createStatusMessage("⏳ Loading conversations..."),
             );
-            // Info area updated in renderPagination
+
             return;
         }
         if (this.error) {
             this.listContainer.appendChild(
                 this.createStatusMessage(`❌ Error: ${this.error}`, true),
             );
-            // Info area updated in renderPagination
+
             return;
         }
         if (!hasContent) {
             this.listContainer.appendChild(
                 this.createStatusMessage("🗑️ No conversations found."),
             );
-            // Info area updated in renderPagination
+
             return;
         }
 
@@ -366,7 +334,7 @@ export class ConversationCleanupTab {
         );
         this.listContainer.appendChild(fragment);
 
-        this.updateSelectAllState(); // Update checkbox based on rendered items
+        this.updateSelectAllState();
     }
 
     private updateListInfo(text: string): void {
@@ -397,21 +365,19 @@ export class ConversationCleanupTab {
     }
 
     private renderPagination(): void {
-        this.paginationContainer.innerHTML = ""; // Clear previous pagination
+        this.paginationContainer.innerHTML = "";
 
         const isActionInProgress = this.isLoading || this.isDeleting;
 
-        // Update List Info Area
         const infoText = this.isLoading
             ? `Loading...`
             : this.error
-              ? `Error`
-              : this.totalConversations > 0
-                ? `Showing ${this.conversations.length} of ${this.totalConversations}`
-                : `0 conversations`;
+                ? `Error`
+                : this.totalConversations > 0
+                    ? `Showing ${this.conversations.length} of ${this.totalConversations}`
+                    : `0 conversations`;
         this.updateListInfo(infoText);
 
-        // Only render pagination controls if needed
         if (this.totalPages > 1 && !this.isLoading && !this.error) {
             const prevButton = this.createButton(
                 "<",
@@ -419,7 +385,7 @@ export class ConversationCleanupTab {
                 this.currentPage <= 1 || isActionInProgress,
             );
             prevButton.style.padding = theme.spacing.xsmall;
-            prevButton.style.minWidth = "30px"; // Slightly smaller
+            prevButton.style.minWidth = "30px";
             prevButton.title = "Previous Page";
             prevButton.setAttribute("aria-label", "Previous Page");
 
@@ -447,11 +413,10 @@ export class ConversationCleanupTab {
             this.paginationContainer.appendChild(pageIndicator);
             this.paginationContainer.appendChild(nextButton);
         } else if (this.totalPages <= 1) {
-            // Clear pagination if only one page exists or error/loading
+
             this.paginationContainer.innerHTML = "";
         }
 
-        // Update Refresh button state
         if (this.refreshButton) {
             this.refreshButton.disabled = isActionInProgress;
             this.refreshButton.style.opacity = isActionInProgress ? "0.6" : "1";
@@ -465,7 +430,7 @@ export class ConversationCleanupTab {
                     theme.colors.borderSecondary;
             }
         }
-        // Update Select All enabled state
+
         this.toggleSelectAllEnabled(
             !isActionInProgress && this.conversations.length > 0,
         );
@@ -504,7 +469,7 @@ export class ConversationCleanupTab {
             alignItems: "center",
             justifyContent: "center",
             gap: theme.spacing.xsmall,
-            boxShadow: "none", // No base shadow
+            boxShadow: "none",
         };
 
         let hoverBgColor = theme.colors.backgroundHover;
@@ -555,15 +520,14 @@ export class ConversationCleanupTab {
         return button;
     }
 
-    // --- Data Fetching & State Update ---
     private async fetchDataForCurrentPage(): Promise<void> {
         if (this.isLoading || this.isDeleting) return;
 
         this.isLoading = true;
         this.error = null;
-        this.renderConversationList(); // Show loading state in list
-        this.renderPagination(); // Update info area and disable buttons
-        this.updateDeleteButtonState(); // Disable delete
+        this.renderConversationList();
+        this.renderPagination();
+        this.updateDeleteButtonState();
 
         try {
             const offset = (this.currentPage - 1) * ITEMS_PER_PAGE;
@@ -597,14 +561,13 @@ export class ConversationCleanupTab {
             this.currentPage = 1;
         } finally {
             this.isLoading = false;
-            this.renderConversationList(); // Render final list/error state
-            this.renderPagination(); // Update pagination & info area
+            this.renderConversationList();
+            this.renderPagination();
             this.updateDeleteButtonState();
-            this.updateSelectAllState(); // Ensure select-all checkbox is correct
+            this.updateSelectAllState();
         }
     }
 
-    // --- Event Handlers ---
     private changePage(newPage: number): void {
         if (
             newPage >= 1 &&
@@ -667,7 +630,7 @@ export class ConversationCleanupTab {
     private updateSelectAllState(): void {
         if (!this.selectAllCheckbox || this.conversations.length === 0) {
             if (this.selectAllCheckbox) this.selectAllCheckbox.checked = false;
-            this.toggleSelectAllEnabled(false); // Disable if no conversations
+            this.toggleSelectAllEnabled(false);
             return;
         }
         const allVisibleSelected = this.conversations.every(
@@ -675,7 +638,7 @@ export class ConversationCleanupTab {
                 this.selectedConversationIds.has(conv.id),
         );
         this.selectAllCheckbox.checked = allVisibleSelected;
-        // Enable checkbox only if there are conversations on the page
+
         this.toggleSelectAllEnabled(true);
     }
 
@@ -702,7 +665,6 @@ export class ConversationCleanupTab {
             : "1";
     }
 
-    // --- Deletion Logic ---
     private async handleDeleteSelected(): Promise<void> {
         if (
             this.isDeleting ||
@@ -718,7 +680,7 @@ export class ConversationCleanupTab {
 
         this.isDeleting = true;
         this.error = null;
-        this.renderPagination(); // Disable buttons
+        this.renderPagination();
         this.updateDeleteButtonState();
         this.displayFeedback(`Deleting ${countToDelete} items...`, "loading");
 
@@ -762,10 +724,9 @@ export class ConversationCleanupTab {
         }
         this.displayFeedback(feedbackMessage, feedbackType, 8000);
 
-        await this.fetchDataForCurrentPage(); // This also clears selection
+        await this.fetchDataForCurrentPage();
     }
 
-    // --- Feedback Display ---
     private displayFeedback(
         message: string,
         type: "success" | "error" | "loading" | "info" | "warning",
@@ -824,7 +785,7 @@ export class ConversationCleanupTab {
             }, autoHideDelay);
             this.feedbackArea.dataset.hideTimeoutId = String(timeoutId);
         } else if (type === "loading") {
-            // Keep loading message
+
         }
     }
 }

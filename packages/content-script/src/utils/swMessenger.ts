@@ -10,7 +10,6 @@ export type SendMessageToSW = <T = any>(message: {
  * @throws An error object if the service worker returns an error or communication fails.
  */
 export const sendMessageToSW: SendMessageToSW = async (message) => {
-    // Using a more generic source name in logs
     console.log(
         "Content Helper: Sending message ->",
         message.type,
