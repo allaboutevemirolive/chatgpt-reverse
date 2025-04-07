@@ -27,9 +27,9 @@ async function main() {
     console.log(`📦 Starting packaging process for: ${targetBrowser.toUpperCase()}`);
 
     // 2. Define manifest paths
-    const chromeManifestPath = path.resolve(publicDir, "manifest.json");
+    const chromeManifestPath = path.resolve(publicDir, "manifest.chrome.json");
     const firefoxManifestPath = path.resolve(publicDir, "manifest.firefox.json");
-    const buildManifestPath = path.resolve(buildDir, "manifest.json"); // Destination path
+    const buildManifestPath = path.resolve(buildDir, "manifest.json");
 
     // Select the correct source manifest
     const sourceManifestPath = targetBrowser === TARGET_FIREFOX ? firefoxManifestPath : chromeManifestPath;
