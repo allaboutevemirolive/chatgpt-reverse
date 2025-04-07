@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy - ChatGPT Reverse</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #333;
+        }
+
+        h1,
+        h2 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            color: #111;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        .last-updated {
+            font-style: italic;
+            color: #555;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Privacy Policy for ChatGPT Reverse</h1>
+
+    <p class="last-updated">Last Updated: 2024-04-06</p>
+
+    <h2>1. Introduction</h2>
+    <p>
+        This Privacy Policy describes how the "ChatGPT Reverse" Chrome
+        Extension ("the Extension", "we", "us", or "our") handles your
+        information when you use the extension. This Extension is designed
+        to enhance your experience on chatgpt.com by interacting with its
+        underlying API.
+    </p>
+    <p>
+        <strong>Important:</strong> This extension operates entirely within
+        your browser. We do not operate any external servers, and we do not
+        collect or transmit your personal data or conversation content to
+        our own servers.
+    </p>
+
+    <h2>2. Information We Handle</h2>
+    <p>
+        To function, the Extension needs to access certain information
+        available within your browser session on chatgpt.com. This includes:
+    </p>
+    <ul>
+        <li>
+            <strong>API Headers/Tokens:</strong> The Extension intercepts
+            and stores necessary authentication tokens and headers (like
+            <code>Authorization</code>, <code>OAI-Device-Id</code>,
+            <code>OAI-Language</code>) generated during your session with
+            chatgpt.com.
+        </li>
+        <li>
+            <strong>Session-Related Data (Potentially):</strong> If specific
+            features require it, the Extension may attempt to read certain
+            cookies from the chatgpt.com domain using the
+            <code>chrome.cookies</code> API (e.g., cookies related to your
+            session or user settings on ChatGPT).
+        </li>
+        <li>
+            <strong>Conversation Data (Locally Processed):</strong> For
+            features like Markdown export, audio generation, or token
+            counting, the Extension accesses conversation data (IDs,
+            content, metadata) via the chatgpt.com API using your stored
+            headers/tokens. This processing happens locally within the
+            Extension's service worker.
+        </li>
+    </ul>
+
+    <h2>3. How We Use Information</h2>
+    <p>The information handled by the Extension is used solely for:</p>
+    <ul>
+        <li>
+            <strong>Enabling Functionality:</strong> Stored API
+            headers/tokens are used exclusively to make authenticated
+            requests to the official chatgpt.com API endpoints from within
+            the Extension (e.g., fetching conversations, deleting chats,
+            generating audio, exporting).
+        </li>
+        <li>
+            <strong>Local Processing:</strong> Conversation data accessed
+            via the API is processed locally within your browser to provide
+            features like formatting exports or counting tokens. It is not
+            sent elsewhere by the Extension.
+        </li>
+        <li>
+            <strong>Session Management (Potentially):</strong> Information
+            read from cookies (if implemented and necessary) would be used
+            to ensure the Extension interacts correctly with your
+            chatgpt.com session.
+        </li>
+    </ul>
+
+    <h2>4. Data Storage and Security</h2>
+    <ul>
+        <li>
+            <strong>Local Storage:</strong> API headers/tokens and any other
+            necessary session data intercepted or configured are stored
+            using the <code>chrome.storage.local</code> API. This data
+            remains on your computer within the browser's secure extension
+            storage.
+        </li>
+        <li>
+            <strong>Security:</strong> While we store this data locally for
+            functionality, please be aware that browser storage security
+            depends on the overall security of your computer and Google
+            account. The stored tokens grant access to your ChatGPT
+            account, similar to being logged into the website.
+        </li>
+        <li>
+            <strong>No External Transmission:</strong> We reiterate that the
+            Extension does not send your API tokens, conversation content,
+            or any personal data to any external servers operated by us or
+            third parties. All API communication happens directly between
+            your browser (via the Extension) and the official chatgpt.com
+            servers.
+        </li>
+    </ul>
+
+    <h2>5. Data Sharing</h2>
+    <p>
+        We do not share any of the information handled by the Extension with
+        any third parties. The data stays within your browser.
+    </p>
+
+    <h2>6. Cookies</h2>
+    <p>
+        The Extension requests permission to access cookies specifically for
+        the <code>chatgpt.com</code> domain. This permission may be used in
+        the future to read necessary session or configuration cookies from
+        ChatGPT to ensure proper functioning or enable specific features.
+        The Extension does not set its own cookies and only reads cookies
+        set by <code>chatgpt.com</code> when necessary for its operation.
+    </p>
+
+    <h2>7. User Control</h2>
+    <ul>
+        <li>
+            You can clear the data stored by the Extension (including API
+            tokens) by clearing your browser's extension data or by
+            uninstalling the Extension.
+        </li>
+        <li>
+            Uninstalling the Extension will remove all stored data and stop
+            all its functionality.
+        </li>
+    </ul>
+
+    <h2>8. Changes to This Privacy Policy</h2>
+    <p>
+        We may update this Privacy Policy from time to time. We will notify
+        you of any changes by posting the new Privacy Policy on this page
+        and updating the "Last Updated" date. You are advised to review
+        this Privacy Policy periodically for any changes.
+    </p>
+
+    <h2>9. Contact Us</h2>
+    <p>
+        If you have any questions about this Privacy Policy, please contact
+        us:
+    </p>
+    <p>
+        Akmal Firdaus <br />
+        xkmxlfirdxus@gmail.com <br />
+        https://x.com/akmalfirdxus
+    </p>
+</body>
+
+</html>
