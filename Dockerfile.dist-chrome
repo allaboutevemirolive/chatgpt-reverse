@@ -1,0 +1,62 @@
+# Dockerfile.dist-chrome
+# Builds the Chrome extension and packages it into a zip file
+# ready for extraction using docker cp.
+
+# Stage 1: Install dependencies leveraging caching
+FROM node:20-slim AS deps
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# --- Dependency Caching ---
+# Copy only necessary package manifests first.
+# Changes in these files trigger a reinstall, but changes in source code won't.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy package.json files for each workspace to leverage caching further.
+# Adjust these paths if your workspace structure is different or add more if needed.
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/content-script/package.json ./packages/content-script/
+COPY packages/interceptor/package.json ./packages/interceptor/
+COPY packages/loadscript/package.json ./packages/loadscript/
+COPY packages/popup/package.json ./packages/popup/
+COPY packages/service-worker/package.json ./packages/service-worker/
+# Add any other workspace package.json files here if they exist
+
+# Install dependencies using the lockfile for reproducibility
+# The --frozen-lockfile ensures pnpm doesn't modify the lockfile and fails if it's outdated.
+RUN pnpm install --frozen-lockfile
+
+# --- Build Stage ---
+# Stage 2: Build the extension and package it into a zip file
+FROM deps AS builder
+WORKDIR /app
+
+# Copy the rest of the source code needed for the build
+# The '.' includes files like biome.json, tsconfig*, vite.config*, scripts/, public/, src/, etc.
+# Make sure your .dockerignore file excludes node_modules, local build/ and dist/ directories, .git, etc.
+COPY . .
+
+# Run the packaging script defined in your root package.json.
+# This script should handle both building the necessary code (build:chrome)
+# AND zipping the result (node ./scripts/package.mjs chrome).
+RUN pnpm package:chrome
+# ASSUMPTION: This command creates the final packaged zip file(s)
+# inside the `/app/dist/` directory within this builder stage.
+# If your `scripts/package.mjs` saves the zip elsewhere (e.g., /app/build/chrome.zip),
+# you MUST adjust the path in the final stage's COPY command below.
+
+# --- Final Stage ---
+# Stage 3: Final minimal stage containing only the packaged zip file(s)
+# This stage is optimized for being small and easy to extract from.
+FROM node:20-slim AS final
+# Define a clear work directory for the final package to be copied into.
+WORKDIR /extension_package
+
+# Copy the *packaged* output (the zip file(s)) from the builder stage's /app/dist directory.
+# *** THIS IS THE CORRECTED LINE ***
+COPY --from=builder /app/dist .
+
+# No CMD or ENTRYPOINT needed as this stage's purpose is solely for file extraction
+# via `docker cp`.

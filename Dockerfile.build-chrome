@@ -1,4 +1,4 @@
-# Dockerfile
+# Dockerfile.chrome
 
 # Stage 1: Install dependencies
 FROM node:20-slim AS deps
@@ -21,15 +21,15 @@ COPY packages/service-worker/package.json ./packages/service-worker/
 # Install dependencies using --frozen-lockfile for reproducibility
 RUN pnpm install --frozen-lockfile
 
-# Stage 2: Build the extension
+# Stage 2: Build the extension for Chrome
 FROM deps AS builder
 WORKDIR /app
 
 # Copy the rest of the source code
 COPY . .
 
-# Run the build command defined in root package.json
-RUN pnpm build
+# Run the specific build command for Chrome
+RUN pnpm build:chrome
 
 # Stage 3: Final image with only the build output
 # Use a minimal base image like nginx or even scratch if just serving static files
@@ -39,6 +39,7 @@ FROM node:20-slim AS final
 WORKDIR /extension_build
 
 # Copy the built extension from the builder stage
+# Assuming pnpm build:chrome still outputs to /app/build
 COPY --from=builder /app/build .
 
 # (Optional) If you needed to serve the build directory for some reason
