@@ -1,3 +1,4 @@
+
 <!-- # ChatGPT Reverse -->
 
 <p align="center">
@@ -129,67 +130,58 @@ These commands create the final `.zip` files in the `dist/` directory, ready for
 
 ## Docker Builds
 
-This method builds the extension package inside a container, ensuring a consistent environment (useful for CI/CD). It defaults to building the **Chrome** package.
+Use Docker to build the extension in a consistent, isolated environment. Two primary workflows are provided:
 
-*   **Build the Docker image:**
-    ```bash
-    # This builds the image containing the final packaged zip
-    docker build -t chatgpt-reverse-pkg .
-    ```
-    *(Note: You might need to define a `Dockerfile` first - see example below)*
+### Build for Development (Unpacked)
 
-*   **Build using Docker Compose:**
-    ```bash
-    # This builds the image defined in docker-compose.yml
-    # By default, it might just run pnpm build, not the packaging.
-    # You may need to adjust docker-compose.yml or Dockerfile for packaging.
-    docker compose build
-    ```
+This creates the unpacked extension files (similar to `pnpm build:chrome`) in the local `./build` directory, suitable for loading directly into Chrome/Edge for development.
 
-*   **How to Retrieve the Packaged ZIP from the Docker Image:**
+```sh
+# Build the image containing the development files
+docker build -t chatgpt-reverse-chrome-build:latest -f Dockerfile.build-chrome .
 
-    If your `Dockerfile` is set up to run the packaging script (e.g., `pnpm run package:chrome`), the resulting `.zip` file will be inside the image, likely in the `/app/dist/` directory (assuming your `WORKDIR` is `/app`).
+# Clean previous extraction if necessary
+rm -rf ./build
+mkdir ./build
 
-    **1. Clean Up Existing `dist` Directory (Optional):**
+# Create a temporary container
+docker create --name extractor_container chatgpt-reverse-chrome-build
 
-    ```bash
-    rm -rf ./dist
-    mkdir ./dist
-    ```
+# Copy the unpacked build files from the container
+docker cp extractor_container:/extension_build/. ./build
 
-    **2. Build the Image (if not already done):**
+# Remove the temporary container
+docker rm extractor_container
 
-    ```bash
-    docker build -t chatgpt-reverse-pkg .
-    ```
+# Verify the build directory exists and has content
+ls ./build
+```
 
-    **3. Create a Temporary Container:**
+### Package for Distribution (Zipped)
 
-    ```bash
-    docker create --name extractor_container chatgpt-reverse-pkg
-    ```
+This creates the final packaged `.zip` file (similar to `pnpm package:chrome`) in the local `./dist` directory, ready for distribution. *Ensure your `Dockerfile.dist-chrome` correctly copies the packaged zip file (usually from `/app/dist`) into its final stage's `WORKDIR` (e.g., `/extension_package`).*
 
-    **4. Copy the ZIP File(s) from the Container to Your Host:**
+```sh
+# Build the image containing the packaged zip file
+docker build -t chatgpt-reverse-chrome-dist:latest -f Dockerfile.dist-chrome .
 
-    ```bash
-    # Copy the entire dist directory content
-    docker cp extractor_container:/app/dist/. ./dist/
-    ```
-    *Replace `/app/dist/.` with the actual path inside your container where the ZIP files are generated.*
+# Clean previous extraction if necessary
+rm -rf ./dist
+mkdir ./dist
 
-    **5. Check Ownership (If needed):**
+# Create container from the final stage of the distribution image
+docker create --name extractor_container chatgpt-reverse-chrome-dist:latest
 
-    ```bash
-    ls -l ./dist
-    # If owned by root:
-    # sudo chown -R $(whoami):$(whoami) ./dist
-    ```
+# Copy the contents (the zip file) from the container's WORKDIR
+# Adjust /extension_package/ if your final stage WORKDIR is different
+docker cp extractor_container:/extension_package/. ./dist
 
-    **6. Remove the Temporary Container:**
+# Clean up the temporary container
+docker rm extractor_container
 
-    ```bash
-    docker rm extractor_container
-    ```
+# Verify the zip file is in your local ./dist directory
+ls ./dist
+```
 
 ## Linting and Formatting
 
@@ -224,5 +216,3 @@ This project uses Biome for linting and formatting.
 ## License
 
 This project is licensed under the ISC License. See the [LICENSE](./LICENSE) file for details.
-
-
