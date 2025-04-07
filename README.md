@@ -15,7 +15,7 @@
 
 ## Overview
 
-This is a Chrome Extension designed to interact with ChatGPT, leveraging potentially reverse-engineered API calls. It adheres strictly to the Manifest V3 (MV3) architecture.
+This is a Chrome & Firefox Extension designed to interact with ChatGPT, leveraging potentially reverse-engineered API calls. It adheres strictly to the Manifest V3 (MV3) architecture.
 
 The project is structured as a **monorepo** using **pnpm workspaces** to enforce modularity and separation of concerns between the different parts of the extension.
 
@@ -38,8 +38,11 @@ The monorepo is organized into several distinct packages within the `packages/` 
 *   `packages/shared`: Common TypeScript types, utility functions, constants, etc., shared across other packages. Built independently using `tsc`.
 *   `packages/interceptor`: A dedicated script, likely for intercepting network requests, intended to be injected into the page context. Built as an IIFE.
 *   `packages/loadscript`: A utility script, likely responsible for injecting other scripts (like the interceptor) into the page context. Built as an IIFE.
-*   `public/`: Contains root-level static assets for the extension, primarily `manifest.json` and icons. These are copied directly into the build output.
-*   `build/`: **(Generated)** The output directory containing the final, loadable Chrome extension package.
+*   `public/`: Contains root-level static assets for the extension, primarily `manifest.chrome.json`, `manifest.firefox.json`, and icons.
+*   `hosting/`: Contains static files for Firebase Hosting (e.g., `privacy.html`).
+*   `build/`: **(Generated)** The output directory containing the intermediate files before packaging.
+*   `dist/`: **(Generated)** The output directory containing the final packaged `.zip` files for distribution.
+*   `scripts/`: Contains build/packaging helper scripts (e.g., `package.mjs`).
 
 Each package (`content-script`, `service-worker`, `interceptor`, `loadscript`, `popup`) utilizes its own `vite.config.ts`, configured for its specific output requirements (IIFE for injected scripts, ES module for service worker, standard build for popup).
 
@@ -48,118 +51,141 @@ Each package (`content-script`, `service-worker`, `interceptor`, `loadscript`, `
 *   [Node.js](https://nodejs.org/) (Version 20 or later recommended)
 *   [pnpm](https://pnpm.io/installation) (Version 8 or later recommended)
 *   [Docker](https://www.docker.com/get-started/) (Optional, for containerized builds)
+*   [Firebase CLI](https://firebase.google.com/docs/cli#install_the_firebase_cli) (Optional, only needed for deploying the privacy policy)
 
 ## Setup
 
 Clone the repository and install dependencies using pnpm:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/allaboutevemirolive/chatgpt-reverse.git
 cd chatgpt-reverse
 pnpm install
 ```
 
 ## Development
 
-To build the packages and watch for changes during development:
+Use the `dev` script for continuous watching and rebuilding of individual packages during development. Note that this does **not** handle copying the correct manifest file for initial loading; use the `build:*` commands for that first.
 
 ```bash
+# Watch for changes and rebuild packages (JS/TS only)
 pnpm dev
 ```
 
-This command typically runs the `dev` script within each package (often `vite build --watch` or `tsc -b --watch`).
-
 **Loading the Extension for Development:**
 
-1.  Run `pnpm build` once initially (or `pnpm dev` and wait for the initial build).
+You need to run a specific build command *before* loading the unpacked extension to ensure the correct `manifest.json` is present in the `build/` directory.
+
+**Chrome/Edge:**
+
+1.  Run the Chrome-specific build command:
+    ```bash
+    pnpm run build:chrome
+    ```
 2.  Open Chrome/Edge and navigate to `chrome://extensions/`.
-3.  Enable "Developer mode" (usually a toggle in the top-right corner).
+3.  Enable "Developer mode".
 4.  Click "Load unpacked".
 5.  Select the `build` directory generated at the root of this project.
 
+**Firefox:**
+
+1.  Run the Firefox-specific build command:
+    ```bash
+    pnpm run build:firefox
+    ```
+2.  Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
+3.  Click "Load Temporary Add-on...".
+4.  Select the `build/manifest.json` file (this file will now contain the correct Firefox-specific content thanks to the build script).
+
 **Important Notes for Development:**
 
-*   Changes to the **popup** code might require reopening the popup to see updates (unless React Fast Refresh is working perfectly via the dev server, which isn't the primary mode here).
-*   Changes to the **service worker** (`background.js`) often require reloading the extension via the `chrome://extensions/` page (click the reload icon for the extension).
-*   Changes to **content scripts**, **loadScript**, or **interceptor** require reloading the extension *and* refreshing the target web page (`chatgpt.com`) where they are injected.
+*   After the initial load using `build:chrome` or `build:firefox`, if you only change code within a package (e.g., `service-worker`):
+    *   `pnpm dev` will rebuild that package's output (e.g., `build/background.js`).
+    *   You'll likely need to manually reload the extension in the browser (`chrome://extensions/` or `about:debugging`) to see the changes.
+    *   If you change shared code, assets, or manifests, run the full `build:chrome` or `build:firefox` command again and reload the unpacked extension.
+*   Changes to the **popup** UI might require reopening the popup.
+*   Changes to **content scripts**, **loadScript**, or **interceptor** require reloading the extension *and* refreshing the target web page (`chatgpt.com`).
 
-## Building for Production
+## Packaging for Distribution
 
-There are several ways to build the production-ready extension:
+These commands create the final `.zip` files in the `dist/` directory, ready for upload to the respective web stores. They perform a full clean build for the target browser before packaging.
 
-**1. Using pnpm (Recommended for local builds):**
+*   **Package for Chrome:**
+    ```bash
+    pnpm run package:chrome
+    ```
+    *(Creates `dist/chatgpt-reverse-vX.Y.Z-chrome.zip`)*
 
-This is the standard method. It cleans the output directory, builds all packages sequentially, and copies public assets into the final `build` directory.
+*   **Package for Firefox:**
+    ```bash
+    pnpm run package:firefox
+    ```
+    *(Creates `dist/chatgpt-reverse-vX.Y.Z-firefox.zip`)*
 
-```bash
-pnpm build
-```
+*   **Package for Both:**
+    ```bash
+    pnpm run package:all
+    ```
 
-The loadable extension will be located in the `build/` directory at the project root.
+## Docker Builds
 
-**2. Using Docker:**
-
-This method builds the extension inside a container, ensuring a consistent environment (useful for CI/CD).
+This method builds the extension package inside a container, ensuring a consistent environment (useful for CI/CD). It defaults to building the **Chrome** package.
 
 *   **Build the Docker image:**
     ```bash
-    docker build -t chatgpt-reverse-extension .
+    # This builds the image containing the final packaged zip
+    docker build -t chatgpt-reverse-pkg .
     ```
-    This creates an image named `chatgpt-reverse-extension`. The build artifacts are located inside the image at `/extension_build`. You would typically extract these artifacts in a CI/CD pipeline or use multi-stage builds to copy them elsewhere.
+    *(Note: You might need to define a `Dockerfile` first - see example below)*
 
-*   **Build using Docker Compose (Less common just for building):**
+*   **Build using Docker Compose:**
     ```bash
+    # This builds the image defined in docker-compose.yml
+    # By default, it might just run pnpm build, not the packaging.
+    # You may need to adjust docker-compose.yml or Dockerfile for packaging.
     docker compose build
     ```
-    If the compose file includes a volume mount (`volumes: - ./build:/extension_build`), the built extension will also appear in the `./build` directory on your host machine. Otherwise, the artifacts are within the container created by compose.
 
-*   **How to Retrieve the Output from the Built Docker Image(s):**
+*   **How to Retrieve the Packaged ZIP from the Docker Image:**
 
-    The command `docker compose build` does exactly what its name implies: it **builds the Docker image(s)** defined in your `docker-compose.yml` file, following the instructions in your `Dockerfile`. It **does not** automatically run a container from that image, nor does it automatically copy files *out* of the built image back onto your host machine.
+    If your `Dockerfile` is set up to run the packaging script (e.g., `pnpm run package:chrome`), the resulting `.zip` file will be inside the image, likely in the `/app/dist/` directory (assuming your `WORKDIR` is `/app`).
 
-    The build artifacts (the contents of your `build/` directory) now exist *inside* the newly built Docker image, specifically at the `/extension_build` path within the image's filesystem. They were **not** created on your host filesystem.
-
-    To access them, we need to manually extract the contents from the built Docker image into our host filesystem, specifically into the root of our project.
-
-    **1. Clean Up Existing `build` Directory (if it exists):**
-    
-    ```bash
-    rm -rf ./build
-    ```
-    **2. Create a Temporary Container:**
-    
-    Use `docker create` to make a container based on the image *without starting it*. We'll give it a temporary name like `extractor_container`.
+    **1. Clean Up Existing `dist` Directory (Optional):**
 
     ```bash
-    # Only run this if 'extractor_container' doesn't exist
-    docker create --name extractor_container chatgpt-reverse-build
+    rm -rf ./dist
+    mkdir ./dist
     ```
 
-    **3. Copy Files from the Container to Your Host:**
-
-    Use the `docker cp` command. The syntax is `docker cp <container_name>:<path_inside_container> <path_on_host>`.
+    **2. Build the Image (if not already done):**
 
     ```bash
-    docker cp extractor_container:/extension_build/. ./build
+    docker build -t chatgpt-reverse-pkg .
     ```
-    **4. Check Ownership (After Copying):**
 
-    If the copy now succeeds without error, check the ownership of the newly created `./build` directory and its contents:
+    **3. Create a Temporary Container:**
 
     ```bash
-    ls -ld ./build
-    ls -l ./build
+    docker create --name extractor_container chatgpt-reverse-pkg
     ```
-    
-    If they are owned by `root` instead of your user (`myusername`), change the ownership back:
+
+    **4. Copy the ZIP File(s) from the Container to Your Host:**
 
     ```bash
-    # Replace 'myusername' with your actual username if different
-    sudo chown -R myusername:myusername ./build
+    # Copy the entire dist directory content
+    docker cp extractor_container:/app/dist/. ./dist/
     ```
-    **5. Remove the Temporary Container:**
+    *Replace `/app/dist/.` with the actual path inside your container where the ZIP files are generated.*
 
-    Don't forget to clean up:
+    **5. Check Ownership (If needed):**
+
+    ```bash
+    ls -l ./dist
+    # If owned by root:
+    # sudo chown -R $(whoami):$(whoami) ./dist
+    ```
+
+    **6. Remove the Temporary Container:**
 
     ```bash
     docker rm extractor_container
