@@ -1,0 +1,16 @@
+# docker/docker-compose.yml
+services:
+  build:
+    build:
+      # The build context is the parent directory (project root)
+      context: ..
+      # The dockerfile path is relative to the context (project root)
+      # Choose the specific Dockerfile you want docker-compose to use by default
+      # Or .build-firefox, etc.
+      dockerfile: docker/Dockerfile.build-chrome 
+      # Build up to the 'final' stage if needed (redundant if dockerfile already uses it)
+      # target: final
+    # Mount the host's build directory (relative to compose file's location)
+    volumes:
+      - ../build:/extension_build
+    # command: ["tail", "-f", "/dev/null"] # Keep container running if needed

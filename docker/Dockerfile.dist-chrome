@@ -1,0 +1,51 @@
+# docker/Dockerfile.dist-chrome
+# Builds the Chrome extension and packages it into a zip file
+# ready for extraction using docker cp.
+
+# Stage 1: Install dependencies leveraging caching
+FROM node:20-slim AS deps
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# --- Dependency Caching ---
+# Copy only necessary package manifests first from parent directory.
+COPY ../package.json ../pnpm-lock.yaml ../pnpm-workspace.yaml ./
+
+# Copy package.json files for each workspace to leverage caching further from parent directory.
+COPY ../packages/shared/package.json ./packages/shared/
+COPY ../packages/content-script/package.json ./packages/content-script/
+COPY ../packages/interceptor/package.json ./packages/interceptor/
+COPY ../packages/loadscript/package.json ./packages/loadscript/
+COPY ../packages/popup/package.json ./packages/popup/
+COPY ../packages/service-worker/package.json ./packages/service-worker/
+# Add any other workspace package.json files here if they exist
+
+# Install dependencies using the lockfile for reproducibility
+RUN pnpm install --frozen-lockfile
+
+# --- Build Stage ---
+# Stage 2: Build the extension and package it into a zip file
+FROM deps AS builder
+WORKDIR /app
+
+# Copy the rest of the source code needed for the build from parent directory
+# Copies the project root content into /app
+COPY .. .
+
+# Run the packaging script defined in your root package.json.
+RUN pnpm package:chrome
+# ASSUMPTION: This command creates the final packaged zip file(s)
+# inside the `/app/dist/` directory within this builder stage.
+
+# --- Final Stage ---
+# Stage 3: Final minimal stage containing only the packaged zip file(s)
+FROM node:20-slim AS final
+WORKDIR /extension_package
+
+# Copy the *packaged* output (the zip file(s)) from the builder stage's /app/dist directory.
+# This path is relative to the builder stage's WORKDIR, so it doesn't change.
+COPY --from=builder /app/dist .
+
+# No CMD or ENTRYPOINT needed.

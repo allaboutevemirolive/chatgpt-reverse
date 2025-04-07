@@ -138,7 +138,7 @@ This creates the unpacked extension files (similar to `pnpm build:chrome`) in th
 
 ```sh
 # Build the image containing the development files
-docker build -t chatgpt-reverse-chrome-build:latest -f Dockerfile.build-chrome .
+docker build -t chatgpt-reverse-chrome-build:latest -f docker/Dockerfile.build-chrome .
 
 # Clean previous extraction if necessary
 rm -rf ./build
@@ -153,6 +153,9 @@ docker cp extractor_container:/extension_build/. ./build
 # Remove the temporary container
 docker rm extractor_container
 
+# Clean up built images
+docker rmi chatgpt-reverse-chrome-build
+
 # Verify the build directory exists and has content
 ls ./build
 ```
@@ -163,7 +166,7 @@ This creates the final packaged `.zip` file (similar to `pnpm package:chrome`) i
 
 ```sh
 # Build the image containing the packaged zip file
-docker build -t chatgpt-reverse-chrome-dist:latest -f Dockerfile.dist-chrome .
+docker build -t chatgpt-reverse-chrome-dist:latest -f docker/Dockerfile.dist-chrome .
 
 # Clean previous extraction if necessary
 rm -rf ./dist
@@ -178,6 +181,9 @@ docker cp extractor_container:/extension_package/. ./dist
 
 # Clean up the temporary container
 docker rm extractor_container
+
+# Clean up built images
+docker rmi chatgpt-reverse-chrome-dist
 
 # Verify the zip file is in your local ./dist directory
 ls ./dist
