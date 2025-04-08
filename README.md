@@ -2,7 +2,7 @@
 <!-- # ChatGPT Reverse -->
 
 <p align="center">
-  <img src="./public/logo.svg" alt="Project Logo" width="450"/>
+  <img src="./assets/chatgpt_reverse_title.svg" alt="Project Logo" width="450"/>
 </p>
 
 <p align="center">
