@@ -177,7 +177,6 @@ mkdir ./dist
 docker create --name extractor_container chatgpt-reverse-chrome-dist:latest
 
 # Copy the contents (the zip file) from the container's WORKDIR
-# Adjust /extension_package/ if your final stage WORKDIR is different
 docker cp extractor_container:/extension_package/. ./dist
 
 # Clean up the temporary container
