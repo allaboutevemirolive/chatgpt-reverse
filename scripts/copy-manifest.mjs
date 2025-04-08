@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 
 // Define project root and paths
 const projectRoot = path.resolve(__dirname, '..');
-const publicDir = path.resolve(projectRoot, 'public');
+const manifestDir = path.resolve(projectRoot, 'manifest');
 const buildDir = path.resolve(projectRoot, 'build');
 
 async function main() {
@@ -30,7 +30,7 @@ async function main() {
 
     // 2. Define manifest paths
     const sourceManifestFilename = `manifest.${targetBrowser}.json`;
-    const sourceManifestPath = path.resolve(publicDir, sourceManifestFilename);
+    const sourceManifestPath = path.resolve(manifestDir, sourceManifestFilename);
     const destManifestPath = path.resolve(buildDir, 'manifest.json'); // Destination is always manifest.json
 
     try {

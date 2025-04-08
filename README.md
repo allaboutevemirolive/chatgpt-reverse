@@ -39,7 +39,8 @@ The monorepo is organized into several distinct packages within the `packages/` 
 *   `packages/shared`: Common TypeScript types, utility functions, constants, etc., shared across other packages. Built independently using `tsc`.
 *   `packages/interceptor`: A dedicated script, likely for intercepting network requests, intended to be injected into the page context. Built as an IIFE.
 *   `packages/loadscript`: A utility script, likely responsible for injecting other scripts (like the interceptor) into the page context. Built as an IIFE.
-*   `public/`: Contains root-level static assets for the extension, primarily `manifest.chrome.json`, `manifest.firefox.json`, and icons.
+*   `manifest/`: Contains the browser-specific manifest files (`manifest.chrome.json`, `manifest.firefox.json`).
+*   `public/`: Contains root-level static assets like icons (`logo.svg`).
 *   `hosting/`: Contains static files for Firebase Hosting (e.g., `privacy.html`).
 *   `build/`: **(Generated)** The output directory containing the intermediate files before packaging.
 *   `dist/`: **(Generated)** The output directory containing the final packaged `.zip` files for distribution.

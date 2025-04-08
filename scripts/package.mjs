@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 const buildDir = path.resolve(projectRoot, "build");
 const outputDir = path.resolve(projectRoot, "dist");
-const publicDir = path.resolve(projectRoot, "public");
+const manifestDir = path.resolve(projectRoot, "manifest");
 
 async function main() {
     // 1. Determine target browser from command line arguments
@@ -27,8 +27,8 @@ async function main() {
     console.log(`📦 Starting packaging process for: ${targetBrowser.toUpperCase()}`);
 
     // 2. Define manifest paths
-    const chromeManifestPath = path.resolve(publicDir, "manifest.chrome.json");
-    const firefoxManifestPath = path.resolve(publicDir, "manifest.firefox.json");
+    const chromeManifestPath = path.resolve(manifestDir, "manifest.chrome.json");
+    const firefoxManifestPath = path.resolve(manifestDir, "manifest.firefox.json");
     const buildManifestPath = path.resolve(buildDir, "manifest.json");
 
     // Select the correct source manifest
