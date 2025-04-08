@@ -2,7 +2,7 @@
 <!-- # ChatGPT Reverse -->
 
 <p align="center">
-  <img src="./assets/logo.svg" alt="Project Logo" width="450"/>
+  <img src="./public/logo.svg" alt="Project Logo" width="450"/>
 </p>
 
 <p align="center">
@@ -37,10 +37,10 @@ The monorepo is organized into several distinct packages within the `packages/` 
 *   `packages/content-script`: Code injected into and interacting with web pages (specifically `chatgpt.com` as per the manifest).
 *   `packages/service-worker`: The background service worker handling core logic, event listeners, and message passing (MV3 standard).
 *   `packages/shared`: Common TypeScript types, utility functions, constants, etc., shared across other packages. Built independently using `tsc`.
-*   `packages/interceptor`: A dedicated script, likely for intercepting network requests, intended to be injected into the page context. Built as an IIFE.
-*   `packages/loadscript`: A utility script, likely responsible for injecting other scripts (like the interceptor) into the page context. Built as an IIFE.
+*   `packages/interceptor`: A dedicated script for intercepting network requests, intended to be injected into the page context. Built as an IIFE.
+*   `packages/loadscript`: A utility script responsible for injecting other scripts (like the interceptor) into the page context. Built as an IIFE.
 *   `manifest/`: Contains the browser-specific manifest files (`manifest.chrome.json`, `manifest.firefox.json`).
-*   `public/`: Contains root-level static assets like icons (`logo.svg`).
+*   `public/`: Files in `public` are copied directly to the root of the build output directory as-is, without processing.
 *   `hosting/`: Contains static files for Firebase Hosting (e.g., `privacy.html`).
 *   `build/`: **(Generated)** The output directory containing the intermediate files before packaging.
 *   `dist/`: **(Generated)** The output directory containing the final packaged `.zip` files for distribution.
