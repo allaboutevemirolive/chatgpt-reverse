@@ -6,7 +6,7 @@
     "icons": {
         "16": "logo_16.png",
         "48": "logo_48.png",
-        "64": "logo.svg",
+        "64": "logo_64.png",
         "128": "logo_128.png"
     },
     "browser_specific_settings": {
@@ -18,7 +18,7 @@
         "default_popup": "popup/index.html",
         "default_icon": {
             "16": "logo_16.png",
-            "32": "logo_48.png",
+            "32": "logo_32.png",
             "48": "logo_48.png"
         }
     },
