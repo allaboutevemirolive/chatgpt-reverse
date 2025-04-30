@@ -1,0 +1,103 @@
+/* packages/popup/src/auth.css */
+
+/* Import fonts or define base styles if needed */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Example: Using Inter font */
+
+:root {
+    /* Define CSS variables based on the shared theme */
+    /* Backgrounds */
+    --bg-primary: #1e1e2e;
+    --bg-secondary: #282a36;
+    --bg-hover: #2a2a3c;
+    --bg-active: #343746;
+
+    /* Text */
+    --text-primary: #e5e5e5;
+    --text-secondary: #c0c0dd;
+    --text-disabled: #626270;
+    --text-tertiary: #6B7280;
+    /* Added from theme */
+
+    /* Accents */
+    --accent-primary: #f38ba8;
+    --accent-hover: #f76e94;
+    --accent-active: #e05a7f;
+
+    /* Borders */
+    --border-primary: #3b3b4d;
+    --border-secondary: #4a4a5e;
+
+    /* Status */
+    --error: #ff5555;
+    --success: #50fa7b;
+    --warning: #f1fa8c;
+
+    /* Typography */
+    --font-family: 'Inter', 'Arial', sans-serif;
+    --fs-small: 12px;
+    --fs-medium: 14px;
+    /* Adjusted base for forms */
+    --fs-large: 18px;
+    --fs-xlarge: 22px;
+    --fw-normal: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
+    /* Spacing */
+    --space-xxs: 4px;
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-xxl: 48px;
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    /* Adjusted for consistency */
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    /* Shadows (use sparingly on auth page maybe) */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5);
+
+    /* Transitions */
+    --transition-duration: 150ms;
+    --transition-easing: ease-in-out;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    /* Ensure body takes full height */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: var(--fs-medium);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+    height: 100%;
+    /* Make sure root div takes full height */
+    width: 100%;
+}

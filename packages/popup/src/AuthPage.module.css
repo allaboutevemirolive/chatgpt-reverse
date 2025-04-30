@@ -1,0 +1,184 @@
+/* packages/popup/src/AuthPage.module.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    /* Use min-height to fill viewport */
+    padding: var(--space-xl);
+    /* Inherits background/color from body via auth.css */
+}
+
+.form {
+    width: 100%;
+    max-width: 380px;
+    /* Slightly wider form */
+    padding: var(--space-lg) var(--space-xl);
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    /* Slightly larger radius */
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.title {
+    font-size: var(--fs-xlarge);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0 0 var(--space-sm) 0;
+    /* Adjusted margin */
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.label {
+    font-size: var(--fs-small);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    cursor: pointer;
+    /* Make label clickable */
+}
+
+.input {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--fs-medium);
+    font-family: inherit;
+    /* Ensure font consistency */
+    outline: none;
+    transition:
+        border-color var(--transition-duration) var(--transition-easing),
+        box-shadow var(--transition-duration) var(--transition-easing);
+}
+
+.input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+    /* Subtle glow using color-mix */
+}
+
+.input::placeholder {
+    color: var(--text-tertiary);
+    opacity: 0.8;
+}
+
+.button {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--accent-primary);
+    color: var(--bg-secondary);
+    /* High contrast text */
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-medium);
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+    transition:
+        background-color var(--transition-duration) var(--transition-easing),
+        opacity var(--transition-duration) var(--transition-easing);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    min-height: 44px;
+    /* Consistent height */
+    text-align: center;
+    /* Ensure text is centered */
+    line-height: 1.2;
+    /* Adjust line height */
+}
+
+.button:not(:disabled):hover {
+    background-color: var(--accent-hover);
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.toggleButton {
+    background: none;
+    border: none;
+    color: var(--accent-primary);
+    text-decoration: none;
+    /* Remove default underline */
+    cursor: pointer;
+    padding: var(--space-xs);
+    font-size: var(--fs-small);
+    margin-top: var(--space-sm);
+    text-align: center;
+    transition: color var(--transition-duration) var(--transition-easing);
+}
+
+.toggleButton:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+    /* Add underline on hover */
+}
+
+.toggleButton:disabled {
+    color: var(--text-disabled);
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.message {
+    width: 100%;
+    /* Span the form width */
+    max-width: 380px;
+    /* Match form max-width */
+    padding: var(--space-sm);
+    margin-top: var(--space-md);
+    /* Space between form and messages */
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-small);
+    text-align: center;
+    border: 1px solid transparent;
+    line-height: 1.4;
+}
+
+.errorMessage {
+    composes: message;
+    /* Inherit base message styles */
+    background-color: color-mix(in srgb, var(--error) 15%, transparent);
+    color: var(--error);
+    border-color: color-mix(in srgb, var(--error) 40%, transparent);
+}
+
+.successMessage {
+    composes: message;
+    /* Inherit base message styles */
+    background-color: color-mix(in srgb, var(--success) 15%, transparent);
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 40%, transparent);
+}
+
+/* Spinner Animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+    /* Spinner color matching button text */
+    border-top-color: var(--bg-secondary);
+    /* Solid top */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
