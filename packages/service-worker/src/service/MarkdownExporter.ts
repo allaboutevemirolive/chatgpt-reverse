@@ -198,10 +198,10 @@ export function generateMarkdownFileName(
     // Sanitize title part if provided
     const sanitizedTitle = title
         ? title
-              .replace(/[/\\?%*:|"<>]/g, "-") // Remove illegal characters
-              .replace(/\s+/g, "_") // Replace spaces with underscores
-              .substring(0, 50) // Limit length
-              .replace(/_+$/, "") // Remove trailing underscores
+            .replace(/[/\\?%*:|"<>]/g, "-") // Remove illegal characters
+            .replace(/\s+/g, "_") // Replace spaces with underscores
+            .substring(0, 50) // Limit length
+            .replace(/_+$/, "") // Remove trailing underscores
         : "";
 
     const datePart = `${year}-${month}-${day}-${hours}${minutes}${seconds}`;

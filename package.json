@@ -1,6 +1,6 @@
 {
     "name": "chatgpt-reverse",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "private": true,
     "description": "A ChatGPT extension built around reverse-engineered REST API.",
     "scripts": {
@@ -24,7 +24,7 @@
     },
     "keywords": [],
     "author": "Akmal Firdaus <https://x.com/akmalfirdxus>",
-    "license": "ISC",
+    "license": "MIT",
     "devDependencies": {
         "@biomejs/biome": "^1.9.4",
         "@testing-library/jest-dom": "^6.6.3",
@@ -41,5 +41,9 @@
         "typescript": "^5.4.5",
         "vite": "^6.2.5",
         "vitest": "^3.1.1"
+    },
+    "dependencies": {
+        "firebase": "^11.6.1",
+        "react-firebase-hooks": "^5.1.1"
     }
 }

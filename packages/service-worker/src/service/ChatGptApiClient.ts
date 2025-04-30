@@ -133,12 +133,10 @@ export class ChatGptApiClient {
         body?: any,
         responseType: "json" | "blob" = "json",
     ): Promise<T> {
-        // --- MODIFICATION START ---
         // Attempt to refresh headers from storage right before making the request.
         // This adds robustness against timing issues where the instance might not
         // have the latest headers immediately after interception.
         await this.refreshHeadersFromStorage();
-        // --- MODIFICATION END ---
 
         const currentHeaders = this.getHeaders(); // Get potentially updated headers
 
@@ -274,7 +272,7 @@ export class ChatGptApiClient {
         limit: number = 28,
         order: string = "updated",
     ): Promise<any> {
-        // Consider defining a specific ConversationListResponse type
+        // TODO: Consider defining a specific ConversationListResponse type
         return this.makeRequest(
             `/backend-api/conversations?offset=${offset}&limit=${limit}&order=${order}`,
             "GET",

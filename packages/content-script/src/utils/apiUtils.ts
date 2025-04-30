@@ -56,7 +56,7 @@ interface FetchConversationsParams {
 type ConversationSummary = {
     id: string;
     title: string;
-    create_time: number /* ... */;
+    create_time: number;
 };
 type ConversationListResponse = {
     items: ConversationSummary[];
@@ -85,7 +85,8 @@ export async function fetchConversations(
 }
 
 // -- Fetch Single Conversation --
-type ConversationDetailResponse = any; // Replace any with specific type if known
+// TODO: Replace any with specific type if known
+type ConversationDetailResponse = any;
 
 export async function fetchConversationDetail(
     conversationId: string,
@@ -121,7 +122,7 @@ interface ShareConversationParams {
     conversationId: string;
     currentNodeId: string;
 }
-type ShareResponse = { share_url?: string; [key: string]: any };
+type ShareResponse = { share_url?: string;[key: string]: any };
 
 export async function shareConversation(
     params: ShareConversationParams,
@@ -182,7 +183,7 @@ interface AutocompletionsParams {
     numCompletions?: number | string;
     inSearchMode?: boolean | string;
 }
-type AutocompletionsResponse = { completions?: string[]; [key: string]: any };
+type AutocompletionsResponse = { completions?: string[];[key: string]: any };
 
 export async function generateAutocompletions(
     params: AutocompletionsParams,

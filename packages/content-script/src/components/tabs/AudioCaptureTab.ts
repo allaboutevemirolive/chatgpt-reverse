@@ -129,7 +129,6 @@ export class AudioCaptureTab {
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             width: "350px",
-
             lineHeight: "1.4",
             display: "flex",
             alignItems: "center",

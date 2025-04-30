@@ -22,9 +22,22 @@ import {
 } from "@/service/ConversationProcessor";
 import { exportConversationAsMarkdown } from "@/service/MarkdownExporter";
 import { countConversationTokens } from "@/service/ConversationTokens";
+import ExtPay from 'extpay';
 
 console.log("Shared Version:", VERSION);
 console.log("Service Worker starting...");
+
+// ============================================================================
+
+// PAYMENT GATEWAY
+
+const extpay = ExtPay('chatgpt-reverse');
+extpay.startBackground();
+extpay.getUser().then(user => {
+    console.log("get user", user)
+});
+
+// ============================================================================
 
 (async () => {
     try {
