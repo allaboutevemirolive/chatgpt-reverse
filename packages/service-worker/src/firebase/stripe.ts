@@ -20,47 +20,52 @@ import {
     FIRESTORE_CHECKOUT_SESSIONS_SUBCOLLECTION,
 } from "@/config/constants";
 
-interface CheckoutSessionPayload {
-    planId: "monthly" | "lifetime";
-}
-
-interface CheckoutSessionResult {
-    checkoutUrl: string;
+interface CheckoutSessionDocData {
+    url?: string;
+    error?: { message: string };
 }
 
 /**
  * Creates a Firestore document to trigger the Stripe Checkout session creation extension.
  * Listens for the URL or error added back to the document by the extension.
- * @param payload - Contains the planId ('monthly' or 'lifetime').
- * @returns A promise resolving with the Stripe Checkout URL.
+ * @param planId - The identifier for the plan ('monthly' or 'lifetime').
+ * @returns A promise resolving with the Stripe Checkout URL string.
+ * @throws An error if the user is not logged in, the planId is invalid,
+ *         the Price ID is missing, Firestore operation fails,
+ *         the extension reports an error, or the operation times out.
  */
-export async function createCheckoutSession(
-    payload: CheckoutSessionPayload,
-): Promise<CheckoutSessionResult> {
+export async function getCheckoutUrl(
+    planId: "monthly" | "lifetime",
+): Promise<string> { // Return type is now string
     const currentUser = getCurrentUser(); // Get the cached current user
     const userId = currentUser?.uid;
 
     if (!userId) {
-        console.error("Firebase Stripe: User not logged in.");
+        console.error("Firebase Stripe (getCheckoutUrl): User not logged in.");
         throw new Error("User must be logged in to start checkout.");
     }
 
     let priceId: string | undefined;
-    switch (payload.planId) {
+    let mode: "payment" | "subscription";
+
+    switch (planId) {
         case "monthly":
             priceId = STRIPE_PRICE_ID_MONTHLY;
+            mode = "subscription";
             break;
         case "lifetime":
             priceId = STRIPE_PRICE_ID_LIFETIME;
+            mode = "payment";
             break;
         default:
-            console.error(`Firebase Stripe: Invalid planId: ${payload.planId}`);
+            // Should be caught by validation in background.ts, but defensive check here
+            console.error(`Firebase Stripe (getCheckoutUrl): Invalid planId: ${planId}`);
             throw new Error(`Invalid plan selected.`);
     }
 
     if (!priceId) {
         console.error(
-            `Firebase Stripe: Stripe Price ID missing for plan: ${payload.planId}. Check constants.`,
+            `Firebase Stripe (getCheckoutUrl): Stripe Price ID missing for plan: ${planId}. Check constants.`,
         );
         throw new Error(
             `Configuration error: Price ID for the selected plan is missing.`,
@@ -68,7 +73,7 @@ export async function createCheckoutSession(
     }
 
     console.log(
-        `Firebase Stripe: Creating checkout session document for user ${userId}, price ${priceId}`,
+        `Firebase Stripe (getCheckoutUrl): Creating checkout session doc for user ${userId}, price ${priceId}`,
     );
     const db = getDb();
     const checkoutSessionCollection = collection(
@@ -79,41 +84,40 @@ export async function createCheckoutSession(
     );
 
     try {
+        // Create the document in Firestore to trigger the extension
         const docRef: DocumentReference<DocumentData> = await addDoc(
             checkoutSessionCollection,
             {
                 price: priceId,
                 success_url: CHECKOUT_SUCCESS_URL,
                 cancel_url: CHECKOUT_CANCEL_URL,
-                mode:
-                    payload.planId === "lifetime" ? "payment" : "subscription",
-                // Optional metadata
-                // client: 'extension',
-                // metadata: { source: 'chrome-extension-auth-page' }
+                mode: mode,
+                // auto_tax: true // Optionally enable automatic tax calculation
+                // allow_promotion_codes: true // Optionally enable promo codes
+                // metadata: { source: 'chrome-extension-auth-page' } // Optional metadata
             },
         );
 
-        console.log(
-            "Firebase Stripe: Checkout session document created:",
-            docRef.id,
-        );
+        console.log("Firebase Stripe (getCheckoutUrl): Checkout session document created:", docRef.id);
 
-        // Wait for the Stripe Extension to update the document
-        return new Promise<CheckoutSessionResult>((resolve, reject) => {
+        // Wait for the Stripe Extension to update the document with the URL
+        return new Promise<string>((resolve, reject) => { // Promise resolves with string
             let timedOut = false;
             let unsubscribeCalled = false;
             let timeoutHandle: NodeJS.Timeout | null = null;
             let unsubscribeFirestore: Unsubscribe | null = null;
 
-            const cleanup = () => {
+            const cleanup = (error?: Error) => {
                 if (timeoutHandle) clearTimeout(timeoutHandle);
+                timeoutHandle = null;
                 if (unsubscribeFirestore && !unsubscribeCalled) {
                     unsubscribeCalled = true;
-                    console.log(
-                        "Firebase Stripe: Unsubscribing Firestore listener for",
-                        docRef.id,
-                    );
+                    console.log("Firebase Stripe (getCheckoutUrl): Unsubscribing listener for", docRef.id);
                     unsubscribeFirestore();
+                    unsubscribeFirestore = null;
+                }
+                if (error && !timedOut) { // Don't reject again if already timed out
+                    reject(error);
                 }
             };
 
@@ -121,74 +125,61 @@ export async function createCheckoutSession(
                 docRef,
                 (snap) => {
                     if (timedOut || unsubscribeCalled) return;
-                    const data = snap.data();
+                    const data = snap.data() as CheckoutSessionDocData | undefined; // Type assertion
                     console.log(
-                        "Firebase Stripe: Snapshot raw data for checkout session:",
-                        docRef.id,
-                        JSON.stringify(data || {}),
+                        "Firebase Stripe (getCheckoutUrl): Snapshot update:", docRef.id, JSON.stringify(data || {})
                     );
 
+                    // Check for error first
                     if (data?.error) {
                         console.error(
-                            "Firebase Stripe: Stripe extension reported error:",
-                            data.error,
+                            "Firebase Stripe (getCheckoutUrl): Stripe extension reported error:", data.error
                         );
-                        cleanup();
-                        reject(
-                            new Error(
-                                `Checkout failed: ${data.error.message || "Unknown Stripe error"}`,
-                            ),
-                        );
-                    } else if (data?.url) {
+                        cleanup(new Error(`Checkout failed: ${data.error.message || "Unknown Stripe error"}`));
+                    }
+                    // Then check for URL
+                    else if (data?.url) {
                         console.log(
-                            "Firebase Stripe: Stripe Checkout URL retrieved:",
-                            data.url,
+                            "Firebase Stripe (getCheckoutUrl): URL retrieved:", data.url
                         );
-                        cleanup();
-                        resolve({ checkoutUrl: data.url });
-                    } else {
-                        console.log(
-                            `Firebase Stripe: Snapshot for ${docRef.id} updated, but no url or error field yet.`,
-                        );
+                        cleanup(); // Clean up listener successfully
+                        resolve(data.url); // Resolve the promise with the URL string
+                    }
+                    // Otherwise, keep listening...
+                    else {
+                        console.log(`Firebase Stripe: Snapshot for ${docRef.id} updated, still waiting for url/error.`);
                     }
                 },
-                (error: FirestoreError) => {
+                (error: FirestoreError) => { // Handle listener errors
                     if (timedOut || unsubscribeCalled) return;
                     console.error(
-                        "Firebase Stripe: Firestore snapshot listener error:",
-                        docRef.id,
-                        error,
+                        "Firebase Stripe (getCheckoutUrl): Firestore listener error:", docRef.id, error
                     );
-                    cleanup();
-                    reject(
-                        new Error(
-                            `Failed to listen for checkout session updates: ${error.message}`,
-                        ),
-                    );
+                    cleanup(new Error(`Failed to listen for checkout session updates: ${error.message}`));
                 },
             );
 
+            // Set timeout
             timeoutHandle = setTimeout(() => {
                 if (timedOut || unsubscribeCalled) return;
-                timedOut = true;
+                timedOut = true; // Mark as timed out
                 console.warn(
-                    `Firebase Stripe: Timeout (${CHECKOUT_LISTENER_TIMEOUT}ms) waiting for checkout URL for doc ${docRef.id}`,
+                    `Firebase Stripe (getCheckoutUrl): Timeout (${CHECKOUT_LISTENER_TIMEOUT}ms) waiting for URL for doc ${docRef.id}`
                 );
-                cleanup();
-                reject(
-                    new Error(
-                        "Timeout waiting for Stripe Checkout URL. Please try again.",
-                    ),
-                );
+                // Reject *only if* cleanup hasn't already happened due to error/success
+                if (!unsubscribeCalled) {
+                    cleanup(new Error("Timeout waiting for Stripe Checkout URL. Please try again."));
+                }
             }, CHECKOUT_LISTENER_TIMEOUT);
-        });
-    } catch (error) {
+        }); // End of Promise
+
+    } catch (error) { // Catch errors during addDoc
         console.error(
-            "Firebase Stripe: Firestore error adding checkout session doc:",
+            "Firebase Stripe (getCheckoutUrl): Firestore error adding checkout session doc:",
             error,
         );
         throw new Error(
-            `Failed to initiate checkout: ${(error as Error).message}`,
+            `Failed to initiate checkout Firestore operation: ${(error as Error).message}`,
         );
     }
 }

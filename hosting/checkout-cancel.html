@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Cancelled - ChatGPT Reverse</title>
+    <style>
+        :root {
+            /* Basic Theme Colors (inspired by your auth.css) */
+            --bg-primary: #1e1e2e;
+            --text-primary: #e5e5e5;
+            --text-secondary: #c0c0dd;
+            --error: #ff5555;
+            --accent-primary: #f38ba8;
+            --font-family: "Inter", "Arial", sans-serif;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --radius-md: 8px;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: inherit;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--space-lg);
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #282a36;
+            /* Slightly lighter background for card */
+            padding: var(--space-lg) var(--space-lg);
+            border-radius: var(--radius-md);
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: var(--error);
+            /* Red for cancel/error */
+            margin-top: 0;
+            margin-bottom: var(--space-md);
+            font-size: 2em;
+        }
+
+        p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--space-md);
+            font-size: 1.1em;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Payment Cancelled</h1>
+        <p>
+            Your checkout process was cancelled, or it could not be
+            completed.
+        </p>
+        <p>You have not been charged.</p>
+        <p>
+            You can close this tab. Feel free to try upgrading again from
+            the extension's account page.
+        </p>
+        <!-- Optional: Add a link back -->
+        <!-- <p><a href="#" onclick="window.close(); return false;">Close Tab</a></p> -->
+    </div>
+</body>
+
+</html>

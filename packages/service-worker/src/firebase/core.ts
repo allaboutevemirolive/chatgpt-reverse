@@ -36,11 +36,16 @@ export function initializeFirebase(): void {
         // Initialize Firestore (allow specifying DB name)
         firestoreInstance = getFirestore(
             firebaseAppInstance,
-            FIRESTORE_DB_NAME,
+            // FIRESTORE_DB_NAME,
         );
+
         console.log(
-            `Firebase Core: Firestore initialized (DB: ${FIRESTORE_DB_NAME}).`,
+            `Firebase Core: Firestore initialized (DB: (default)).`,
         );
+
+        // console.log(
+        //     `Firebase Core: Firestore initialized (DB: ${FIRESTORE_DB_NAME}).`,
+        // );
 
         // Initialize Auth
         firebaseAuthInstance = getAuth(firebaseAppInstance);

@@ -10,7 +10,7 @@ import {
     awaitAuthReady,
     resetAuthReadyPromise,
 } from "@/firebase/auth";
-import { createCheckoutSession } from "@/firebase/stripe";
+import { getCheckoutUrl } from "@/firebase/stripe";
 import { ChatGptApiClient } from "@/service/ChatGptApiClient";
 import * as ChatGptService from "@/service/ChatGptService";
 import * as ConversationProcessor from "@/service/ConversationProcessor";
@@ -206,17 +206,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         // --- Stripe (Delegated) ---
         case "CREATE_CHECKOUT_SESSION":
-            if (
-                !message.payload?.planId ||
-                !["monthly", "lifetime"].includes(message.payload.planId)
-            ) {
+            const planId = message.payload?.planId; // Extract planId
+            if (!planId || !["monthly", "lifetime"].includes(planId)) {
+                console.error("SW: Invalid or missing planId in payload:", message.payload);
                 sendResponse({
                     success: false,
                     error: { message: "Invalid or missing planId in payload" },
                 });
                 return false; // Sync validation fail
             }
-            handleAsync(() => createCheckoutSession(message.payload));
+            // Pass the extracted planId string to getCheckoutUrl
+            handleAsync(() => getCheckoutUrl(planId));
             break;
 
         // --- ChatGPT API Wrappers (Delegated) ---

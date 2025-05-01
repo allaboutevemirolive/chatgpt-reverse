@@ -30,11 +30,11 @@ interface UserSubscription {
 
 // Props expected by the PricingSection component
 interface PricingSectionProps {
-    userSubscription: UserSubscription | null; // User's current subscription data
-    isLoggedIn: boolean; // Is the user currently logged into Firebase Auth?
-    isLoadingCheckout: PlanData["id"] | null; // ID of the plan currently being processed for checkout, or null
-    onSelectPlan: (planId: PlanData["id"]) => void; // Callback when a paid plan button is clicked by a logged-in user
-    onLoginRequired: () => void; // Callback if a paid plan button is clicked by a logged-out user
+    userSubscription: UserSubscription | null;
+    isLoggedIn: boolean;
+    isLoadingCheckout: PlanData['id'] | null;
+    onSelectPlan: (planId: 'monthly' | 'lifetime') => void; // Correctly type the callback
+    onLoginRequired: () => void;
 }
 
 // --- Component Implementation ---
