@@ -1,11 +1,8 @@
 // packages/popup/src/App.tsx
 import { useState, useEffect } from "react";
-import logo from "./assets/logo.svg"; // Make sure you have this asset
-// import { theme } from "@shared"; // Theme object no longer directly needed for inline styles
+import logo from "./assets/logo.svg";
 import { sendMessageToSW } from "./utils/swMessenger";
-import styles from "./App.module.css"; // Import the CSS module
-// Remove App.css import if its styles are covered by index.css and App.module.css
-// import "./App.css";
+import styles from "./App.module.css";
 
 // --- Type Definitions ---
 interface UserData {
@@ -32,10 +29,10 @@ function App() {
         const fetchAuthState = async () => {
             // Ensure loading state is true at the start if not already
             if (isMounted && !isLoadingAuth) {
-                 setIsLoadingAuth(true);
-                 setAuthError(null);
+                setIsLoadingAuth(true);
+                setAuthError(null);
             } else if (isMounted) {
-                 setAuthError(null); // Clear error even if already loading
+                setAuthError(null); // Clear error even if already loading
             }
 
             try {
@@ -64,12 +61,12 @@ function App() {
 
         const messageListener = (message: any) => {
             if (message.type === 'AUTH_STATE_UPDATED' && isMounted) {
-                 console.log("Popup: Received AUTH_STATE_UPDATED", message.payload);
-                 if (typeof message.payload?.isLoggedIn === 'boolean') {
-                     setAuthState(message.payload);
-                     setIsLoadingAuth(false);
-                     setAuthError(null);
-                 }
+                console.log("Popup: Received AUTH_STATE_UPDATED", message.payload);
+                if (typeof message.payload?.isLoggedIn === 'boolean') {
+                    setAuthState(message.payload);
+                    setIsLoadingAuth(false);
+                    setAuthError(null);
+                }
             }
         };
         chrome.runtime.onMessage.addListener(messageListener);
@@ -121,17 +118,17 @@ function App() {
         if (authError) {
             console.log("Popup: Rendering Error State:", authError);
             // Offer a way to retry or login again
-             return (
+            return (
                 <>
                     <p className={styles.errorText}>{authError}</p>
-                     <button
-                         onClick={openAuthPage}
-                         className={styles.button}
-                     >
-                         Login / Register
-                     </button>
+                    <button
+                        onClick={openAuthPage}
+                        className={styles.button}
+                    >
+                        Login / Register
+                    </button>
                 </>
-             );
+            );
         }
 
         // If loading is finished and no error, *then* check login state
