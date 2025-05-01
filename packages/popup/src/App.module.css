@@ -1,7 +1,8 @@
 /* packages/popup/src/App.module.css */
 
+/* Assuming CSS variables are defined globally (e.g., in index.css or auth.css) */
+
 .container {
-    /* Use variables defined in :root (index.css) */
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-family);
@@ -10,9 +11,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+    /* Align content to the top */
     width: 100%;
-    /* Take full width defined by body */
+    /* Let index.css control overall width */
     min-height: 350px;
+    /* Give it some minimum height */
     box-sizing: border-box;
     gap: var(--space-md);
     text-align: center;
@@ -36,6 +39,7 @@
     font-size: var(--fs-small);
     margin: 0;
     max-width: 90%;
+    /* Prevent text touching edges */
 }
 
 .instructionBox {
@@ -45,6 +49,7 @@
     border: 1px solid var(--border-secondary);
     width: 100%;
     max-width: 260px;
+    /* Adjust max-width for popup */
     box-shadow: var(--shadow-sm);
     margin-top: var(--space-sm);
 }
@@ -58,8 +63,8 @@
 }
 
 .instructionSubText {
-    color: var(--text-secondary);
-    font-size: var(--fs-small);
+    composes: description;
+    /* Inherit description styles */
     margin-bottom: var(--space-sm);
 }
 
@@ -84,7 +89,9 @@
 }
 
 .kbdCode {
+    /* Specific style for the code element within instructionSubText */
     composes: kbd;
+    /* Inherit kbd styles */
     padding: 1px 4px;
     font-size: 11px;
 }
@@ -105,14 +112,16 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-sm);
+    /* Reduced gap */
 }
 
 .loggedInText {
-    color: var(--text-secondary);
-    font-size: var(--fs-small);
+    composes: description;
+    /* Inherit description styles */
     font-weight: var(--fw-normal);
     word-break: break-all;
     line-height: var(--lh-small);
+    /* Use theme line height */
 }
 
 .loggedInEmail {
@@ -125,7 +134,7 @@
     min-width: 150px;
     background-color: var(--accent-primary);
     color: var(--bg-primary);
-    /* Contrast against accent */
+    /* High contrast text */
     border: none;
     border-radius: var(--radius-sm);
     font-size: var(--fs-medium);

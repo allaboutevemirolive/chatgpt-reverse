@@ -9,8 +9,8 @@ import {
     signOut,
 } from "firebase/auth";
 
-import { VERSION } from "@shared"; // Assuming you export version from shared
-import firebaseConfig from "./config/firebaseConfigs"; // Import the config object
+import { VERSION } from "@shared";
+import firebaseConfig from "./config/firebaseConfigs";
 import { ChatGptApiClient } from "@/service/ChatGptApiClient";
 import {
     fetchConversations,
@@ -41,7 +41,7 @@ console.log("Shared Version:", VERSION);
 // ============================================================================
 // PAYMENT GATEWAY (Example - Uncomment and configure if needed)
 // ============================================================================
-// const extpay = ExtPay('chatgpt-reverse'); // Replace with your ExtensionPay ID
+// const extpay = ExtPay('chatgpt-reverse'); 
 // extpay.startBackground();
 // extpay.getUser().then(user => {
 //     console.log("ExtensionPay User:", user);

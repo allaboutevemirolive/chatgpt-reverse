@@ -1,8 +1,11 @@
 // packages/popup/src/App.tsx
 import { useState, useEffect } from "react";
-import logo from "./assets/logo.svg";
+import logo from "./assets/logo.svg"; // Make sure you have this asset
+// import { theme } from "@shared"; // Theme object no longer directly needed for inline styles
 import { sendMessageToSW } from "./utils/swMessenger";
-import styles from "./App.module.css";
+import styles from "./App.module.css"; // Import the CSS module
+// Remove App.css import if its styles are covered by index.css and App.module.css
+// import "./App.css";
 
 // --- Type Definitions ---
 interface UserData {
@@ -18,34 +21,67 @@ interface AuthState {
 function App() {
     // --- State Variables ---
     const [authState, setAuthState] = useState<AuthState>({ isLoggedIn: false, uid: null, email: null });
-    const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
+    const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true); // Keep loading true initially
     const [authError, setAuthError] = useState<string | null>(null);
 
     // --- Fetch Auth State ---
     useEffect(() => {
+        console.log("Popup: useEffect started. Initial isLoadingAuth:", isLoadingAuth);
+        let isMounted = true;
+
         const fetchAuthState = async () => {
-            setIsLoadingAuth(true);
-            setAuthError(null);
+            // Ensure loading state is true at the start if not already
+            if (isMounted && !isLoadingAuth) {
+                 setIsLoadingAuth(true);
+                 setAuthError(null);
+            } else if (isMounted) {
+                 setAuthError(null); // Clear error even if already loading
+            }
+
             try {
+                console.log("Popup: Sending GET_AUTH_STATE message...");
                 const userData = await sendMessageToSW<UserData | null>({ type: "GET_AUTH_STATE" });
+                console.log("Popup: Received auth state response:", userData);
+
+                if (!isMounted) return;
+
                 setAuthState(userData ? { isLoggedIn: true, ...userData } : { isLoggedIn: false, uid: null, email: null });
+
             } catch (error: any) {
+                if (!isMounted) return;
+                console.error("Popup: Error fetching auth state:", error);
                 setAuthError(error.message || "Failed to fetch authentication status.");
                 setAuthState({ isLoggedIn: false, uid: null, email: null });
             } finally {
-                setIsLoadingAuth(false);
+                if (isMounted) {
+                    console.log("Popup: fetchAuthState finally block. Setting isLoadingAuth to false.");
+                    setIsLoadingAuth(false);
+                }
             }
         };
+
         fetchAuthState();
 
         const messageListener = (message: any) => {
-            if (message.type === 'AUTH_STATE_UPDATED') {
-                setAuthState(message.payload);
+            if (message.type === 'AUTH_STATE_UPDATED' && isMounted) {
+                 console.log("Popup: Received AUTH_STATE_UPDATED", message.payload);
+                 if (typeof message.payload?.isLoggedIn === 'boolean') {
+                     setAuthState(message.payload);
+                     setIsLoadingAuth(false);
+                     setAuthError(null);
+                 }
             }
         };
         chrome.runtime.onMessage.addListener(messageListener);
-        return () => chrome.runtime.onMessage.removeListener(messageListener);
-    }, []);
+
+        return () => {
+            console.log("Popup: Unmounting. Cleaning up listener.");
+            isMounted = false;
+            chrome.runtime.onMessage.removeListener(messageListener);
+        };
+
+    }, []); // Empty dependency array
+
 
     // --- Event Handlers ---
     const openAuthPage = () => {
@@ -59,7 +95,7 @@ function App() {
     };
 
     const handleLogout = async () => {
-        setIsLoadingAuth(true);
+        setIsLoadingAuth(true); // Show loading during logout
         setAuthError(null);
         try {
             await sendMessageToSW({ type: "LOGOUT_USER" });
@@ -67,14 +103,74 @@ function App() {
         } catch (error: any) {
             setAuthError(error.message || "Logout failed.");
         } finally {
+            // Set loading false *after* logout attempt, regardless of auth state
             setIsLoadingAuth(false);
         }
     };
 
+    // --- Render Helper ---
+    const renderAccountSection = () => {
+        // * Crucially, always show loading first *
+        if (isLoadingAuth) {
+            console.log("Popup: Rendering Loading State");
+            // You could add a small spinner here if desired
+            return <p className={styles.description}>Loading account status...</p>;
+        }
+
+        // If there was an error after loading, show it
+        if (authError) {
+            console.log("Popup: Rendering Error State:", authError);
+            // Offer a way to retry or login again
+             return (
+                <>
+                    <p className={styles.errorText}>{authError}</p>
+                     <button
+                         onClick={openAuthPage}
+                         className={styles.button}
+                     >
+                         Login / Register
+                     </button>
+                </>
+             );
+        }
+
+        // If loading is finished and no error, *then* check login state
+        if (authState.isLoggedIn) {
+            console.log("Popup: Rendering Logged In State");
+            return (
+                <>
+                    <p className={styles.loggedInText}>
+                        Logged in as:<br /> <strong className={styles.loggedInEmail}>{authState.email || 'N/A'}</strong>
+                    </p>
+                    <button
+                        onClick={handleLogout}
+                        className={styles.logoutButton}
+                    >
+                        Logout
+                    </button>
+                </>
+            );
+        } else {
+            // Loading finished, no error, not logged in
+            console.log("Popup: Rendering Logged Out State");
+            return (
+                <>
+                    <p className={styles.description}>Login or Register for features.</p>
+                    <button
+                        onClick={openAuthPage}
+                        className={styles.button}
+                    >
+                        Login / Register
+                    </button>
+                </>
+            );
+        }
+    };
+
+    // --- Main Return ---
     return (
         // Apply the container class from the CSS module
-        // You might keep a base AppContainer class from App.css if it has global resets/structure
-        <div className={`${styles.container} AppContainer`}>
+        <div className={styles.container}>
 
             {/* Header Section */}
             <img src={logo} alt="Extension Logo" className={styles.logo} />
@@ -95,39 +191,9 @@ function App() {
                 </div>
             </div>
 
-            {/* Account Section (Conditional Rendering) */}
+            {/* Account Section (uses render helper) */}
             <div className={styles.accountSection}>
-                {isLoadingAuth ? (
-                    <p className={styles.description}>Loading account status...</p>
-                ) : authState.isLoggedIn ? (
-                    /* --- Logged In View --- */
-                    <>
-                        <p className={styles.loggedInText}>
-                            Logged in as:<br /> <strong className={styles.loggedInEmail}>{authState.email}</strong>
-                        </p>
-                        <button
-                            onClick={handleLogout}
-                            className={styles.logoutButton} // Use logout specific class
-                            disabled={isLoadingAuth}
-                        >
-                            Logout
-                        </button>
-                    </>
-                ) : (
-                    /* --- Logged Out View --- */
-                    <>
-                        <p className={styles.description}>Login or Register for features.</p>
-                        <button
-                            onClick={openAuthPage}
-                            className={styles.button} // Use base button class
-                            disabled={isLoadingAuth}
-                        >
-                            Login / Register
-                        </button>
-                    </>
-                )}
-                {/* Display any errors */}
-                {authError && <p className={styles.errorText}>{authError}</p>}
+                {renderAccountSection()}
             </div>
         </div>
     );
