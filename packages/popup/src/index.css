@@ -1,17 +1,87 @@
 /* packages/popup/src/index.css */
 
-/* Define base font and potential background/text colors */
+/* Define CSS custom properties based on the shared theme */
 :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    /* Backgrounds */
+    --bg-primary: #1e1e2e;
+    --bg-secondary: #282a36;
+    --bg-hover: #2a2a3c;
+    --bg-active: #343746;
+
+    /* Text */
+    --text-primary: #e5e5e5;
+    --text-secondary: #c0c0dd;
+    --text-disabled: #626270;
+    --text-tertiary: #6B7280;
+    /* textTertiary */
+
+    /* Accents */
+    --accent-primary: #f38ba8;
+    --accent-hover: #f76e94;
+    --accent-active: #e05a7f;
+
+    /* Borders */
+    --border-primary: #3b3b4d;
+    --border-secondary: #4a4a5e;
+
+    /* Status */
+    --error: #ff5555;
+    --success: #50fa7b;
+    --warning: #f1fa8c;
+
+    /* Typography */
+    --font-family: "Inter", "Arial", sans-serif;
+    --fs-small: 12px;
+    --fs-medium: 14px;
+    /* Adjusted base for popup */
+    --fs-large: 18px;
+    /* Adjusted for popup */
+    --fs-xlarge: 20px;
+    /* Adjusted for popup */
+    --lh-small: 1.4;
+    --lh-medium: 1.6;
+    --lh-large: 1.8;
+    --lh-xlarge: 2;
+    --fw-normal: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
+    /* Spacing */
+    --space-xxs: 4px;
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-xxl: 48px;
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    /* Adjusted for consistency */
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.7);
+
+    /* Transitions */
+    --transition-duration-fast: 150ms;
+    --transition-duration-normal: 300ms;
+    --transition-duration-slow: 500ms;
+    --transition-easing: ease-in-out;
+
+    /* Define base font and background for the popup body */
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+
     line-height: 1.5;
-    font-weight: 400;
-
-    /* Optional: Set default colors (can be overridden) */
-    color-scheme: light;
-    /* Default to light, or remove if you handle dark mode */
-    color: #213547;
-    background-color: #ffffff;
-
+    font-weight: var(--fw-normal);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -24,34 +94,35 @@ body {
     margin: 0;
     padding: 0;
     width: 300px;
-    /* Example width */
+    /* Maintain popup width */
     height: auto;
     /* Allow height to grow with content */
-    /* Or set a specific height: */
-    /* height: 400px; */
+    box-sizing: border-box;
+    background-color: var(--bg-primary);
+    /* Ensure background applies */
 }
 
-/* Remove default browser margins if needed */
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}
+
 body {
-    font-size: 14px;
-    /* Adjust base font size for popup */
+    font-size: var(--fs-medium);
+    /* Base font size for popup */
 }
 
-/* Basic link styling */
-a {
-    font-weight: 500;
-    color: #646cff;
-    text-decoration: inherit;
+#root {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    /* Optional: if you want App to fill height */
+    flex-direction: column;
 }
 
-a:hover {
-    color: #535bf2;
-}
-
-/* Remove default button styling if you style it specifically in App.css */
+/* Remove default button styling globally if desired */
 button {
-    /* Reset styles or leave it to App.css */
-    /* Example reset: */
     border: none;
     margin: 0;
     padding: 0;
@@ -64,4 +135,20 @@ button {
     -webkit-font-smoothing: inherit;
     -moz-osx-font-smoothing: inherit;
     appearance: none;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+/* Basic link styling if needed */
+a {
+    font-weight: var(--fw-medium);
+    color: var(--accent-primary);
+    text-decoration: inherit;
+}
+
+a:hover {
+    color: var(--accent-hover);
 }

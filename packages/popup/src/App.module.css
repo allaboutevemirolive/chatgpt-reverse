@@ -1,0 +1,170 @@
+/* packages/popup/src/App.module.css */
+
+.container {
+    /* Use variables defined in :root (index.css) */
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    /* Take full width defined by body */
+    min-height: 350px;
+    box-sizing: border-box;
+    gap: var(--space-md);
+    text-align: center;
+}
+
+.logo {
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--space-sm);
+}
+
+.title {
+    font-size: var(--fs-large);
+    font-weight: var(--fw-bold);
+    color: var(--accent-primary);
+    margin: 0;
+}
+
+.description {
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    margin: 0;
+    max-width: 90%;
+}
+
+.instructionBox {
+    background-color: var(--bg-secondary);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-secondary);
+    width: 100%;
+    max-width: 260px;
+    box-shadow: var(--shadow-sm);
+    margin-top: var(--space-sm);
+}
+
+.instructionText {
+    color: var(--text-primary);
+    font-weight: var(--fw-medium);
+    margin-bottom: var(--space-sm);
+    font-size: var(--fs-medium);
+    margin: 0;
+}
+
+.instructionSubText {
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    margin-bottom: var(--space-sm);
+}
+
+.shortcutContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+}
+
+.kbd {
+    display: inline-block;
+    padding: var(--space-xxs) var(--space-xs);
+    font-size: var(--fs-small);
+    font-weight: var(--fw-semibold);
+    color: var(--accent-primary);
+    background-color: var(--bg-active);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.kbdCode {
+    composes: kbd;
+    padding: 1px 4px;
+    font-size: 11px;
+}
+
+.shortcutPlus {
+    color: var(--text-secondary);
+    font-weight: var(--fw-bold);
+    margin: 0 2px;
+}
+
+.accountSection {
+    width: 100%;
+    max-width: 260px;
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.loggedInText {
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    font-weight: var(--fw-normal);
+    word-break: break-all;
+    line-height: var(--lh-small);
+}
+
+.loggedInEmail {
+    color: var(--text-primary);
+    font-weight: var(--fw-semibold);
+}
+
+.button {
+    padding: var(--space-sm) var(--space-lg);
+    min-width: 150px;
+    background-color: var(--accent-primary);
+    color: var(--bg-primary);
+    /* Contrast against accent */
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-medium);
+    font-weight: var(--fw-semibold);
+    transition:
+        background-color var(--transition-duration-fast) var(--transition-easing),
+        opacity var(--transition-duration-fast) var(--transition-easing);
+    text-align: center;
+    line-height: 1.3;
+    /* cursor is handled by button element default + :disabled */
+}
+
+.button:not(:disabled):hover {
+    background-color: var(--accent-hover);
+}
+
+.logoutButton {
+    composes: button;
+    /* Inherit base button styles */
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+}
+
+.logoutButton:not(:disabled):hover {
+    background-color: var(--bg-active);
+    color: var(--error);
+    border-color: var(--error);
+}
+
+.button:disabled {
+    opacity: 0.6;
+    /* cursor: not-allowed; is handled by button element */
+}
+
+.errorText {
+    color: var(--error);
+    font-size: var(--fs-small);
+    margin-top: var(--space-sm);
+    max-width: 100%;
+    word-break: break-word;
+}

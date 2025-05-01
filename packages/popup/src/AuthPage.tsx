@@ -1,6 +1,13 @@
 // packages/popup/src/AuthPage.tsx
 import React, { useState, useEffect } from "react";
 import styles from './AuthPage.module.css';
+import { sendMessageToSW } from "./utils/swMessenger";
+
+// Define the expected structure for successful login/register data
+interface AuthSuccessData {
+    uid: string;
+    email: string | null;
+}
 
 function AuthPage() {
     const [email, setEmail] = useState("");
@@ -42,28 +49,28 @@ function AuthPage() {
 
         try {
             console.log(`AuthPage: Sending ${messageType} message...`);
-            const response = await chrome.runtime.sendMessage({
+            const data = await sendMessageToSW<AuthSuccessData>({
                 type: messageType,
                 payload: { email, password },
             });
-            console.log(`AuthPage: Received response for ${messageType}:`, response);
+            console.log(`AuthPage: Received successful response for ${messageType}:`, data);
 
-            if (response?.success) {
-                const action = isLoginView ? "Logged in" : "Registered";
-                setSuccessMessage(`${action} successfully! Welcome, ${response.data?.email || 'user'}. This page will close shortly.`);
-                setTimeout(() => {
-                    chrome.tabs.getCurrent(tab => {
-                        if (tab?.id) {
-                            chrome.tabs.remove(tab.id).catch(err => console.error("Error closing tab:", err));
-                        }
-                    });
-                }, 2000); // Increased delay slightly
-            } else {
-                setError(response?.error?.message || `An unknown error occurred during ${isLoginView ? 'login' : 'registration'}.`);
-            }
+            const action = isLoginView ? "Logged in" : "Registered";
+            // data should contain {uid, email} on success if SW returns it
+            setSuccessMessage(`${action} successfully! Welcome, ${data?.email || 'user'}. This page will close shortly.`);
+            setTimeout(() => {
+                chrome.tabs.getCurrent(tab => {
+                    if (tab?.id) {
+                        chrome.tabs.remove(tab.id).catch(err => console.error("Error closing tab:", err));
+                    }
+                });
+            }, 2000);
+
         } catch (err: any) {
-            console.error(`AuthPage: Error sending ${messageType} message:`, err);
-            setError(err.message || "Failed to communicate with the extension background.");
+            console.error(`AuthPage: Error during ${messageType}:`, err);
+            // sendMessageToSW throws user-friendly errors for connection issues
+            // and re-throws errors reported by the service worker.
+            setError(err.message || `An unknown error occurred during ${isLoginView ? 'login' : 'registration'}.`);
         } finally {
             setIsLoading(false);
         }
@@ -109,6 +116,7 @@ function AuthPage() {
                         disabled={isLoading}
                     />
                 </div>
+
 
                 <button
                     type="submit"
