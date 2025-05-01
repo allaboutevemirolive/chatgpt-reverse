@@ -1,7 +1,7 @@
 // packages/popup/src/AuthPage.tsx
 import { useState, useEffect } from 'react';
-import styles from './AuthPage.module.css';
-import { sendMessageToSW } from './utils/swMessenger';
+import styles from './AuthPage.module.css'; // Styles for the page layout (header, main)
+import { sendMessageToSW } from './utils/swMessenger'; // Messenger with retry
 import PricingSection from './components/PricingSection/PricingSection';
 import LoginForm from './components/LoginForm/LoginForm';
 import AccountInfo from './components/AccountInfo/AccountInfo'; // Import AccountInfo
@@ -17,178 +17,229 @@ interface AuthState {
     uid: string | null;
     email: string | null;
 }
-interface UserSubscription { // Placeholder - replace with actual structure from SW/Backend
+// Placeholder - replace with your actual subscription structure
+interface UserSubscription {
     planId: 'free' | 'monthly' | 'lifetime' | null; // Example plan IDs
-    // e.g., paidUntil?: number; status?: 'active' | 'canceled' | 'trialing';
+    // Add other relevant fields like expiry, status etc.
 }
 
+// Defines which main view is currently active
 type AuthPageView = 'pricing' | 'login' | 'account';
 
 // --- Component ---
 function AuthPage() {
-    const [authState, setAuthState] = useState<AuthState | null>(null); // Start as null until fetched
-    const [subscription, setSubscription] = useState<UserSubscription | null>(null); // Start as null
-    const [currentView, setCurrentView] = useState<AuthPageView>('pricing'); // Default view
-    const [isLoading, setIsLoading] = useState(true); // Overall loading state for the page
+    // State for authentication status (null means not yet checked)
+    const [authState, setAuthState] = useState<AuthState | null>(null);
+    // State for subscription status (null means not checked or not applicable)
+    const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+    // State to control which view (Pricing, Login, or Account) is shown
+    const [currentView, setCurrentView] = useState<AuthPageView>('pricing'); // Default to pricing
+    // Overall loading state for the initial data fetch
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // Error state for fetch/actions
     const [error, setError] = useState<string | null>(null);
 
-    // --- Fetch Initial State ---
+    // --- Fetch Initial State on Mount ---
     useEffect(() => {
         let isMounted = true;
         const fetchInitialData = async () => {
             console.log("AuthPage: Fetching initial state...");
-            setIsLoading(true);
-            setError(null);
+            if (isMounted) {
+                 setIsLoading(true);
+                 setError(null);
+            }
             try {
-                // Fetch auth state
+                // 1. Fetch Auth State
                 const userAuthData = await sendMessageToSW<UserData | null>({ type: "GET_AUTH_STATE" });
-                const currentAuthState = userAuthData ? { isLoggedIn: true, ...userAuthData } : { isLoggedIn: false, uid: null, email: null };
-                if (isMounted) setAuthState(currentAuthState);
+                const currentAuthState: AuthState = userAuthData
+                    ? { isLoggedIn: true, ...userAuthData }
+                    : { isLoggedIn: false, uid: null, email: null };
+
+                if (!isMounted) return; // Exit if component unmounted during async call
+                setAuthState(currentAuthState);
                 console.log("AuthPage: Auth state received:", currentAuthState);
 
-                // Fetch subscription status (IF user is logged in)
+                // 2. Fetch Subscription Status (ONLY if logged in)
+                let initialView: AuthPageView = 'pricing'; // Default view if not logged in
                 if (currentAuthState.isLoggedIn && currentAuthState.uid) {
-                     // --- !!! PLACEHOLDER !!! ---
-                     // Replace this with an actual call to your SW/backend
-                     // to get the user's subscription status based on their UID.
-                     console.log("AuthPage: Fetching subscription status for UID:", currentAuthState.uid);
-                     // Example: const subData = await sendMessageToSW<UserSubscription>({ type: "GET_SUBSCRIPTION_STATUS", payload: { uid: currentAuthState.uid } });
-                     // For now, simulate different states:
-                     // const subData: UserSubscription = { planId: 'monthly' };
-                      const subData: UserSubscription = { planId: null }; // Simulate free user
-                     // const subData: UserSubscription = { planId: 'lifetime' };
-                     // --- !!! END PLACEHOLDER !!! ---
+                    try {
+                         // --- !!! REPLACE WITH ACTUAL SUBSCRIPTION FETCH !!! ---
+                         console.log("AuthPage: Fetching subscription status for UID:", currentAuthState.uid);
+                         // const subData = await sendMessageToSW<UserSubscription | null>({ type: "GET_SUBSCRIPTION", payload: { uid: currentAuthState.uid } });
+                         // --- Simulate fetching for now ---
+                         await new Promise(resolve => setTimeout(resolve, 150)); // Simulate network delay
+                         const subData: UserSubscription = { planId: null }; // Example: Simulate a free user
+                         // const subData: UserSubscription = { planId: 'monthly' };
+                         // --- End Simulation ---
 
-                    if (isMounted) setSubscription(subData);
-                    console.log("AuthPage: Subscription status received:", subData);
-
-                    // If logged in, potentially default to 'account' view instead of 'pricing'
-                    if (isMounted) setCurrentView('account');
-
+                         if (isMounted) setSubscription(subData);
+                         console.log("AuthPage: Subscription status received:", subData);
+                         initialView = 'account'; // If logged in, default to account view
+                    } catch (subError: any) {
+                         console.error("AuthPage: Failed to fetch subscription status:", subError);
+                          if (isMounted) setError("Could not load subscription details.");
+                         // Keep initialView as 'pricing' or maybe 'account' with an error message? Decide UX.
+                         initialView = 'account'; // Let's default to account view even if sub fails, show error there
+                    }
                 } else {
-                    // Not logged in, ensure subscription is null and default view is pricing
-                     if (isMounted) {
-                         setSubscription(null);
-                         setCurrentView('pricing');
-                     }
+                     // Not logged in
+                     if (isMounted) setSubscription(null); // Ensure subscription is null
                 }
 
-            } catch (err: any) {
-                 if (isMounted) setError(err.message || "Failed to load initial data.");
-                 console.error("AuthPage: Error fetching initial data:", err);
+                 // 3. Set the initial view based on login status
+                 if (isMounted) setCurrentView(initialView);
+
+            } catch (authError: any) {
+                if (isMounted) {
+                     setError(authError.message || "Failed to load account status.");
+                     setAuthState({ isLoggedIn: false, uid: null, email: null }); // Assume not logged in on error
+                     setCurrentView('pricing'); // Fallback to pricing on critical auth error
+                }
+                console.error("AuthPage: Error fetching initial auth data:", authError);
             } finally {
-                if (isMounted) setIsLoading(false);
-                console.log("AuthPage: Initial data fetch complete.");
+                if (isMounted) {
+                     setIsLoading(false);
+                     console.log("AuthPage: Initial data fetch complete. Final View:", currentView);
+                }
             }
         };
 
         fetchInitialData();
 
-        // Optional: Listener for real-time updates (if SW broadcasts them)
+        // Optional: Listener for real-time updates from SW (e.g., after payment)
         const messageListener = (message: any) => {
              if (!isMounted) return;
-             if (message.type === 'AUTH_STATE_UPDATED') {
-                 console.log("AuthPage: Received AUTH_STATE_UPDATED", message.payload);
-                 if (typeof message.payload?.isLoggedIn === 'boolean') {
-                     setAuthState(message.payload);
-                     // If user just logged out, switch to pricing view
-                     if (!message.payload.isLoggedIn) {
-                         setCurrentView('pricing');
-                         setSubscription(null);
-                     } else {
-                         // If user just logged in, refetch subscription & switch view
-                         // For simplicity, we might just switch view here and let handleLoginSuccess handle sub fetch
-                         setCurrentView('account');
-                     }
+             if (message.type === 'AUTH_STATE_UPDATED') { // If SW pushes auth changes
+                 const newAuthState = message.payload;
+                 setAuthState(newAuthState);
+                 if (!newAuthState.isLoggedIn) {
+                     setCurrentView('pricing');
+                     setSubscription(null);
+                 } else {
+                     setCurrentView('account');
+                     // Optionally re-fetch subscription here if it might change on login
                  }
-             } else if (message.type === 'SUBSCRIPTION_UPDATED') { // Example message type
-                 console.log("AuthPage: Received SUBSCRIPTION_UPDATED", message.payload);
+             } else if (message.type === 'SUBSCRIPTION_UPDATED') { // If SW pushes sub changes
                  setSubscription(message.payload);
+                 // Optionally switch view if needed, e.g., ensure they see account after purchase
+                 if(authState?.isLoggedIn) {
+                     setCurrentView('account');
+                 }
              }
         };
         chrome.runtime.onMessage.addListener(messageListener);
 
-        return () => { isMounted = false; chrome.runtime.onMessage.removeListener(messageListener); };
-    }, []);
+
+        return () => {
+            isMounted = false;
+            chrome.runtime.onMessage.removeListener(messageListener);
+            console.log("AuthPage: Unmounted.");
+        };
+    }, []); // Run only once on mount
 
     // --- Handlers ---
     const handleLoginSuccess = (userData: UserData) => {
-        console.log("AuthPage: Login/Register successful", userData);
-        setAuthState({ isLoggedIn: true, ...userData });
+        console.log("AuthPage: Login/Register successful callback", userData);
+        const newAuthState = { isLoggedIn: true, ...userData };
+        setAuthState(newAuthState);
         setError(null);
-        // TODO: Fetch subscription status *after* successful login/register
-        // For now, just switch view
-        setCurrentView('account');
-        setIsLoading(false); // Ensure loading stops
-         // You might want to trigger a fetch of subscription status here
-         // fetchSubscriptionStatus(userData.uid);
+        setIsLoading(true); // Show loading while potentially fetching subscription
+
+        // --- !!! Fetch subscription status AFTER successful login/register !!! ---
+        const fetchSubAfterLogin = async () => {
+            try {
+                 console.log("AuthPage: Fetching subscription status after login for UID:", userData.uid);
+                 // const subData = await sendMessageToSW<UserSubscription | null>({ type: "GET_SUBSCRIPTION", payload: { uid: userData.uid } });
+                 await new Promise(resolve => setTimeout(resolve, 150)); // Simulate
+                 const subData: UserSubscription = { planId: null }; // Simulate free
+                 setSubscription(subData);
+                 setCurrentView('account'); // Switch to account view *after* getting sub status
+            } catch (subError: any) {
+                 console.error("AuthPage: Failed to fetch subscription after login:", subError);
+                 setError("Logged in, but failed to load subscription details.");
+                 setSubscription(null); // Set to null on error
+                 setCurrentView('account'); // Still go to account view, show error there
+            } finally {
+                 setIsLoading(false);
+            }
+        };
+        fetchSubAfterLogin();
+        // --- End Subscription Fetch ---
     };
 
-     const handleLogout = async () => {
-        setIsLoading(true); // Indicate loading during logout
+    const handleLogout = async () => {
+        setIsLoading(true);
         setError(null);
         try {
             await sendMessageToSW({ type: "LOGOUT_USER" });
             setAuthState({ isLoggedIn: false, uid: null, email: null });
             setSubscription(null);
             setCurrentView('pricing'); // Go back to pricing after logout
-        } catch (error: any) {
-            setError(error.message || "Logout failed.");
+        } catch (err: any) {
+            setError(err.message || "Logout failed.");
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleSelectPlan = (planId: string) => {
-        setError(null); // Clear previous errors
+        setError(null);
         console.log(`AuthPage: Plan selected - ${planId}. Triggering payment flow...`);
         // --- !!! PLACEHOLDER for Payment Initiation !!! ---
-        // Here you would typically:
-        // 1. Send a message to the service worker (e.g., { type: 'CREATE_CHECKOUT_SESSION', payload: { planId, uid: authState?.uid } })
-        // 2. The SW would call your backend/Firebase Function to create a Stripe Checkout session.
-        // 3. The SW would receive the Checkout Session URL back.
-        // 4. The SW would send the URL back to this page (or open it directly).
-        // 5. This page would redirect the user to the Stripe Checkout URL.
         alert(`Initiate payment for plan: ${planId}. (Integration needed)`);
-        // Example using ExtPay (if you choose that route)
-        // const extpay = ExtPay('YOUR_EXTENSION_ID');
-        // extpay.openPaymentPage(planId); // Use plan IDs matching ExtPay setup
         // --- !!! END PLACEHOLDER !!! ---
     };
 
     // --- Render Logic ---
     const renderContent = () => {
-        if (isLoading) {
-            return <div className={styles.loading}>Loading...</div>; // Add a loading indicator style
-        }
-        if (error && currentView !== 'login') { // Show critical error prominently unless on login screen
-             return <p className={styles.criticalError}>Error loading page: {error}</p>;
+        // Show loading indicator until initial fetch is complete
+        if (isLoading || authState === null) {
+             return <div className={styles.loading}>Loading Account...</div>;
         }
 
+         // Show critical fetch error if it happened (and not trying to log in)
+         if (error && currentView !== 'login') {
+             return (
+                 <div className={styles.container}> {/* Use container for centering */}
+                     <p className={styles.criticalError}>Error loading page: {error}</p>
+                     {/* Optionally add a retry button */}
+                 </div>
+             );
+         }
+
+        // Render based on the current view state
         switch (currentView) {
             case 'login':
-                return <LoginForm onSuccess={handleLoginSuccess} />;
+                return (
+                    <div className={styles.container}> {/* Center login form */}
+                        <LoginForm onSuccess={handleLoginSuccess} />
+                    </div>
+                );
             case 'account':
-                // Should only reach here if logged in and not loading/error
-                if (authState?.isLoggedIn) {
-                     return <AccountInfo
+                // Should only be in this view if logged in
+                if (authState.isLoggedIn) {
+                    return (
+                         <div className={styles.container}> {/* Center account info */}
+                            <AccountInfo
                                 email={authState.email}
-                                planId={subscription?.planId ?? null} // Pass current plan
+                                planId={subscription?.planId ?? null}
                                 onLogout={handleLogout}
-                                isLoading={isLoading} // Pass loading state for logout button
-                            />;
+                                isLoading={isLoading} // Pass loading state for logout button potentially
+                            />
+                         </div>
+                    );
                 }
-                 // Fallback if somehow account view is shown while logged out
-                 setCurrentView('pricing');
-                 return null;
+                // Fallback if state is inconsistent (shouldn't happen with correct logic)
+                setCurrentView('pricing'); // Go back to pricing if trying to show account but not logged in
+                return null; // Render nothing this cycle, useEffect will correct next cycle
             case 'pricing':
             default:
                 return <PricingSection
                             userSubscription={subscription}
-                            isLoggedIn={authState?.isLoggedIn ?? false}
+                            isLoggedIn={authState.isLoggedIn} // Use the fetched state
                             onSelectPlan={handleSelectPlan}
-                            onLoginRequired={() => setCurrentView('login')} // Switch to login view if needed
-                        />;
+                            onLoginRequired={() => { setError(null); setCurrentView('login'); }} // Clear errors when switching to login
+                       />;
         }
     };
 
@@ -197,17 +248,22 @@ function AuthPage() {
             <header className={styles.header}>
                  <div className={styles.headerTitle}>ChatGPT Reverse Account</div>
                  <nav className={styles.nav}>
+                     {/* Pricing Tab */}
                      <Button
                          variant="ghost"
-                         onClick={() => setCurrentView('pricing')}
+                         onClick={() => !isLoading && setCurrentView('pricing')} // Prevent switching while loading
+                         disabled={isLoading}
                          aria-current={currentView === 'pricing' ? 'page' : undefined}
                      >
                          Pricing
                      </Button>
+
+                     {/* Account or Login Tab */}
                      {authState?.isLoggedIn ? (
                           <Button
                             variant="ghost"
-                            onClick={() => setCurrentView('account')}
+                            onClick={() => !isLoading && setCurrentView('account')}
+                            disabled={isLoading}
                             aria-current={currentView === 'account' ? 'page' : undefined}
                           >
                              Account
@@ -215,7 +271,8 @@ function AuthPage() {
                      ) : (
                          <Button
                             variant="ghost"
-                            onClick={() => setCurrentView('login')}
+                            onClick={() => !isLoading && setCurrentView('login')}
+                            disabled={isLoading}
                             aria-current={currentView === 'login' ? 'page' : undefined}
                          >
                              Login/Register
@@ -224,7 +281,7 @@ function AuthPage() {
                  </nav>
             </header>
             <main className={styles.mainContent}>
-                {renderContent()}
+                {renderContent()} {/* Render content based on state */}
             </main>
         </div>
     );

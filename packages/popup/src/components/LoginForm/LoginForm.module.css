@@ -1,31 +1,44 @@
 /* packages/popup/src/components/LoginForm/LoginForm.module.css */
 
+/* Using :global to define keyframes once if needed, or ensure it's in a global CSS file */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .form {
     width: 100%;
-    max-width: 380px;
+    max-width: 360px;
+    /* Consistent max-width */
     padding: var(--space-lg);
+    /* Use theme spacing */
     background-color: var(--bg-secondary);
     border-radius: var(--radius-lg);
+    /* Consistent radius */
     box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-primary);
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
-    border: 1px solid var(--border-primary);
+    gap: var(--space-lg);
+    /* Increased gap for better separation */
 }
 
 .title {
     font-size: var(--fs-large);
-    /* Slightly smaller title for form */
+    /* Slightly smaller than page title */
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
     text-align: center;
     margin: 0 0 var(--space-xs) 0;
+    /* Adjusted margin */
 }
 
 .inputGroup {
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
+    /* Gap between label and input */
 }
 
 .label {
@@ -33,11 +46,15 @@
     font-weight: var(--fw-medium);
     color: var(--text-secondary);
     cursor: pointer;
+    text-align: left;
+    /* Align labels left */
 }
 
 .input {
     padding: var(--space-sm) var(--space-md);
+    /* Consistent padding */
     background-color: var(--bg-primary);
+    /* Use primary bg for contrast */
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
@@ -47,66 +64,85 @@
     transition:
         border-color var(--transition-duration-fast) var(--transition-easing),
         box-shadow var(--transition-duration-fast) var(--transition-easing);
+    width: 100%;
+    /* Ensure input takes full width */
+    box-sizing: border-box;
 }
 
 .input:focus {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+    /* Slightly stronger glow */
 }
 
 .input::placeholder {
     color: var(--text-tertiary);
-    opacity: 0.8;
+    opacity: 0.7;
+    /* Slightly less prominent placeholder */
 }
 
+.input:disabled {
+    background-color: var(--bg-active);
+    /* Indicate disabled state */
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+
 .submitButton {
-    /* Inherits from Button component */
+    /* Button styles are mostly inherited via Button component */
     width: 100%;
-    /* Make submit button full width */
+    margin-top: var(--space-xs);
+    /* Add a small gap above submit button */
 }
 
 .toggleButton {
-    /* Inherits from Button component, variant=ghost */
-    margin-top: var(--space-sm);
+    /* Button styles inherited, variant="ghost" */
+    margin-top: 0;
+    /* Reduce margin, rely on form gap */
     padding: var(--space-xs);
     color: var(--accent-primary);
-    /* Ensure color is set */
+    /* Explicitly set color */
+    font-weight: var(--fw-medium);
+    /* Normal weight */
 }
 
 .toggleButton:hover {
     color: var(--accent-hover);
     background-color: transparent !important;
-    /* Ensure ghost hover */
     text-decoration: underline;
 }
 
+.toggleButton:disabled {
+    color: var(--text-disabled) !important;
+    /* Ensure disabled color */
+    text-decoration: none;
+}
 
 .errorMessage {
     padding: var(--space-sm);
-    margin-bottom: var(--space-sm);
-    /* Add space below error */
+    /* margin-bottom: var(--space-sm); */
+    /* Removed margin, rely on form gap */
     border-radius: var(--radius-sm);
     font-size: var(--fs-small);
     text-align: center;
-    border: 1px solid var(--border-secondary);
-    /* Use secondary for less emphasis */
-    background-color: color-mix(in srgb, var(--error) 15%, transparent);
+    background-color: color-mix(in srgb, var(--error) 10%, transparent);
+    /* More subtle background */
     color: var(--error);
-    border-color: color-mix(in srgb, var(--error) 40%, transparent);
-}
-
-/* Spinner Animation (ensure keyframes are defined globally or here) */
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    border: 1px solid color-mix(in srgb, var(--error) 30%, transparent);
+    /* Subtle border */
+    width: 100%;
+    /* Ensure it takes full width */
+    box-sizing: border-box;
+    line-height: 1.4;
 }
 
 .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid color-mix(in srgb, var(--bg-primary) 70%, transparent);
-    /* Match primary button text color */
+    width: 18px;
+    /* Slightly larger spinner */
+    height: 18px;
+    border: 3px solid color-mix(in srgb, var(--bg-primary) 50%, transparent);
+    /* Match button text color better */
     border-top-color: var(--bg-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
