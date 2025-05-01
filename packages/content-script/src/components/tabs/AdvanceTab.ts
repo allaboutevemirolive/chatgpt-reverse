@@ -178,7 +178,7 @@ export class AdvanceTab {
             {
                 label: "In Search Mode",
                 name: "insearchmode",
-                type: "checkbox"
+                type: "checkbox",
             },
         ];
         fields.forEach((field) => {

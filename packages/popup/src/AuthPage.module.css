@@ -44,8 +44,8 @@
 /* Style Button component when used in nav (using :global is one way, but direct targeting is okay too if specific) */
 /* Targeting the specific button elements passed to nav might be more robust */
 /* Example: If Button component renders a <button> or <a> tag */
-.nav>button,
-.nav>a {
+.nav > button,
+.nav > a {
     font-size: var(--fs-medium);
     /* Adjust font size for nav items if needed */
     padding: var(--space-xs) var(--space-sm);

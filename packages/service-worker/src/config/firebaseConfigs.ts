@@ -12,11 +12,15 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
+if (
+    !firebaseConfig.apiKey ||
+    !firebaseConfig.projectId ||
+    !firebaseConfig.appId
+) {
     console.error(
         "Firebase configuration is missing essential values. Check your .env file and VITE_ prefix.",
     );
     // Consider throwing an error or having a fallback mechanism
 }
 
-export default firebaseConfig; 
+export default firebaseConfig;

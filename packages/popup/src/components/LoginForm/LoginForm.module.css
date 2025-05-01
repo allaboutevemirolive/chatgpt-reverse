@@ -61,9 +61,9 @@
     font-size: var(--fs-medium);
     font-family: inherit;
     outline: none;
-    transition:
-        border-color var(--transition-duration-fast) var(--transition-easing),
-        box-shadow var(--transition-duration-fast) var(--transition-easing);
+    transition: border-color var(--transition-duration-fast)
+        var(--transition-easing), box-shadow var(--transition-duration-fast)
+        var(--transition-easing);
     width: 100%;
     /* Ensure input takes full width */
     box-sizing: border-box;
@@ -71,7 +71,8 @@
 
 .input:focus {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+    box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--accent-primary) 25%, transparent);
     /* Slightly stronger glow */
 }
 
@@ -87,7 +88,6 @@
     cursor: not-allowed;
     opacity: 0.7;
 }
-
 
 .submitButton {
     /* Button styles are mostly inherited via Button component */

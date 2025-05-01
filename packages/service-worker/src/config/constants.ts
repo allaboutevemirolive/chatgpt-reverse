@@ -15,10 +15,10 @@ export const CHECKOUT_CANCEL_URL = `${EXTENSION_BASE_URL}?checkout=cancel`;
 export const CHECKOUT_LISTENER_TIMEOUT = 30000; // 30 seconds
 
 // --- Firestore ---
-export const FIRESTORE_DB_NAME = 'chatgpt-reverse-db'; // Example DB name
-export const FIRESTORE_CUSTOMERS_COLLECTION = 'customers';
-export const FIRESTORE_CHECKOUT_SESSIONS_SUBCOLLECTION = 'checkout_sessions';
+export const FIRESTORE_DB_NAME = "chatgpt-reverse-db"; // Example DB name
+export const FIRESTORE_CUSTOMERS_COLLECTION = "customers";
+export const FIRESTORE_CHECKOUT_SESSIONS_SUBCOLLECTION = "checkout_sessions";
 
 // --- Storage Keys ---
-export const STORAGE_API_HEADERS_KEY = 'apiHeaders';
-export const STORAGE_AUTH_DATA_KEY = 'authData'; // Example key for storing auth data
+export const STORAGE_API_HEADERS_KEY = "apiHeaders";
+export const STORAGE_AUTH_DATA_KEY = "authData"; // Example key for storing auth data

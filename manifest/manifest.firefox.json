@@ -22,13 +22,8 @@
             "48": "logo_48.png"
         }
     },
-    "permissions": [
-        "storage",
-        "cookies"
-    ],
-    "host_permissions": [
-        "https://chatgpt.com/*"
-    ],
+    "permissions": ["storage", "cookies"],
+    "host_permissions": ["https://chatgpt.com/*"],
     "background": {
         "service_worker": "background.js",
         "type": "module"
@@ -38,13 +33,8 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "https://chatgpt.com/*"
-            ],
-            "js": [
-                "loadScript.js",
-                "content.js"
-            ],
+            "matches": ["https://chatgpt.com/*"],
+            "js": ["loadScript.js", "content.js"],
             "run_at": "document_start"
         }
     ],
@@ -56,9 +46,7 @@
                 "*.png",
                 "logo.svg"
             ],
-            "matches": [
-                "https://chatgpt.com/*"
-            ]
+            "matches": ["https://chatgpt.com/*"]
         }
     ]
 }

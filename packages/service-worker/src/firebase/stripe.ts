@@ -41,9 +41,7 @@ export async function createCheckoutSession(
     const userId = currentUser?.uid;
 
     if (!userId) {
-        console.error(
-            "Firebase Stripe: User not logged in.",
-        );
+        console.error("Firebase Stripe: User not logged in.");
         throw new Error("User must be logged in to start checkout.");
     }
 
@@ -56,9 +54,7 @@ export async function createCheckoutSession(
             priceId = STRIPE_PRICE_ID_LIFETIME;
             break;
         default:
-            console.error(
-                `Firebase Stripe: Invalid planId: ${payload.planId}`,
-            );
+            console.error(`Firebase Stripe: Invalid planId: ${payload.planId}`);
             throw new Error(`Invalid plan selected.`);
     }
 
@@ -89,14 +85,18 @@ export async function createCheckoutSession(
                 price: priceId,
                 success_url: CHECKOUT_SUCCESS_URL,
                 cancel_url: CHECKOUT_CANCEL_URL,
-                mode: payload.planId === "lifetime" ? "payment" : "subscription",
+                mode:
+                    payload.planId === "lifetime" ? "payment" : "subscription",
                 // Optional metadata
                 // client: 'extension',
                 // metadata: { source: 'chrome-extension-auth-page' }
             },
         );
 
-        console.log("Firebase Stripe: Checkout session document created:", docRef.id);
+        console.log(
+            "Firebase Stripe: Checkout session document created:",
+            docRef.id,
+        );
 
         // Wait for the Stripe Extension to update the document
         return new Promise<CheckoutSessionResult>((resolve, reject) => {
@@ -109,7 +109,10 @@ export async function createCheckoutSession(
                 if (timeoutHandle) clearTimeout(timeoutHandle);
                 if (unsubscribeFirestore && !unsubscribeCalled) {
                     unsubscribeCalled = true;
-                    console.log("Firebase Stripe: Unsubscribing Firestore listener for", docRef.id);
+                    console.log(
+                        "Firebase Stripe: Unsubscribing Firestore listener for",
+                        docRef.id,
+                    );
                     unsubscribeFirestore();
                 }
             };
@@ -120,7 +123,9 @@ export async function createCheckoutSession(
                     if (timedOut || unsubscribeCalled) return;
                     const data = snap.data();
                     console.log(
-                        "Firebase Stripe: Snapshot raw data for checkout session:", docRef.id, JSON.stringify(data || {})
+                        "Firebase Stripe: Snapshot raw data for checkout session:",
+                        docRef.id,
+                        JSON.stringify(data || {}),
                     );
 
                     if (data?.error) {
@@ -142,7 +147,9 @@ export async function createCheckoutSession(
                         cleanup();
                         resolve({ checkoutUrl: data.url });
                     } else {
-                        console.log(`Firebase Stripe: Snapshot for ${docRef.id} updated, but no url or error field yet.`);
+                        console.log(
+                            `Firebase Stripe: Snapshot for ${docRef.id} updated, but no url or error field yet.`,
+                        );
                     }
                 },
                 (error: FirestoreError) => {

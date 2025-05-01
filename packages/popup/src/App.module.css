@@ -63,7 +63,7 @@
 }
 
 .instructionSubText {
-    composes: description;
+    /* composes: description; */
     /* Inherit description styles */
     margin-bottom: var(--space-sm);
 }
@@ -90,7 +90,7 @@
 
 .kbdCode {
     /* Specific style for the code element within instructionSubText */
-    composes: kbd;
+    /* composes: kbd; */
     /* Inherit kbd styles */
     padding: 1px 4px;
     font-size: 11px;
@@ -116,7 +116,7 @@
 }
 
 .loggedInText {
-    composes: description;
+    /* composes: description; */
     /* Inherit description styles */
     font-weight: var(--fw-normal);
     word-break: break-all;
@@ -139,9 +139,9 @@
     border-radius: var(--radius-sm);
     font-size: var(--fs-medium);
     font-weight: var(--fw-semibold);
-    transition:
-        background-color var(--transition-duration-fast) var(--transition-easing),
-        opacity var(--transition-duration-fast) var(--transition-easing);
+    transition: background-color var(--transition-duration-fast)
+        var(--transition-easing), opacity var(--transition-duration-fast)
+        var(--transition-easing);
     text-align: center;
     line-height: 1.3;
     /* cursor is handled by button element default + :disabled */
@@ -152,7 +152,7 @@
 }
 
 .logoutButton {
-    composes: button;
+    /* composes: button; */
     /* Inherit base button styles */
     background-color: var(--bg-secondary);
     color: var(--text-secondary);

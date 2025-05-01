@@ -1,12 +1,13 @@
 // packages/popup/src/components/Button/Button.tsx
-import React, { type ReactNode } from 'react';
-import styles from './Button.module.css';
+import React, { type ReactNode } from "react";
+import styles from "./Button.module.css";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement | HTMLAnchorElement> {
+interface ButtonProps
+    extends React.ButtonHTMLAttributes<HTMLButtonElement | HTMLAnchorElement> {
     children: ReactNode;
     href?: string; // If it's a link
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost'; // Added ghost variant for header potentially
-    size?: 'normal' | 'large';
+    variant?: "primary" | "secondary" | "outline" | "ghost"; // Added ghost variant for header potentially
+    size?: "normal" | "large";
     className?: string;
     target?: string; // Allow target attribute for links
     rel?: string; // Allow rel attribute for links
@@ -15,23 +16,20 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement | HTM
 const Button: React.FC<ButtonProps> = ({
     children,
     href,
-    variant = 'primary',
-    size = 'normal',
-    className = '',
+    variant = "primary",
+    size = "normal",
+    className = "",
     target, // Pass target prop
     rel, // Pass rel prop
     ...props // Spread remaining props (like onClick, disabled, etc.)
 }) => {
-    const buttonClasses = [
-        styles.btn,
-        styles[variant],
-        styles[size],
-        className
-    ].filter(Boolean).join(' ');
+    const buttonClasses = [styles.btn, styles[variant], styles[size], className]
+        .filter(Boolean)
+        .join(" ");
 
     const commonProps = {
         className: buttonClasses,
-        ...props // Pass down other props like disabled, onClick
+        ...props, // Pass down other props like disabled, onClick
     };
 
     if (href) {
@@ -44,7 +42,7 @@ const Button: React.FC<ButtonProps> = ({
     }
 
     // Default type to "button" if not specified, to prevent accidental form submissions
-    const buttonType = props.type || 'button';
+    const buttonType = props.type || "button";
 
     return (
         <button type={buttonType} {...commonProps}>

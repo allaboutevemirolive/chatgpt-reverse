@@ -1,7 +1,7 @@
 /* packages/popup/src/auth.css */
 
 /* Import fonts or define base styles if needed */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 /* Example: Using Inter font */
 
 :root {
@@ -16,7 +16,7 @@
     --text-primary: #e5e5e5;
     --text-secondary: #c0c0dd;
     --text-disabled: #626270;
-    --text-tertiary: #6B7280;
+    --text-tertiary: #6b7280;
     /* Added from theme */
 
     /* Accents */
@@ -34,7 +34,7 @@
     --warning: #f1fa8c;
 
     /* Typography */
-    --font-family: 'Inter', 'Arial', sans-serif;
+    --font-family: "Inter", "Arial", sans-serif;
     --fs-small: 12px;
     --fs-medium: 14px;
     /* Adjusted base for forms */

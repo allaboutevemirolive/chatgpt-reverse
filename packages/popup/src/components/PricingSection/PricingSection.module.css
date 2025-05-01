@@ -33,7 +33,6 @@
     line-height: var(--lh-medium);
 }
 
-
 .pricingGrid {
     display: grid;
     /* Use 3 columns explicitly on wider screens */
@@ -56,10 +55,8 @@
     opacity: 0.8;
 }
 
-
 /* --- Responsiveness --- */
 @media (max-width: 992px) {
-
     /* Tablet breakpoint */
     .pricingGrid {
         grid-template-columns: 1fr;
@@ -79,7 +76,6 @@
 }
 
 @media (max-width: 576px) {
-
     /* Mobile breakpoint */
     .sectionTitle {
         font-size: calc(var(--fs-xlarge) * 0.9);

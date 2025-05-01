@@ -1,7 +1,7 @@
 // packages/popup/src/components/PricingCard/PricingCard.tsx
-import React from 'react';
-import Button from '../Button/Button'; // Adjust path if necessary
-import styles from './PricingCard.module.css';
+import React from "react";
+import Button from "../Button/Button"; // Adjust path if necessary
+import styles from "./PricingCard.module.css";
 // If you want to use react-icons, add it: pnpm add react-icons -w
 // import { FaCheckCircle } from 'react-icons/fa';
 
@@ -14,7 +14,7 @@ interface PricingCardProps {
     buttonText: string;
     buttonOnClick?: () => void; // Use onClick handler instead of link for extension actions
     buttonHref?: string; // Optional href for external links (like store)
-    buttonVariant?: 'primary' | 'secondary' | 'outline';
+    buttonVariant?: "primary" | "secondary" | "outline";
     isDisabled?: boolean; // To disable button (e.g., if already subscribed)
     isFeatured?: boolean;
     isCurrentPlan?: boolean; // To indicate this is the user's current plan
@@ -23,31 +23,39 @@ interface PricingCardProps {
 const PricingCard: React.FC<PricingCardProps> = ({
     planName,
     price,
-    frequency = '',
+    frequency = "",
     description,
     features,
     buttonText,
     buttonOnClick,
     buttonHref,
-    buttonVariant = 'primary',
+    buttonVariant = "primary",
     isDisabled = false,
     isFeatured = false,
     isCurrentPlan = false,
 }) => {
     const cardClasses = [
         styles.pricingCard,
-        isFeatured ? styles.featured : '',
-        isCurrentPlan ? styles.currentPlan : '',
-    ].filter(Boolean).join(' ');
+        isFeatured ? styles.featured : "",
+        isCurrentPlan ? styles.currentPlan : "",
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     return (
         <div className={cardClasses}>
-            {isFeatured && <div className={styles.featuredBadge}>Best Value</div>}
-            {isCurrentPlan && <div className={styles.currentPlanBadge}>Current Plan</div>}
+            {isFeatured && (
+                <div className={styles.featuredBadge}>Best Value</div>
+            )}
+            {isCurrentPlan && (
+                <div className={styles.currentPlanBadge}>Current Plan</div>
+            )}
             <h3 className={styles.planName}>{planName}</h3>
             <div className={styles.planPrice}>
                 {price}
-                {frequency && <span className={styles.priceFrequency}>{frequency}</span>}
+                {frequency && (
+                    <span className={styles.priceFrequency}>{frequency}</span>
+                )}
             </div>
             <p className={styles.planDescription}>{description}</p>
             <ul className={styles.planFeatures}>
@@ -76,15 +84,15 @@ const PricingCard: React.FC<PricingCardProps> = ({
             <Button
                 href={buttonHref}
                 onClick={buttonOnClick}
-                variant={isCurrentPlan ? 'secondary' : buttonVariant}
+                variant={isCurrentPlan ? "secondary" : buttonVariant}
                 className={styles.planButton}
                 // Pass the isDisabled prop to the Button component
                 disabled={isDisabled || isCurrentPlan}
-                target={buttonHref ? '_blank' : undefined}
-                rel={buttonHref ? 'noopener noreferrer' : undefined}
+                target={buttonHref ? "_blank" : undefined}
+                rel={buttonHref ? "noopener noreferrer" : undefined}
             >
                 {/* Show dynamic text based on state */}
-                {isCurrentPlan ? 'Your Plan' : buttonText}
+                {isCurrentPlan ? "Your Plan" : buttonText}
             </Button>
         </div>
     );

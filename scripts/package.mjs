@@ -20,19 +20,31 @@ const manifestDir = path.resolve(projectRoot, "manifest");
 async function main() {
     // 1. Determine target browser from command line arguments
     const args = process.argv.slice(2); // Remove 'node' and script path
-    const targetBrowser = args[0]?.toLowerCase() === TARGET_FIREFOX
-        ? TARGET_FIREFOX
-        : TARGET_CHROME; // Default to chrome
+    const targetBrowser =
+        args[0]?.toLowerCase() === TARGET_FIREFOX
+            ? TARGET_FIREFOX
+            : TARGET_CHROME; // Default to chrome
 
-    console.log(`📦 Starting packaging process for: ${targetBrowser.toUpperCase()}`);
+    console.log(
+        `📦 Starting packaging process for: ${targetBrowser.toUpperCase()}`,
+    );
 
     // 2. Define manifest paths
-    const chromeManifestPath = path.resolve(manifestDir, "manifest.chrome.json");
-    const firefoxManifestPath = path.resolve(manifestDir, "manifest.firefox.json");
+    const chromeManifestPath = path.resolve(
+        manifestDir,
+        "manifest.chrome.json",
+    );
+    const firefoxManifestPath = path.resolve(
+        manifestDir,
+        "manifest.firefox.json",
+    );
     const buildManifestPath = path.resolve(buildDir, "manifest.json");
 
     // Select the correct source manifest
-    const sourceManifestPath = targetBrowser === TARGET_FIREFOX ? firefoxManifestPath : chromeManifestPath;
+    const sourceManifestPath =
+        targetBrowser === TARGET_FIREFOX
+            ? firefoxManifestPath
+            : chromeManifestPath;
 
     try {
         // 3. Read package.json to get name and version
@@ -49,13 +61,15 @@ async function main() {
         // 5. Ensure build directory exists and is ready (assuming build ran first)
         if (!fs.existsSync(buildDir)) {
             console.error(
-                `❌ Error: Build directory not found at ${buildDir}. Run the build process first.`
+                `❌ Error: Build directory not found at ${buildDir}. Run the build process first.`,
             );
             process.exit(1);
         }
         // Ensure selected manifest source exists
         if (!fs.existsSync(sourceManifestPath)) {
-            console.error(`❌ Error: Source manifest not found at ${sourceManifestPath}.`);
+            console.error(
+                `❌ Error: Source manifest not found at ${sourceManifestPath}.`,
+            );
             process.exit(1);
         }
 
@@ -66,14 +80,15 @@ async function main() {
         }
 
         // 7. Prepare build directory: Copy the target manifest into build/manifest.json
-        console.log(`Copying ${path.basename(sourceManifestPath)} to ${buildManifestPath}...`);
+        console.log(
+            `Copying ${path.basename(sourceManifestPath)} to ${buildManifestPath}...`,
+        );
         // Remove existing manifest in build dir if it exists, to avoid confusion
         if (fs.existsSync(buildManifestPath)) {
             fs.unlinkSync(buildManifestPath);
         }
         fs.copyFileSync(sourceManifestPath, buildManifestPath);
         console.log(`Manifest copied successfully.`);
-
 
         // 8. Create a file to stream archive data to.
         console.log(`Creating archive: ${outputPath}`);
@@ -83,7 +98,9 @@ async function main() {
         });
 
         output.on("close", () => {
-            console.log(`✅ Successfully created ${targetBrowser.toUpperCase()} archive: ${outputPath}`);
+            console.log(
+                `✅ Successfully created ${targetBrowser.toUpperCase()} archive: ${outputPath}`,
+            );
             console.log(`Total size: ${archive.pointer()} total bytes`);
         });
 
@@ -110,9 +127,11 @@ async function main() {
 
         await archive.finalize();
         console.log("Archive finalized.");
-
     } catch (error) {
-        console.error(`❌ ${targetBrowser.toUpperCase()} packaging failed:`, error);
+        console.error(
+            `❌ ${targetBrowser.toUpperCase()} packaging failed:`,
+            error,
+        );
         process.exit(1);
     }
 }

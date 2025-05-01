@@ -38,7 +38,6 @@
     /* Slightly larger font */
 }
 
-
 /* Variants */
 .primary {
     background-color: var(--accent-primary);
@@ -104,7 +103,6 @@
     color: var(--text-primary);
     font-weight: var(--fw-semibold);
 }
-
 
 .btn:disabled {
     opacity: 0.6;

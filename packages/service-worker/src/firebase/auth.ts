@@ -6,7 +6,7 @@ import {
     signInWithEmailAndPassword,
     signOut,
     Auth,
-    UserCredential
+    UserCredential,
 } from "firebase/auth";
 import { getFirebaseAuth } from "./core"; // Import getter
 
@@ -89,7 +89,10 @@ export function setupAuthListener(): void {
                 }
             },
             (error) => {
-                console.error("Firebase Auth: Auth state listener error:", error);
+                console.error(
+                    "Firebase Auth: Auth state listener error:",
+                    error,
+                );
                 const previousUser = currentUserState;
                 currentUserState = null;
 
@@ -109,10 +112,7 @@ export function setupAuthListener(): void {
         isAuthListenerAttached = true;
         console.log("Firebase Auth: Listener attached.");
     } catch (error) {
-        console.error(
-            "Firebase Auth: Failed to setup listener:",
-            error,
-        );
+        console.error("Firebase Auth: Failed to setup listener:", error);
         isAuthListenerAttached = false;
         currentUserState = null;
         // Ensure promise resolves with null if setup fails
@@ -136,12 +136,16 @@ export function resetAuthReadyPromise(): void {
 /** Returns a promise that resolves when the initial authentication state is known. */
 export function awaitAuthReady(): Promise<User | null> {
     if (!authReadyPromise) {
-        console.warn("Firebase Auth: awaitAuthReady called before promise was initialized. Initializing now.");
+        console.warn(
+            "Firebase Auth: awaitAuthReady called before promise was initialized. Initializing now.",
+        );
         initializeAuthReadyPromise();
     }
     // If the listener hasn't been attached yet, setting it up is critical
     if (!isAuthListenerAttached) {
-        console.warn("Firebase Auth: awaitAuthReady called before listener setup. Setting up listener now.");
+        console.warn(
+            "Firebase Auth: awaitAuthReady called before listener setup. Setting up listener now.",
+        );
         setupAuthListener(); // Attempt setup if not already done
     }
     return authReadyPromise!;
@@ -153,7 +157,11 @@ export function getCurrentUser(): User | null {
 }
 
 /** Gets the current authentication state synchronously. */
-export function getAuthState(): { isLoggedIn: boolean; uid: string | null; email: string | null; } {
+export function getAuthState(): {
+    isLoggedIn: boolean;
+    uid: string | null;
+    email: string | null;
+} {
     const user = getCurrentUser();
     return {
         isLoggedIn: !!user,
@@ -162,12 +170,19 @@ export function getAuthState(): { isLoggedIn: boolean; uid: string | null; email
     };
 }
 
-
 /** Registers a new user with email and password. */
-export async function registerUser(email: string, password: string): Promise<{ uid: string; email: string | null }> {
-    if (!email || !password) throw new Error("Email and password required for registration.");
+export async function registerUser(
+    email: string,
+    password: string,
+): Promise<{ uid: string; email: string | null }> {
+    if (!email || !password)
+        throw new Error("Email and password required for registration.");
     const auth = getFirebaseAuth();
-    const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential: UserCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+    );
     return {
         uid: userCredential.user.uid,
         email: userCredential.user.email,
@@ -175,10 +190,18 @@ export async function registerUser(email: string, password: string): Promise<{ u
 }
 
 /** Logs in a user with email and password. */
-export async function loginUser(email: string, password: string): Promise<{ uid: string; email: string | null }> {
-    if (!email || !password) throw new Error("Email and password required for login.");
+export async function loginUser(
+    email: string,
+    password: string,
+): Promise<{ uid: string; email: string | null }> {
+    if (!email || !password)
+        throw new Error("Email and password required for login.");
     const auth = getFirebaseAuth();
-    const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential: UserCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+    );
     return {
         uid: userCredential.user.uid,
         email: userCredential.user.email,

@@ -25,20 +25,26 @@ export function initializeFirebase(): void {
             !firebaseConfig.projectId ||
             !firebaseConfig.appId
         ) {
-            throw new Error("Firebase configuration is missing essential values.");
+            throw new Error(
+                "Firebase configuration is missing essential values.",
+            );
         }
 
         firebaseAppInstance = initializeApp(firebaseConfig);
         console.log("Firebase Core: App initialized.");
 
         // Initialize Firestore (allow specifying DB name)
-        firestoreInstance = getFirestore(firebaseAppInstance, FIRESTORE_DB_NAME);
-        console.log(`Firebase Core: Firestore initialized (DB: ${FIRESTORE_DB_NAME}).`);
+        firestoreInstance = getFirestore(
+            firebaseAppInstance,
+            FIRESTORE_DB_NAME,
+        );
+        console.log(
+            `Firebase Core: Firestore initialized (DB: ${FIRESTORE_DB_NAME}).`,
+        );
 
         // Initialize Auth
         firebaseAuthInstance = getAuth(firebaseAppInstance);
         console.log("Firebase Core: Auth initialized.");
-
     } catch (error) {
         console.error("Firebase Core: Initialization failed:", error);
         // Reset instances on failure

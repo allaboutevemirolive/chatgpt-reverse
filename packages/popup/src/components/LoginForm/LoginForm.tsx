@@ -1,11 +1,11 @@
 // packages/popup/src/components/LoginForm/LoginForm.tsx
-import React, { useState } from 'react';
-import Button from '../Button/Button'; 
-import styles from './LoginForm.module.css';
-import { sendMessageToSW } from '../../utils/swMessenger';
+import React, { useState } from "react";
+import Button from "../Button/Button";
+import styles from "./LoginForm.module.css";
+import { sendMessageToSW } from "../../utils/swMessenger";
 
 interface LoginFormProps {
-    onSuccess: (userData: { uid: string, email: string | null }) => void; // Callback on successful login/register
+    onSuccess: (userData: { uid: string; email: string | null }) => void; // Callback on successful login/register
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
@@ -20,7 +20,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         setError(null); // Clear error on input change
     };
 
-    const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePasswordChange = (
+        event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
         setPassword(event.target.value);
         setError(null); // Clear error on input change
     };
@@ -39,16 +41,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
         try {
             // Use the robust messenger
-            const response = await sendMessageToSW<{ uid: string, email: string | null }>({
+            const response = await sendMessageToSW<{
+                uid: string;
+                email: string | null;
+            }>({
                 type: messageType,
                 payload: { email, password },
             });
             console.log(`LoginForm: ${messageType} successful`, response);
             onSuccess(response); // Call parent's success handler
-
         } catch (err: any) {
             console.error(`LoginForm: Error during ${messageType}:`, err);
-            setError(err.message || `An unknown error occurred during ${isLoginView ? 'login' : 'registration'}.`);
+            setError(
+                err.message ||
+                    `An unknown error occurred during ${isLoginView ? "login" : "registration"}.`,
+            );
         } finally {
             setIsLoading(false);
         }
@@ -58,22 +65,25 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         event.preventDefault();
         setIsLoginView(!isLoginView);
         setError(null);
-        setEmail('');
-        setPassword('');
+        setEmail("");
+        setPassword("");
     };
 
     return (
         // Apply form class from module
         <form className={styles.form} onSubmit={handleSubmit}>
             <h2 className={styles.title}>
-                {isLoginView ? "Login to Your Account" : "Create Your Account"} {/* Slightly more descriptive */}
+                {isLoginView ? "Login to Your Account" : "Create Your Account"}{" "}
+                {/* Slightly more descriptive */}
             </h2>
 
             {/* Error message displayed first within the form */}
             {error && <p className={styles.errorMessage}>{error}</p>}
 
             <div className={styles.inputGroup}>
-                <label htmlFor="login-email" className={styles.label}>Email Address</label>
+                <label htmlFor="login-email" className={styles.label}>
+                    Email Address
+                </label>
                 <input
                     type="email"
                     id="login-email"
@@ -89,7 +99,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             </div>
 
             <div className={styles.inputGroup}>
-                <label htmlFor="login-password" className={styles.label}>Password</label>
+                <label htmlFor="login-password" className={styles.label}>
+                    Password
+                </label>
                 <input
                     type="password"
                     id="login-password"
@@ -113,7 +125,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                 size="large" // Make the primary action button larger
                 disabled={isLoading}
             >
-                {isLoading && <div className={styles.spinner}></div>} {/* Use spinner class */}
+                {isLoading && <div className={styles.spinner}></div>}{" "}
+                {/* Use spinner class */}
                 <span>{isLoginView ? "Login" : "Register"}</span>
             </Button>
 
@@ -125,11 +138,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                 onClick={toggleView}
                 disabled={isLoading}
             >
-                {isLoginView ? "Need an account? Register" : "Already have an account? Login"}
+                {isLoginView
+                    ? "Need an account? Register"
+                    : "Already have an account? Login"}
             </Button>
 
             {/* Add id to error message for aria-describedby */}
-            {error && <div id="login-error" style={{ display: 'none' }}>{error}</div>}
+            {error && (
+                <div id="login-error" style={{ display: "none" }}>
+                    {error}
+                </div>
+            )}
         </form>
     );
 };

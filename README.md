@@ -193,20 +193,13 @@ ls ./dist
 
 This project uses Biome for linting and formatting.
 
-*   **Check formatting and linting:**
-    ```bash
-    pnpm biome check .
-    # Or run separately:
-    # pnpm biome format .
-    # pnpm biome lint .
-    ```
-*   **Apply formatting and safe lint fixes:**
-    ```bash
-    pnpm biome check --apply .
-    # Or run separately:
-    # pnpm biome format --write .
-    # pnpm biome lint --apply .
-    ```
+```sh
+pnpm biome format --write .
+
+pnpm biome lint --write .
+
+pnpm biome check --write .
+```
 
 ## Testing
 

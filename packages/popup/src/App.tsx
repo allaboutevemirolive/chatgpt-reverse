@@ -17,13 +17,20 @@ interface AuthState {
 
 function App() {
     // --- State Variables ---
-    const [authState, setAuthState] = useState<AuthState>({ isLoggedIn: false, uid: null, email: null });
+    const [authState, setAuthState] = useState<AuthState>({
+        isLoggedIn: false,
+        uid: null,
+        email: null,
+    });
     const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true); // Keep loading true initially
     const [authError, setAuthError] = useState<string | null>(null);
 
     // --- Fetch Auth State ---
     useEffect(() => {
-        console.log("Popup: useEffect started. Initial isLoadingAuth:", isLoadingAuth);
+        console.log(
+            "Popup: useEffect started. Initial isLoadingAuth:",
+            isLoadingAuth,
+        );
         let isMounted = true;
 
         const fetchAuthState = async () => {
@@ -37,21 +44,30 @@ function App() {
 
             try {
                 console.log("Popup: Sending GET_AUTH_STATE message...");
-                const userData = await sendMessageToSW<UserData | null>({ type: "GET_AUTH_STATE" });
+                const userData = await sendMessageToSW<UserData | null>({
+                    type: "GET_AUTH_STATE",
+                });
                 console.log("Popup: Received auth state response:", userData);
 
                 if (!isMounted) return;
 
-                setAuthState(userData ? { isLoggedIn: true, ...userData } : { isLoggedIn: false, uid: null, email: null });
-
+                setAuthState(
+                    userData
+                        ? { isLoggedIn: true, ...userData }
+                        : { isLoggedIn: false, uid: null, email: null },
+                );
             } catch (error: any) {
                 if (!isMounted) return;
                 console.error("Popup: Error fetching auth state:", error);
-                setAuthError(error.message || "Failed to fetch authentication status.");
+                setAuthError(
+                    error.message || "Failed to fetch authentication status.",
+                );
                 setAuthState({ isLoggedIn: false, uid: null, email: null });
             } finally {
                 if (isMounted) {
-                    console.log("Popup: fetchAuthState finally block. Setting isLoadingAuth to false.");
+                    console.log(
+                        "Popup: fetchAuthState finally block. Setting isLoadingAuth to false.",
+                    );
                     setIsLoadingAuth(false);
                 }
             }
@@ -60,9 +76,12 @@ function App() {
         fetchAuthState();
 
         const messageListener = (message: any) => {
-            if (message.type === 'AUTH_STATE_UPDATED' && isMounted) {
-                console.log("Popup: Received AUTH_STATE_UPDATED", message.payload);
-                if (typeof message.payload?.isLoggedIn === 'boolean') {
+            if (message.type === "AUTH_STATE_UPDATED" && isMounted) {
+                console.log(
+                    "Popup: Received AUTH_STATE_UPDATED",
+                    message.payload,
+                );
+                if (typeof message.payload?.isLoggedIn === "boolean") {
                     setAuthState(message.payload);
                     setIsLoadingAuth(false);
                     setAuthError(null);
@@ -76,9 +95,7 @@ function App() {
             isMounted = false;
             chrome.runtime.onMessage.removeListener(messageListener);
         };
-
     }, []); // Empty dependency array
-
 
     // --- Event Handlers ---
     const openAuthPage = () => {
@@ -111,7 +128,9 @@ function App() {
         if (isLoadingAuth) {
             console.log("Popup: Rendering Loading State");
             // You could add a small spinner here if desired
-            return <p className={styles.description}>Loading account status...</p>;
+            return (
+                <p className={styles.description}>Loading account status...</p>
+            );
         }
 
         // If there was an error after loading, show it
@@ -121,10 +140,7 @@ function App() {
             return (
                 <>
                     <p className={styles.errorText}>{authError}</p>
-                    <button
-                        onClick={openAuthPage}
-                        className={styles.button}
-                    >
+                    <button onClick={openAuthPage} className={styles.button}>
                         Login / Register
                     </button>
                 </>
@@ -137,7 +153,11 @@ function App() {
             return (
                 <>
                     <p className={styles.loggedInText}>
-                        Logged in as:<br /> <strong className={styles.loggedInEmail}>{authState.email || 'N/A'}</strong>
+                        Logged in as:
+                        <br />{" "}
+                        <strong className={styles.loggedInEmail}>
+                            {authState.email || "N/A"}
+                        </strong>
                     </p>
                     <button
                         onClick={handleLogout}
@@ -152,11 +172,10 @@ function App() {
             console.log("Popup: Rendering Logged Out State");
             return (
                 <>
-                    <p className={styles.description}>Login or Register for features.</p>
-                    <button
-                        onClick={openAuthPage}
-                        className={styles.button}
-                    >
+                    <p className={styles.description}>
+                        Login or Register for features.
+                    </p>
+                    <button onClick={openAuthPage} className={styles.button}>
                         Login / Register
                     </button>
                 </>
@@ -168,18 +187,19 @@ function App() {
     return (
         // Apply the container class from the CSS module
         <div className={styles.container}>
-
             {/* Header Section */}
             <img src={logo} alt="Extension Logo" className={styles.logo} />
             <h1 className={styles.title}>ChatGPT Reverse</h1>
-            <p className={styles.description}>Your enhancement tools are ready!</p>
+            <p className={styles.description}>
+                Your enhancement tools are ready!
+            </p>
 
             {/* Instruction Section */}
             <div className={styles.instructionBox}>
                 <p className={styles.instructionText}>How to Access Tools:</p>
                 <p className={styles.instructionSubText}>
-                    On{" "}
-                    <code className={styles.kbdCode}>chatgpt.com</code>, press:
+                    On <code className={styles.kbdCode}>chatgpt.com</code>,
+                    press:
                 </p>
                 <div className={styles.shortcutContainer}>
                     <kbd className={styles.kbd}>CTRL</kbd>

@@ -1,7 +1,7 @@
 // packages/popup/src/components/AccountInfo/AccountInfo.tsx
-import React from 'react';
-import Button from '../Button/Button';
-import styles from './AccountInfo.module.css';
+import React from "react";
+import Button from "../Button/Button";
+import styles from "./AccountInfo.module.css";
 
 interface AccountInfoProps {
     email: string | null;
@@ -10,12 +10,16 @@ interface AccountInfoProps {
     isLoading: boolean; // To disable logout during action
 }
 
-const AccountInfo: React.FC<AccountInfoProps> = ({ email, planId, onLogout, isLoading }) => {
-
+const AccountInfo: React.FC<AccountInfoProps> = ({
+    email,
+    planId,
+    onLogout,
+    isLoading,
+}) => {
     const getPlanName = (id: string | null): string => {
-        if (id === 'monthly') return 'Pro Monthly';
-        if (id === 'lifetime') return 'Lifetime Pro';
-        return 'Free';
+        if (id === "monthly") return "Pro Monthly";
+        if (id === "lifetime") return "Lifetime Pro";
+        return "Free";
     };
 
     return (
@@ -23,7 +27,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ email, planId, onLogout, isLo
             <h2 className={styles.title}>Account Status</h2>
             <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Email:</span>
-                <span className={styles.infoValue}>{email || 'N/A'}</span>
+                <span className={styles.infoValue}>{email || "N/A"}</span>
             </div>
             <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Plan:</span>
