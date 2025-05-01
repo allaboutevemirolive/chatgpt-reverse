@@ -1,8 +1,8 @@
 // packages/popup/src/components/LoginForm/LoginForm.tsx
 import React, { useState } from 'react';
-import Button from '../Button/Button'; // Adjust path if necessary
-import styles from './LoginForm.module.css'; // Use the CSS module
-import { sendMessageToSW } from '../../utils/swMessenger'; // Adjust path
+import Button from '../Button/Button'; 
+import styles from './LoginForm.module.css';
+import { sendMessageToSW } from '../../utils/swMessenger';
 
 interface LoginFormProps {
     onSuccess: (userData: { uid: string, email: string | null }) => void; // Callback on successful login/register

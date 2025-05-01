@@ -76,12 +76,14 @@ const PricingCard: React.FC<PricingCardProps> = ({
             <Button
                 href={buttonHref}
                 onClick={buttonOnClick}
-                variant={isCurrentPlan ? 'secondary' : buttonVariant} // Different style for current plan button
+                variant={isCurrentPlan ? 'secondary' : buttonVariant}
                 className={styles.planButton}
-                disabled={isDisabled || isCurrentPlan} // Disable if current plan or explicitly disabled
-                target={buttonHref ? '_blank' : undefined} // Open external links in new tab
+                // Pass the isDisabled prop to the Button component
+                disabled={isDisabled || isCurrentPlan}
+                target={buttonHref ? '_blank' : undefined}
                 rel={buttonHref ? 'noopener noreferrer' : undefined}
             >
+                {/* Show dynamic text based on state */}
                 {isCurrentPlan ? 'Your Plan' : buttonText}
             </Button>
         </div>

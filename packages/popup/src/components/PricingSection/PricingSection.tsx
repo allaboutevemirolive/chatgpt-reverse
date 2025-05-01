@@ -1,11 +1,13 @@
 // packages/popup/src/components/PricingSection/PricingSection.tsx
 import React from 'react';
-import PricingCard from '../PricingCard/PricingCard'; // Adjust path
+import PricingCard from '../PricingCard/PricingCard'; // Adjust path if necessary
 import styles from './PricingSection.module.css';
 
-// Define types for plan data and user status
+// --- Type Definitions ---
+
+// Describes the data structure for a single pricing plan
 interface PlanData {
-    id: string; // e.g., 'free', 'monthly', 'lifetime'
+    id: 'free' | 'monthly' | 'lifetime'; // Use specific IDs
     planName: string;
     price: string;
     frequency?: string;
@@ -14,31 +16,42 @@ interface PlanData {
     buttonText: string;
     buttonVariant?: 'primary' | 'secondary' | 'outline';
     isFeatured?: boolean;
-    storeLink?: string; // Optional link for the free plan
+    storeLink?: string; // Optional link only for the free plan button
+    stripePriceId?: string; // Store the associated Stripe Price ID (used internally by SW)
 }
 
+// Describes the user's current subscription status (fetched from SW/backend)
 interface UserSubscription {
-    planId: string | null; // ID of the current plan, or null if free/none
-    // Add other relevant fields like expiry if needed
+    planId: PlanData['id'] | null; // Matches the PlanData id type
+    // Add other relevant fields like expiry, status etc. from your subscription data
+    // e.g., status?: 'active' | 'trialing' | 'canceled';
+    // e.g., paidUntilTimestamp?: number;
 }
 
+// Props expected by the PricingSection component
 interface PricingSectionProps {
-    userSubscription: UserSubscription | null;
-    isLoggedIn: boolean;
-    onSelectPlan: (planId: string) => void; // Callback when a paid plan button is clicked
-    onLoginRequired: () => void; // Callback if login is needed to purchase
+    userSubscription: UserSubscription | null; // User's current subscription data
+    isLoggedIn: boolean; // Is the user currently logged into Firebase Auth?
+    isLoadingCheckout: PlanData['id'] | null; // ID of the plan currently being processed for checkout, or null
+    onSelectPlan: (planId: PlanData['id']) => void; // Callback when a paid plan button is clicked by a logged-in user
+    onLoginRequired: () => void; // Callback if a paid plan button is clicked by a logged-out user
 }
+
+// --- Component Implementation ---
 
 const PricingSection: React.FC<PricingSectionProps> = ({
     userSubscription,
     isLoggedIn,
+    isLoadingCheckout, // Receive the specific plan ID being loaded, or null
     onSelectPlan,
     onLoginRequired
 }) => {
 
     // --- Define Pricing Plans ---
+    // Match the 'id' field with the `planId` you expect in the UserSubscription object
+    // and the `planId` sent to the service worker for checkout.
     const pricingPlans: PlanData[] = [
-        {
+         {
             id: 'free',
             planName: 'Free',
             price: '$0',
@@ -50,15 +63,15 @@ const PricingSection: React.FC<PricingSectionProps> = ({
                 'Basic Conversation Management',
                 'Community Support',
             ],
-            buttonText: 'Your Current Plan', // Changed text
-            buttonVariant: 'secondary',
+            buttonText: 'Your Current Plan', // Text shown when this is the current plan
+            buttonVariant: 'secondary', // Use a less prominent style for the free plan button/indicator
             isFeatured: false,
-            storeLink: 'https://chromewebstore.google.com/detail/chatgpt-reverse/flcfhjdkcdnijdkcglnpecjkndnjjkai', // Example store link
-        },
+            // storeLink: 'YOUR_CHROME_STORE_LINK', // Optional: Link to Chrome store page
+         },
         {
             id: 'monthly',
             planName: 'Pro Monthly',
-            price: '$1',
+            price: '$1', // Ensure this matches your Stripe Product Price
             frequency: '/ month',
             description: 'Unlock all features with flexibility.',
             features: [
@@ -72,11 +85,12 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             buttonText: 'Go Pro Monthly',
             buttonVariant: 'primary',
             isFeatured: false,
+            stripePriceId: 'price_1PV38iJGLYV9XQh12y88Qo3h', // Your actual Stripe Price ID
         },
         {
             id: 'lifetime',
             planName: 'Lifetime Deal',
-            price: '$9.99',
+            price: '$9.99', // Ensure this matches your Stripe Product Price
             frequency: 'One-time',
             description: 'Get lifetime access with a single payment.',
             features: [
@@ -87,45 +101,72 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             ],
             buttonText: 'Get Lifetime Access',
             buttonVariant: 'primary',
-            isFeatured: true,
+            isFeatured: true, // Make this stand out
+            stripePriceId: 'price_1PV38jJGLYV9XQh173aYJbQ5', // Your actual Stripe Price ID
         },
     ];
 
+    // --- Button Click Handler ---
     const handleButtonClick = (plan: PlanData) => {
-        if (plan.id === 'free') {
-            // Optionally open store link if provided
-            if (plan.storeLink) window.open(plan.storeLink, '_blank');
-        } else {
-            // Paid plan clicked
-            if (isLoggedIn) {
-                onSelectPlan(plan.id); // Trigger payment flow via parent
-            } else {
-                onLoginRequired(); // Tell parent login is needed
-            }
-        }
+         // Don't handle clicks on the free plan button if it's just informational
+         if (plan.id === 'free') {
+             // If you have a store link, open it
+             if (plan.storeLink) {
+                 window.open(plan.storeLink, '_blank');
+             }
+             return; // Do nothing else for the free plan click
+         }
+
+         // Handle paid plans
+         if (plan.id === 'monthly' || plan.id === 'lifetime') {
+             if (!isLoggedIn) {
+                 onLoginRequired(); // Trigger login flow if not logged in
+             } else {
+                 // User is logged in, trigger the checkout process
+                 onSelectPlan(plan.id);
+             }
+         }
     };
 
+    // --- Render ---
     return (
         <section id="pricing" className={styles.pricingSection}>
             <h2 className={styles.sectionTitle}>Simple, Transparent Pricing</h2>
             <p className={styles.sectionSubtitle}>
-                Choose the plan that fits your needs. Pay once for lifetime access or subscribe monthly.
+                Choose the plan that fits your needs. Upgrade anytime.
             </p>
             <div className={styles.pricingGrid}>
                 {pricingPlans.map((plan) => {
-                    const isCurrent = userSubscription?.planId === plan.id || (plan.id === 'free' && !userSubscription?.planId);
+                    // Determine if this card represents the user's current plan
+                    const isCurrent = plan.id === (userSubscription?.planId || 'free');
+                    // Determine if this specific plan's checkout is loading
+                    const isThisPlanLoading = isLoadingCheckout === plan.id;
+
                     return (
                         <PricingCard
                             key={plan.id}
-                            {...plan}
+                            planName={plan.planName}
+                            price={plan.price}
+                            frequency={plan.frequency}
+                            description={plan.description}
+                            features={plan.features}
+                            buttonText={isThisPlanLoading ? "Processing..." : plan.buttonText}
+                            buttonVariant={plan.buttonVariant}
+                            isFeatured={plan.isFeatured}
                             isCurrentPlan={isCurrent}
-                            buttonHref={plan.id === 'free' && plan.storeLink ? plan.storeLink : undefined}
-                            buttonOnClick={plan.id !== 'free' ? () => handleButtonClick(plan) : undefined} // Only add click handler for paid plans here
+                            // Disable the button if it's the current plan OR if *any* checkout is loading
+                            isDisabled={isCurrent || isLoadingCheckout !== null}
+                            // Only provide href for the free plan's store link
+                            buttonHref={(plan.id === 'free' && plan.storeLink && !isCurrent) ? plan.storeLink : undefined}
+                            // Only provide onClick for plans that are NOT free and NOT the current plan
+                            buttonOnClick={ (plan.id !== 'free' && !isCurrent) ? () => handleButtonClick(plan) : undefined }
                         />
                     );
                 })}
             </div>
-            <p className={styles.priceDisclaimer}>* Prices are in USD. One-time payment for Lifetime Deal.</p>
+            <p className={styles.priceDisclaimer}>
+                * Prices are in USD. Taxes may apply. One-time payment for Lifetime Deal.
+            </p>
         </section>
     );
 };
