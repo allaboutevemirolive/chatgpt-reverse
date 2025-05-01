@@ -1,0 +1,104 @@
+/* packages/popup/src/components/PricingSection/PricingSection.module.css */
+
+.pricingSection {
+    width: 100%;
+    max-width: 1100px;
+    /* Give the section a max width */
+    margin-left: auto;
+    margin-right: auto;
+    padding: var(--space-xl) 0 var(--space-xxl) 0;
+    /* More vertical padding */
+}
+
+.sectionTitle {
+    font-size: var(--fs-xlarge);
+    /* Use larger font size */
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: var(--space-sm);
+    /* More space below title */
+}
+
+.sectionSubtitle {
+    font-size: var(--fs-medium);
+    /* Slightly larger subtitle */
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    /* More space below subtitle */
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: var(--lh-medium);
+}
+
+
+.pricingGrid {
+    display: grid;
+    /* Use 3 columns explicitly on wider screens */
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+    /* Slightly larger gap */
+    align-items: stretch;
+    /* Make cards same height */
+    margin-top: var(--space-xl);
+    /* More space above grid */
+}
+
+.priceDisclaimer {
+    text-align: center;
+    margin-top: var(--space-xl);
+    /* More space above disclaimer */
+    font-size: var(--fs-small);
+    /* Keep disclaimer small */
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+
+/* --- Responsiveness --- */
+@media (max-width: 992px) {
+
+    /* Tablet breakpoint */
+    .pricingGrid {
+        grid-template-columns: 1fr;
+        /* Stack earlier */
+        max-width: 450px;
+        /* Control width when stacked */
+        margin-left: auto;
+        margin-right: auto;
+        gap: var(--space-xl);
+        /* Increase gap when stacked */
+    }
+
+    .pricingSection {
+        padding-left: var(--space-md);
+        padding-right: var(--space-md);
+    }
+}
+
+@media (max-width: 576px) {
+
+    /* Mobile breakpoint */
+    .sectionTitle {
+        font-size: calc(var(--fs-xlarge) * 0.9);
+        /* Scale down title */
+    }
+
+    .sectionSubtitle {
+        font-size: calc(var(--fs-medium) * 0.95);
+        /* Scale down subtitle */
+    }
+
+    .pricingGrid {
+        max-width: 100%;
+        /* Allow full width */
+        gap: var(--space-lg);
+    }
+
+    .pricingSection {
+        padding-left: var(--space-sm);
+        padding-right: var(--space-sm);
+    }
+}

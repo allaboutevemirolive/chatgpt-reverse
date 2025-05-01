@@ -1,0 +1,76 @@
+/* packages/popup/src/components/AccountInfo/AccountInfo.module.css */
+
+.accountContainer {
+    width: 100%;
+    max-width: 400px;
+    padding: var(--space-lg);
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    border: 1px solid var(--border-primary);
+    align-items: center;
+    /* Center items */
+}
+
+.title {
+    font-size: var(--fs-large);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0 0 var(--space-sm) 0;
+    width: 100%;
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.infoItem {
+    display: flex;
+    justify-content: space-between;
+    /* Align label and value */
+    width: 100%;
+    font-size: var(--fs-medium);
+    gap: var(--space-md);
+}
+
+.infoLabel {
+    color: var(--text-secondary);
+    font-weight: var(--fw-medium);
+    flex-shrink: 0;
+    /* Prevent label from shrinking */
+}
+
+.infoValue {
+    color: var(--text-primary);
+    font-weight: var(--fw-semibold);
+    word-break: break-all;
+    /* Break long emails */
+    text-align: right;
+}
+
+.manageButton {
+    /* Inherits from Button component */
+    margin-top: var(--space-sm);
+    width: 100%;
+}
+
+.logoutButton {
+    /* Inherits from Button component */
+    margin-top: var(--space-md);
+    width: 100%;
+    border-color: var(--error) !important;
+    /* Make border red */
+    color: var(--error) !important;
+    /* Make text red */
+    background-color: transparent !important;
+    /* Ensure background is transparent */
+}
+
+.logoutButton:hover {
+    background-color: color-mix(in srgb, var(--error) 15%, transparent) !important;
+    /* Reddish background */
+    border-color: var(--error) !important;
+    color: var(--error) !important;
+}

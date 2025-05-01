@@ -1,0 +1,113 @@
+/* packages/popup/src/components/LoginForm/LoginForm.module.css */
+
+.form {
+    width: 100%;
+    max-width: 380px;
+    padding: var(--space-lg);
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    border: 1px solid var(--border-primary);
+}
+
+.title {
+    font-size: var(--fs-large);
+    /* Slightly smaller title for form */
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0 0 var(--space-xs) 0;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.label {
+    font-size: var(--fs-small);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.input {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--fs-medium);
+    font-family: inherit;
+    outline: none;
+    transition:
+        border-color var(--transition-duration-fast) var(--transition-easing),
+        box-shadow var(--transition-duration-fast) var(--transition-easing);
+}
+
+.input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+.input::placeholder {
+    color: var(--text-tertiary);
+    opacity: 0.8;
+}
+
+.submitButton {
+    /* Inherits from Button component */
+    width: 100%;
+    /* Make submit button full width */
+}
+
+.toggleButton {
+    /* Inherits from Button component, variant=ghost */
+    margin-top: var(--space-sm);
+    padding: var(--space-xs);
+    color: var(--accent-primary);
+    /* Ensure color is set */
+}
+
+.toggleButton:hover {
+    color: var(--accent-hover);
+    background-color: transparent !important;
+    /* Ensure ghost hover */
+    text-decoration: underline;
+}
+
+
+.errorMessage {
+    padding: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    /* Add space below error */
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-small);
+    text-align: center;
+    border: 1px solid var(--border-secondary);
+    /* Use secondary for less emphasis */
+    background-color: color-mix(in srgb, var(--error) 15%, transparent);
+    color: var(--error);
+    border-color: color-mix(in srgb, var(--error) 40%, transparent);
+}
+
+/* Spinner Animation (ensure keyframes are defined globally or here) */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid color-mix(in srgb, var(--bg-primary) 70%, transparent);
+    /* Match primary button text color */
+    border-top-color: var(--bg-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
