@@ -1,107 +1,207 @@
 <!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Payment Cancelled - ChatGPT Reverse</title>
+        <!-- Optional: Link to Inter font if not relying on system fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                /* Theme Colors (ensure these match your auth.css) */
+                --bg-primary: #1e1e2e;
+                --bg-secondary: #282a36;
+                --bg-tertiary: #343746; /* Slightly lighter for card */
+                --text-primary: #e5e5e5;
+                --text-secondary: #c0c0dd;
+                --error: #ff5555; /* Use error color */
+                --accent-primary: #f38ba8;
+                --border-primary: #3b3b4d;
+                --font-family: "Inter", -apple-system, BlinkMacSystemFont,
+                    "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+                    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+                --space-sm: 12px;
+                --space-md: 16px;
+                --space-lg: 24px;
+                --space-xl: 32px;
+                --radius-md: 8px;
+                --radius-lg: 12px;
+                --fw-normal: 400;
+                --fw-medium: 500;
+                --fw-semibold: 600;
+                --fw-bold: 700;
+                --fs-base: 16px;
+                --fs-large: 1.25rem; /* ~20px */
+                --fs-xlarge: 1.875rem; /* ~30px */
+                --lh-relaxed: 1.7;
+            }
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Payment Cancelled - ChatGPT Reverse</title>
-    <style>
-        :root {
-            /* Basic Theme Colors (inspired by your auth.css) */
-            --bg-primary: #1e1e2e;
-            --text-primary: #e5e5e5;
-            --text-secondary: #c0c0dd;
-            --error: #ff5555;
-            --accent-primary: #f38ba8;
-            --font-family: "Inter", "Arial", sans-serif;
-            --space-md: 16px;
-            --space-lg: 24px;
-            --radius-md: 8px;
-        }
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                box-sizing: border-box;
+            }
 
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            box-sizing: border-box;
-        }
+            *,
+            *::before,
+            *::after {
+                box-sizing: inherit;
+            }
 
-        *,
-        *::before,
-        *::after {
-            box-sizing: inherit;
-        }
+            body {
+                font-family: var(--font-family);
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                padding: var(--space-lg);
+                min-height: 100vh;
+                font-size: var(--fs-base);
+                line-height: var(--lh-relaxed);
+            }
 
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: var(--space-lg);
-            min-height: 100vh;
-        }
+            .container {
+                background-color: var(--bg-tertiary);
+                padding: var(--space-xl) var(--space-lg);
+                border-radius: var(--radius-lg);
+                max-width: 550px; /* Slightly wider */
+                width: 90%;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); /* Enhanced shadow */
+                border: 1px solid var(--border-primary);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
 
-        .container {
-            background-color: #282a36;
-            /* Slightly lighter background for card */
-            padding: var(--space-lg) var(--space-lg);
-            border-radius: var(--radius-md);
-            max-width: 500px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
+            .logo {
+                /* Optional logo styling */
+                width: 48px;
+                height: 48px;
+                margin-bottom: var(--space-md);
+                opacity: 0.8;
+            }
 
-        h1 {
-            color: var(--error);
-            /* Red for cancel/error */
-            margin-top: 0;
-            margin-bottom: var(--space-md);
-            font-size: 2em;
-        }
+            .status-icon {
+                color: var(--error); /* Red icon */
+                width: 64px; /* Larger icon */
+                height: 64px;
+                margin-bottom: var(--space-md);
+            }
 
-        p {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: var(--space-md);
-            font-size: 1.1em;
-        }
+            h1 {
+                color: var(--text-primary); /* Keep heading white for contrast */
+                margin-top: 0;
+                margin-bottom: var(--space-sm);
+                font-size: var(--fs-xlarge);
+                font-weight: var(--fw-bold);
+            }
 
-        p:last-child {
-            margin-bottom: 0;
-        }
+            p {
+                color: var(--text-secondary);
+                margin-bottom: var(--space-md);
+                font-size: var(--fs-base);
+                max-width: 90%; /* Prevent text from stretching too wide */
+            }
 
-        a {
-            color: var(--accent-primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
+            p.instruction {
+                margin-top: var(--space-lg);
+                font-weight: var(--fw-medium);
+                color: var(--text-primary);
+            }
 
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
+            .button-group {
+                margin-top: var(--space-lg);
+                display: flex;
+                gap: var(--space-md);
+            }
 
-<body>
-    <div class="container">
-        <h1>Payment Cancelled</h1>
-        <p>
-            Your checkout process was cancelled, or it could not be
-            completed.
-        </p>
-        <p>You have not been charged.</p>
-        <p>
-            You can close this tab. Feel free to try upgrading again from
-            the extension's account page.
-        </p>
-        <!-- Optional: Add a link back -->
-        <!-- <p><a href="#" onclick="window.close(); return false;">Close Tab</a></p> -->
-    </div>
-</body>
+            .action-button {
+                display: inline-block;
+                padding: var(--space-sm) var(--space-lg);
+                background-color: var(--bg-secondary); /* Neutral background */
+                color: var(--text-primary);
+                border: 1px solid var(--border-primary);
+                border-radius: var(--radius-md);
+                font-weight: var(--fw-semibold);
+                font-size: var(--fs-base);
+                cursor: pointer;
+                text-decoration: none;
+                transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+            }
 
+            .action-button:hover {
+                background-color: var(--bg-tertiary);
+                border-color: var(--text-secondary);
+            }
+
+            .action-button:active {
+                transform: scale(0.98);
+            }
+
+             /* Specific style for retry button */
+             .retry-button {
+                background-color: var(--accent-primary);
+                color: var(--bg-primary);
+                border-color: var(--accent-primary);
+             }
+             .retry-button:hover {
+                background-color: #f76e94; /* accent-hover */
+                border-color: #f76e94;
+             }
+
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- Optional Logo -->
+            <!-- <img src="/logo.svg" alt="ChatGPT Reverse Logo" class="logo" /> -->
+
+            <!-- Error/Cancel Icon -->
+            <svg
+                class="status-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+            >
+                <path
+                    fill-rule="evenodd"
+                    d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z"
+                    clip-rule="evenodd"
+                />
+            </svg>
+
+            <h1>Payment Not Completed</h1>
+            <p>
+                Your checkout process was cancelled or could not be completed.
+                You have not been charged.
+            </p>
+            <p class="instruction">
+                You can close this tab now, or try again.
+            </p>
+
+            <div class="button-group">
+                 <button class="action-button close-button" onclick="window.close()">
+                    Close Tab
+                </button>
+                 <!-- Optional: Link back to the pricing/auth page -->
+                 <!-- Make sure this URL is correct -->
+                 <a href="chrome-extension://gchcfcpimpgfbmbfpfpkakpkjkgobcjk/popup/auth.html#pricing" class="action-button retry-button">
+                    Retry / View Plans
+                 </a>
+            </div>
+
+        </div>
+    </body>
 </html>
