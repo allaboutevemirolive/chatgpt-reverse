@@ -12,46 +12,6 @@
     /* Ensure font is inherited */
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-sm) var(--space-lg);
-    background-color: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-primary);
-    position: sticky;
-    /* Keep header visible */
-    top: 0;
-    z-index: 10;
-    box-shadow: var(--shadow-sm);
-}
-
-.headerTitle {
-    font-size: var(--fs-large);
-    /* Use theme size */
-    font-weight: var(--fw-semibold);
-    color: var(--text-primary);
-    margin: 0;
-    white-space: nowrap;
-    /* Prevent wrapping */
-}
-
-.nav {
-    display: flex;
-    gap: var(--space-sm);
-}
-
-/* Style Button component when used in nav (using :global is one way, but direct targeting is okay too if specific) */
-/* Targeting the specific button elements passed to nav might be more robust */
-/* Example: If Button component renders a <button> or <a> tag */
-.nav > button,
-.nav > a {
-    font-size: var(--fs-medium);
-    /* Adjust font size for nav items if needed */
-    padding: var(--space-xs) var(--space-sm);
-    /* Adjust padding */
-}
-
 .mainContent {
     flex-grow: 1;
     /* Allow main content to fill remaining space */

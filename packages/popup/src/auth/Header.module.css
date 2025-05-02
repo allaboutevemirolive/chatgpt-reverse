@@ -1,0 +1,97 @@
+/* src/auth/Header.module.css */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Increase vertical padding slightly, maintain horizontal */
+    padding: var(--space-md) var(--space-lg);
+    background-color: var(--bg-secondary);
+    /* Use a more subtle border or remove if shadow is enough */
+    border-bottom: 1px solid var(--border-primary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    /* Remove shadow if border is present, or use a lighter one */
+    box-shadow: none;
+    /* Example: box-shadow: 0 1px 3px rgba(0,0,0,0.2); */
+}
+
+.headerTitle {
+    font-size: var(--fs-large);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    /* Add slight letter spacing for refinement */
+    letter-spacing: 0.3px;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    /* Vertically align nav items */
+    /* Increase gap slightly for better separation */
+    gap: var(--space-md);
+}
+
+/* --- Refine Nav Button Styling --- */
+
+/* Target buttons within the nav specifically */
+.navButton {
+    /* Use the Button component's ghost variant styles as a base */
+    /* composes: ghost from '../components/Button/Button.module.css'; */
+    /* Re-declare or refine styles specifically for the header nav */
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--fs-medium);
+    font-weight: var(--fw-medium);
+    /* Slightly less bold than default button */
+    color: var(--text-secondary);
+    background-color: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    /* Consistent radius */
+    transition: background-color var(--transition-duration-fast) var(--transition-easing),
+        color var(--transition-duration-fast) var(--transition-easing);
+    cursor: pointer;
+    line-height: 1.4;
+    /* Ensure consistent line height */
+}
+
+.navButton:disabled {
+    /* Use disabled colors from theme */
+    color: var(--text-disabled) !important;
+    /* Ensure override */
+    background-color: transparent !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.navButton:not(:disabled):hover {
+    /* Subtle hover effect */
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Active state styling */
+.navButtonActive {
+    /* composes: navButton; */
+    /* Inherit base styles */
+    color: var(--accent-primary);
+    /* Use accent color for active state */
+    font-weight: var(--fw-semibold);
+    /* Make active item bolder */
+    /* Optional: add a subtle background or underline */
+    background-color: var(--bg-active);
+    /* Example: Subtle background */
+    /* text-decoration: underline; */
+    /* text-underline-offset: 4px; */
+}
+
+/* Ensure hover on active doesn't lose the active color */
+.navButtonActive:not(:disabled):hover {
+    color: var(--accent-hover);
+    /* Use hover accent color */
+    background-color: var(--bg-active);
+    /* Maintain active background */
+}
