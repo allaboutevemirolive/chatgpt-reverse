@@ -1,9 +1,9 @@
 // packages/popup/src/App.tsx
 import { useState, useEffect } from "react";
-import logo from "./assets/logo.svg";
-import { sendMessageToSW } from "./utils/swMessenger";
+import logo from "../assets/logo.svg";
+import { sendMessageToSW } from "../utils/swMessenger";
 import styles from "./App.module.css";
-import Button from "./components/Button/Button";
+import Button from "../components/Button/Button";
 
 interface UserData {
     uid: string;

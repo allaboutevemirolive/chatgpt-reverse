@@ -1,11 +1,11 @@
 // packages/popup/src/AuthPage.tsx
 import { useState, useEffect } from "react";
 import styles from "./AuthPage.module.css";
-import { sendMessageToSW } from "./utils/swMessenger";
-import PricingSection from "./components/PricingSection/PricingSection";
-import LoginForm from "./components/LoginForm/LoginForm";
-import AccountInfo from "./components/AccountInfo/AccountInfo";
-import Button from "./components/Button/Button";
+import { sendMessageToSW } from "../utils/swMessenger";
+import PricingSection from "../components/PricingSection/PricingSection";
+import LoginForm from "../components/LoginForm/LoginForm";
+import AccountInfo from "../components/AccountInfo/AccountInfo";
+import Button from "../components/Button/Button";
 
 // --- Interfaces ---
 
