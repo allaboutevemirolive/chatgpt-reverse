@@ -10,7 +10,7 @@ import {
     awaitAuthReady,
     resetAuthReadyPromise,
 } from "@/firebase/auth";
-import { getCheckoutUrl } from "@/firebase/stripe";
+import { getCheckoutUrl, getSubscriptionStatus } from "@/firebase/stripe";
 import { ChatGptApiClient } from "@/service/ChatGptApiClient";
 import * as ChatGptService from "@/service/ChatGptService";
 import * as ConversationProcessor from "@/service/ConversationProcessor";
@@ -199,6 +199,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     "SW: GET_AUTH_STATE promise resolved, returning current state.",
                 );
                 return getAuthState(); // Return the synchronous state
+            });
+            break;
+
+        case "GET_SUBSCRIPTION_STATUS":
+            handleAsync(async () => {
+                // Ensure auth is ready before trying to get UID
+                await awaitAuthReady();
+                const authState = getAuthState(); // Get current state after ready
+                if (!authState.isLoggedIn || !authState.uid) {
+                    console.warn("SW: GET_SUBSCRIPTION_STATUS called but user not logged in.");
+                    return null; // Or throw new Error("User not logged in");
+                }
+                return getSubscriptionStatus(authState.uid);
             });
             break;
 

@@ -16,6 +16,7 @@ export const CHECKOUT_LISTENER_TIMEOUT = 30000; // 30 seconds
 export const FIRESTORE_DB_NAME = "chatgpt-reverse-db";
 export const FIRESTORE_CUSTOMERS_COLLECTION = "customers";
 export const FIRESTORE_CHECKOUT_SESSIONS_SUBCOLLECTION = "checkout_sessions";
+export const FIRESTORE_SUBSCRIPTIONS_SUBCOLLECTION = "subscriptions";
 
 // --- Storage Keys ---
 export const STORAGE_API_HEADERS_KEY = "apiHeaders";

@@ -1,8 +1,13 @@
-// src/firebase/stripe.ts
+// packages/service-worker/src/firebase/stripe.ts
 import {
     collection,
     addDoc,
     onSnapshot,
+    query,
+    where,
+    orderBy,
+    limit,
+    getDocs,
     DocumentReference,
     DocumentData,
     FirestoreError,
@@ -18,6 +23,7 @@ import {
     CHECKOUT_LISTENER_TIMEOUT,
     FIRESTORE_CUSTOMERS_COLLECTION,
     FIRESTORE_CHECKOUT_SESSIONS_SUBCOLLECTION,
+    FIRESTORE_SUBSCRIPTIONS_SUBCOLLECTION,
 } from "@/config/constants";
 
 interface CheckoutSessionDocData {
@@ -45,27 +51,29 @@ export async function getCheckoutUrl(
         throw new Error("User must be logged in to start checkout.");
     }
 
+    // Determine the correct Stripe Price ID based on the internal planId
     let priceId: string | undefined;
     let mode: "payment" | "subscription";
 
     switch (planId) {
         case "monthly":
+            // Map internal 'monthly' to the actual Stripe Price ID from constants
             priceId = STRIPE_PRICE_ID_MONTHLY;
             mode = "subscription";
             break;
         case "lifetime":
+            // Map internal 'lifetime' to the actual Stripe Price ID from constants
             priceId = STRIPE_PRICE_ID_LIFETIME;
             mode = "payment";
             break;
         default:
-            // Should be caught by validation in background.ts, but defensive check here
             console.error(`Firebase Stripe (getCheckoutUrl): Invalid planId: ${planId}`);
             throw new Error(`Invalid plan selected.`);
     }
 
     if (!priceId) {
         console.error(
-            `Firebase Stripe (getCheckoutUrl): Stripe Price ID missing for plan: ${planId}. Check constants.`,
+            `Firebase Stripe (getCheckoutUrl): Stripe Price ID missing or misconfigured for plan: ${planId}. Check constants.ts.`,
         );
         throw new Error(
             `Configuration error: Price ID for the selected plan is missing.`,
@@ -73,7 +81,7 @@ export async function getCheckoutUrl(
     }
 
     console.log(
-        `Firebase Stripe (getCheckoutUrl): Creating checkout session doc for user ${userId}, price ${priceId}`,
+        `Firebase Stripe (getCheckoutUrl): Creating checkout session doc for user ${userId}, price ${priceId} (plan: ${planId})`,
     );
     const db = getDb();
     const checkoutSessionCollection = collection(
@@ -88,19 +96,19 @@ export async function getCheckoutUrl(
         const docRef: DocumentReference<DocumentData> = await addDoc(
             checkoutSessionCollection,
             {
-                price: priceId,
+                price: priceId, // Use the mapped Stripe Price ID
                 success_url: CHECKOUT_SUCCESS_URL,
                 cancel_url: CHECKOUT_CANCEL_URL,
                 mode: mode,
-                // auto_tax: true // Optionally enable automatic tax calculation
-                // allow_promotion_codes: true // Optionally enable promo codes
-                // metadata: { source: 'chrome-extension-auth-page' } // Optional metadata
+                // Optionally add metadata to link back to your internal planId if needed
+                metadata: { internalPlanId: planId }
             },
         );
 
         console.log("Firebase Stripe (getCheckoutUrl): Checkout session document created:", docRef.id);
 
         // Wait for the Stripe Extension to update the document with the URL
+        // (Promise logic remains the same as before)
         return new Promise<string>((resolve, reject) => {
             let timedOut = false;
             let unsubscribeCalled = false;
@@ -181,5 +189,88 @@ export async function getCheckoutUrl(
         throw new Error(
             `Failed to initiate checkout Firestore operation: ${(error as Error).message}`,
         );
+    }
+}
+
+
+/**
+ * Fetches the subscription status for a given user from Firestore.
+ * Checks the subscriptions subcollection for the latest active subscription.
+ * @param userId - The Firebase Authentication user ID.
+ * @returns A promise resolving with the user's subscription data (planId and status) or null if error.
+ */
+export async function getSubscriptionStatus(
+    userId: string,
+): Promise<{ planId: "free" | "monthly" | "lifetime"; status: string | null } | null> {
+    if (!userId) {
+        console.error("Firebase Stripe (getSubscriptionStatus): userId is required.");
+        return null; // Or throw new Error("User ID required");
+    }
+    const db = getDb();
+    // Reference the 'subscriptions' subcollection using the constant
+    const subsRef = collection(
+        db,
+        FIRESTORE_CUSTOMERS_COLLECTION,
+        userId,
+        FIRESTORE_SUBSCRIPTIONS_SUBCOLLECTION, // Use constant here
+    );
+
+    try {
+        console.log(
+            `Firebase Stripe (getSubscriptionStatus): Querying '${FIRESTORE_SUBSCRIPTIONS_SUBCOLLECTION}' subcollection for user ${userId}`,
+        );
+        // Query for the latest subscription with an active-like status
+        const q = query(
+            subsRef,
+            where("status", "in", ["active", "trialing"]), // Check for active or trialing status
+            orderBy("created", "desc"), // Get the latest one if multiple exist
+            limit(1),
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            console.log(
+                `Firebase Stripe (getSubscriptionStatus): No active/trialing subscription found for user ${userId}. Assuming free plan.`,
+            );
+            // If no active subscription found, assume free
+            return { planId: "free", status: null };
+        }
+
+        // Get the data from the first (and only) document in the result
+        const subDoc = querySnapshot.docs[0];
+        const subData = subDoc.data();
+        console.log(
+            `Firebase Stripe (getSubscriptionStatus): Active subscription data found for ${userId} (Doc ID: ${subDoc.id}):`,
+            subData,
+        );
+
+        // --- Determine Plan ID based on Stripe Price ID ---
+        let resolvedPlanId: "free" | "monthly" | "lifetime" = "free"; // Default to free
+        const priceId = subData?.items?.[0]?.price?.id; // Safely access nested Price ID
+
+        if (!priceId) {
+            console.warn(`Firebase Stripe (getSubscriptionStatus): Subscription document ${subDoc.id} for user ${userId} is missing items[0].price.id. Assuming free.`);
+        } else if (priceId === STRIPE_PRICE_ID_MONTHLY) {
+            resolvedPlanId = "monthly";
+        } else if (priceId === STRIPE_PRICE_ID_LIFETIME) {
+            resolvedPlanId = "lifetime";
+        } else {
+            console.warn(`Firebase Stripe (getSubscriptionStatus): Unknown priceId '${priceId}' found for user ${userId}. Assuming free.`);
+        }
+
+        const resolvedStatus = subData?.status || null; // Get the status directly
+
+        console.log(
+            `Firebase Stripe (getSubscriptionStatus): Resolved planId=${resolvedPlanId}, status=${resolvedStatus} for ${userId} from subscription ${subDoc.id}`,
+        );
+        return { planId: resolvedPlanId, status: resolvedStatus };
+
+    } catch (error) {
+        console.error(
+            `Firebase Stripe (getSubscriptionStatus): Error fetching subscription for user ${userId}:`,
+            error,
+        );
+        return null;
     }
 }
