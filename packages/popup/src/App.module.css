@@ -129,6 +129,29 @@
     font-weight: var(--fw-semibold);
 }
 
+/* --- Button Group Styles --- */
+.accountActions {
+    display: flex;
+    justify-content: center;
+    /* Center buttons horizontally */
+    gap: var(--space-sm);
+    /* 12px Space between buttons */
+    width: 100%;
+    margin-top: var(--space-xs);
+    /* 8px Small space above buttons */
+}
+
+/* Optional: Style Manage button specifically if Button component variant isn't enough */
+.manageButton {
+    /* Using Button variant="secondary" */
+    padding: var(--space-xs) var(--space-md) !important;
+    /* Override if needed: 8px 16px */
+    font-size: calc(var(--fs-medium) * 0.9) !important;
+    /* Override if needed: ~12.6px */
+    flex: 1;
+    /* Allow buttons to share space */
+}
+
 .button {
     padding: var(--space-sm) var(--space-lg);
     min-width: 150px;

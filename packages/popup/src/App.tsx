@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import logo from "./assets/logo.svg";
 import { sendMessageToSW } from "./utils/swMessenger";
 import styles from "./App.module.css";
+import Button from "./components/Button/Button";
 
 interface UserData {
     uid: string;
@@ -157,12 +158,27 @@ function App() {
                             {authState.email || "N/A"}
                         </strong>
                     </p>
-                    <button
-                        onClick={handleLogout}
-                        className={`${styles.button} ${styles.logoutButton}`}
-                    >
-                        Logout
-                    </button>
+                    {/* Button Group */}
+                    <div className={styles.accountActions}>
+                        <Button
+                            onClick={openAuthPage} // Reuse the function to open auth.html
+                            variant="secondary"    // Use secondary style
+                            size="normal"
+                            disabled={isLoadingAuth}
+                            className={styles.manageButton} // Optional specific class
+                        >
+                            Manage Account
+                        </Button>
+                        <Button
+                            onClick={handleLogout}
+                            variant="ghost"       // Use ghost or outline
+                            size="normal"
+                            disabled={isLoadingAuth}
+                            className={styles.logoutButton} // Keep specific styles if needed
+                        >
+                            Logout
+                        </Button>
+                    </div>
                 </>
             );
         } else {

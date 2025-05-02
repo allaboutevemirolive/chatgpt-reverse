@@ -2,17 +2,19 @@
 
 .accountContainer {
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
+    /* Slightly wider if needed */
     padding: var(--space-lg);
     background-color: var(--bg-secondary);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
+    /* Softer shadow */
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-lg);
+    /* Increased gap between elements */
     border: 1px solid var(--border-primary);
-    align-items: center;
-    /* Center items */
+    /* Removed align-items: center; default is stretch/start */
 }
 
 .title {
@@ -20,57 +22,85 @@
     font-weight: var(--fw-semibold);
     color: var(--text-primary);
     text-align: center;
-    margin: 0 0 var(--space-sm) 0;
-    width: 100%;
+    margin: 0;
+    /* Remove default margins */
     padding-bottom: var(--space-sm);
-    border-bottom: 1px solid var(--border-secondary);
+    /* Space below title */
+    /* Removed border-bottom for cleaner look */
 }
 
-.infoItem {
+.infoGroup {
     display: flex;
-    justify-content: space-between;
-    /* Align label and value */
+    flex-direction: column;
+    /* Stack label and value */
+    gap: var(--space-xxs);
+    /* Small gap between label and value */
     width: 100%;
-    font-size: var(--fs-medium);
-    gap: var(--space-md);
 }
 
 .infoLabel {
+    font-size: var(--fs-small);
+    /* Smaller label */
     color: var(--text-secondary);
     font-weight: var(--fw-medium);
-    flex-shrink: 0;
-    /* Prevent label from shrinking */
+    text-transform: uppercase;
+    /* Optional: Uppercase labels */
+    letter-spacing: 0.5px;
+    /* Optional: Slight spacing */
 }
 
 .infoValue {
+    font-size: var(--fs-medium);
+    /* Normal size value */
     color: var(--text-primary);
-    font-weight: var(--fw-semibold);
+    font-weight: var(--fw-normal);
+    /* Normal weight value */
     word-break: break-all;
-    /* Break long emails */
-    text-align: right;
+    line-height: 1.4;
+    /* Adjust line height */
+}
+
+.planValue {
+    font-weight: var(--fw-semibold);
+    /* Make plan name stand out */
+    color: var(--accent-primary);
+    /* Use accent color for plan */
+}
+
+.buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    /* Gap between buttons */
+    margin-top: var(--space-sm);
+    /* Space above button group */
+    padding-top: var(--space-md);
+    /* Space above buttons */
+    border-top: 1px solid var(--border-secondary);
+    /* Separator line */
+    width: 100%;
+    /* Ensure buttons can be full width */
 }
 
 .manageButton {
-    /* Inherits from Button component */
-    margin-top: var(--space-sm);
+    /* Inherits from Button component - variant="secondary" */
     width: 100%;
+    /* Make button full width */
 }
 
 .logoutButton {
-    /* Inherits from Button component */
-    margin-top: var(--space-md);
+    /* Inherits from Button component - variant="ghost" */
     width: 100%;
-    border-color: var(--error) !important;
-    /* Make border red */
-    color: var(--error) !important;
-    /* Make text red */
-    background-color: transparent !important;
-    /* Ensure background is transparent */
+    /* Make button full width */
+    color: var(--text-secondary);
+    /* Subtle default color */
 }
 
-.logoutButton:hover {
-    background-color: color-mix(in srgb, var(--error) 15%, transparent) !important;
-    /* Reddish background */
-    border-color: var(--error) !important;
+/* Add a subtle danger indication on hover for logout */
+.logoutButton:not(:disabled):hover {
+    background-color: color-mix(in srgb, var(--error) 10%, transparent) !important;
+    /* Subtle red background */
     color: var(--error) !important;
+    /* Red text */
+    /* border-color: var(--error) !important; /* Optional: Red border if using outline variant */
 }
