@@ -1,9 +1,9 @@
 // src/auth/Header.tsx
-import React from 'react';
+import React from "react";
 // Remove direct import of Button component if we style directly
 // import Button from '../components/Button/Button';
-import styles from './Header.module.css'; // Use Header's specific styles
-import type { AuthPageView } from './types';
+import styles from "./Header.module.css"; // Use Header's specific styles
+import type { AuthPageView } from "./types";
 
 interface HeaderProps {
     currentView: AuthPageView;
@@ -18,11 +18,10 @@ const Header: React.FC<HeaderProps> = ({
     isLoading,
     onNavigate,
 }) => {
-
     // Helper function to get button classes
     const getButtonClasses = (view: AuthPageView): string => {
         const isActive = currentView === view;
-        return `${styles.navButton} ${isActive ? styles.navButtonActive : ''}`;
+        return `${styles.navButton} ${isActive ? styles.navButtonActive : ""}`;
     };
 
     return (

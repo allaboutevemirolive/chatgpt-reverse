@@ -51,8 +51,9 @@
     border: none;
     border-radius: var(--radius-sm);
     /* Consistent radius */
-    transition: background-color var(--transition-duration-fast) var(--transition-easing),
-        color var(--transition-duration-fast) var(--transition-easing);
+    transition: background-color var(--transition-duration-fast)
+        var(--transition-easing), color var(--transition-duration-fast)
+        var(--transition-easing);
     cursor: pointer;
     line-height: 1.4;
     /* Ensure consistent line height */

@@ -1,11 +1,11 @@
 // packages/popup/src/components/AccountInfo/AccountInfo.tsx
-import React from 'react';
-import Button from '../Button/Button';
-import styles from './AccountInfo.module.css';
+import React from "react";
+import Button from "../Button/Button";
+import styles from "./AccountInfo.module.css";
 
 interface AccountInfoProps {
     email: string | null;
-    planId: 'free' | 'monthly' | 'lifetime' | null;
+    planId: "free" | "monthly" | "lifetime" | null;
     onLogout: () => void;
     isLoading: boolean; // Combined loading state (auth, sub fetch, portal link)
     // Add handler prop for managing subscription
@@ -22,22 +22,22 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
     onManageSubscription, // Receive the handler
     isPortalLoading, // Specific loading state for portal button
 }) => {
-    const getPlanName = (id: AccountInfoProps['planId']): string => {
+    const getPlanName = (id: AccountInfoProps["planId"]): string => {
         switch (id) {
-            case 'monthly':
-                return 'Pro Monthly';
-            case 'lifetime':
-                return 'Lifetime Pro';
-            case 'free':
+            case "monthly":
+                return "Pro Monthly";
+            case "lifetime":
+                return "Lifetime Pro";
+            case "free":
             default:
-                return 'Free';
+                return "Free";
         }
     };
 
     const currentPlanName = getPlanName(planId);
     // Determine if the user has a plan that can be managed in the portal
     // Usually, 'free' plans don't have anything to manage via Stripe Portal
-    const isPaidPlan = planId === 'monthly' || planId === 'lifetime';
+    const isPaidPlan = planId === "monthly" || planId === "lifetime";
 
     return (
         <div className={styles.accountContainer}>
@@ -45,7 +45,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 
             <div className={styles.infoGroup}>
                 <span className={styles.infoLabel}>Email Address</span>
-                <span className={styles.infoValue}>{email || 'N/A'}</span>
+                <span className={styles.infoValue}>{email || "N/A"}</span>
             </div>
 
             <div className={styles.infoGroup}>
@@ -67,7 +67,9 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                         disabled={isLoading || isPortalLoading}
                         className={styles.manageButton}
                     >
-                        {isPortalLoading ? "Loading Portal..." : "Manage Subscription"}
+                        {isPortalLoading
+                            ? "Loading Portal..."
+                            : "Manage Subscription"}
                     </Button>
                 )}
 

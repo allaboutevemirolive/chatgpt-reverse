@@ -151,7 +151,9 @@ function App() {
             console.log("Popup: Rendering Logged In State");
             return (
                 <>
-                    <p className={`${styles.loggedInText} ${styles.description}`}>
+                    <p
+                        className={`${styles.loggedInText} ${styles.description}`}
+                    >
                         Logged in as:
                         <br />{" "}
                         <strong className={styles.loggedInEmail}>
@@ -162,7 +164,7 @@ function App() {
                     <div className={styles.accountActions}>
                         <Button
                             onClick={openAuthPage} // Reuse the function to open auth.html
-                            variant="secondary"    // Use secondary style
+                            variant="secondary" // Use secondary style
                             size="normal"
                             disabled={isLoadingAuth}
                             className={styles.manageButton} // Optional specific class
@@ -171,7 +173,7 @@ function App() {
                         </Button>
                         <Button
                             onClick={handleLogout}
-                            variant="ghost"       // Use ghost or outline
+                            variant="ghost" // Use ghost or outline
                             size="normal"
                             disabled={isLoadingAuth}
                             className={styles.logoutButton} // Keep specific styles if needed
@@ -211,9 +213,14 @@ function App() {
             {/* Instruction Section */}
             <div className={styles.instructionBox}>
                 <p className={styles.instructionText}>How to Access Tools:</p>
-                <p className={`${styles.instructionSubText} ${styles.description}`}>
-                    On <code className={`${styles.kbdCode} ${styles.kbd}`}>chatgpt.com</code>,
-                    press:
+                <p
+                    className={`${styles.instructionSubText} ${styles.description}`}
+                >
+                    On{" "}
+                    <code className={`${styles.kbdCode} ${styles.kbd}`}>
+                        chatgpt.com
+                    </code>
+                    , press:
                 </p>
                 <div className={styles.shortcutContainer}>
                     <kbd className={styles.kbd}>CTRL</kbd>

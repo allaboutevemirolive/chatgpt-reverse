@@ -7,7 +7,7 @@ import type {
     UserSubscription,
     AuthPageView,
     CheckoutPlanId,
-} from "./types"; // Import types
+} from "./types";
 
 export function useAuthPageLogic() {
     // --- State ---
@@ -69,7 +69,11 @@ export function useAuthPageLogic() {
                 setError(null);
             }
 
-            let initialAuthState: AuthState = { isLoggedIn: false, uid: null, email: null };
+            let initialAuthState: AuthState = {
+                isLoggedIn: false,
+                uid: null,
+                email: null,
+            };
             let initialSubscription: UserSubscription | null = null;
 
             try {
@@ -104,7 +108,10 @@ export function useAuthPageLogic() {
                         setSubscription(initialSubscription); // Update state
                     } catch (subError: any) {
                         if (!isMounted) return;
-                        console.error("AuthPage Logic: Failed to fetch subscription:", subError);
+                        console.error(
+                            "AuthPage Logic: Failed to fetch subscription:",
+                            subError,
+                        );
                         setError("Could not load subscription details.");
                         setSubscription({ planId: null, status: null });
                     }
@@ -123,21 +130,28 @@ export function useAuthPageLogic() {
                             // Stays 'pricing' (initial state) if not logged in and no cancel redirect
                             setCurrentView("pricing");
                         }
-                    } else if (checkoutStatus === "success" && initialAuthState.isLoggedIn) {
+                    } else if (
+                        checkoutStatus === "success" &&
+                        initialAuthState.isLoggedIn
+                    ) {
                         // If checkout succeeded, ensure we end up on account page
                         setCurrentView("account");
                     }
                     // If checkout was cancelled, view was already set to 'pricing'
                 }
-
             } catch (authError: any) {
                 if (isMounted) {
-                    setError(authError.message || "Failed to load account status.");
+                    setError(
+                        authError.message || "Failed to load account status.",
+                    );
                     setAuthState({ isLoggedIn: false, uid: null, email: null });
                     setSubscription(null);
                     setCurrentView("pricing"); // Reset view on critical error
                 }
-                console.error("AuthPage Logic: Error fetching initial auth data:", authError);
+                console.error(
+                    "AuthPage Logic: Error fetching initial auth data:",
+                    authError,
+                );
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -151,14 +165,16 @@ export function useAuthPageLogic() {
 
         // SW Message Listener (Keep this as is, it handles updates *after* initial load)
         const messageListener = (message: any) => {
-            // ... (existing listener logic from previous answer) ...
             if (!isMounted) return;
-            console.log("AuthPage Logic: Received message from SW:", message?.type);
+            console.log(
+                "AuthPage Logic: Received message from SW:",
+                message?.type,
+            );
 
             if (message.type === "AUTH_STATE_UPDATED") {
                 const newAuthState: AuthState = message.payload;
                 // Use function form of setState to get previous state reliably
-                setAuthState(prevState => {
+                setAuthState((prevState) => {
                     const wasLoggedIn = prevState?.isLoggedIn ?? false;
                     if (!newAuthState.isLoggedIn) {
                         setCurrentView("pricing");
@@ -168,47 +184,87 @@ export function useAuthPageLogic() {
                     } else if (newAuthState.isLoggedIn && !wasLoggedIn) {
                         // Just logged in externally
                         setIsLoading(true);
-                        sendMessageToSW<{ planId: string | null; status: string | null } | null>({ type: "GET_SUBSCRIPTION_STATUS" })
+                        sendMessageToSW<{
+                            planId: string | null;
+                            status: string | null;
+                        } | null>({ type: "GET_SUBSCRIPTION_STATUS" })
                             .then((subData) => {
                                 if (isMounted) {
-                                    const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
-                                    setSubscription(subData ? { planId: validPlanId, status: subData.status } : { planId: "free", status: null });
+                                    const validPlanId =
+                                        subData?.planId === "monthly" ||
+                                            subData?.planId === "lifetime"
+                                            ? subData.planId
+                                            : "free";
+                                    setSubscription(
+                                        subData
+                                            ? {
+                                                planId: validPlanId,
+                                                status: subData.status,
+                                            }
+                                            : { planId: "free", status: null },
+                                    );
                                     setCurrentView("account");
                                 }
                             })
                             .catch((err) => {
                                 if (isMounted) {
-                                    console.error("AuthPage Logic: Error fetching sub after external login:", err);
-                                    setError("Failed to load subscription details after login update.");
-                                    setSubscription({ planId: null, status: null });
+                                    console.error(
+                                        "AuthPage Logic: Error fetching sub after external login:",
+                                        err,
+                                    );
+                                    setError(
+                                        "Failed to load subscription details after login update.",
+                                    );
+                                    setSubscription({
+                                        planId: null,
+                                        status: null,
+                                    });
                                     setCurrentView("account");
                                 }
                             })
                             .finally(() => {
                                 if (isMounted) setIsLoading(false);
                             });
-                    } else if (newAuthState.isLoggedIn && currentView !== "account") {
+                    } else if (
+                        newAuthState.isLoggedIn &&
+                        currentView !== "account"
+                    ) {
                         // Ensure account view if already logged in but on wrong view (e.g. manual refresh on pricing)
                         setCurrentView("account");
                     }
                     return newAuthState; // Return the new state for setAuthState
                 });
-
             } else if (message.type === "SUBSCRIPTION_UPDATED") {
-                console.log("AuthPage Logic: Subscription updated via broadcast", message.payload);
+                console.log(
+                    "AuthPage Logic: Subscription updated via broadcast",
+                    message.payload,
+                );
                 const subPayload = message.payload;
-                const validPlanId = (subPayload?.planId === "monthly" || subPayload?.planId === "lifetime") ? subPayload.planId : "free";
-                setSubscription(subPayload ? { planId: validPlanId, status: subPayload.status } : { planId: "free", status: null });
+                const validPlanId =
+                    subPayload?.planId === "monthly" ||
+                        subPayload?.planId === "lifetime"
+                        ? subPayload.planId
+                        : "free";
+                setSubscription(
+                    subPayload
+                        ? { planId: validPlanId, status: subPayload.status }
+                        : { planId: "free", status: null },
+                );
 
                 // Use functional update for safety if checking previous state
-                setAuthState(prevAuthState => {
-                    if (prevAuthState?.isLoggedIn && currentView !== "account") {
+                setAuthState((prevAuthState) => {
+                    if (
+                        prevAuthState?.isLoggedIn &&
+                        currentView !== "account"
+                    ) {
                         setCurrentView("account");
                     }
                     return prevAuthState;
-                })
+                });
 
-                setError(prevError => (prevError?.includes("Checkout") ? null : prevError));
+                setError((prevError) =>
+                    prevError?.includes("Checkout") ? null : prevError,
+                );
             }
         };
 
@@ -224,10 +280,8 @@ export function useAuthPageLogic() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-
     // --- Event Handlers (Keep these useCallback versions) ---
     const handleLoginSuccess = useCallback((userData: UserData) => {
-        // ... (logic remains the same) ...
         console.log("AuthPage Logic: Login successful callback", userData);
         const newAuthState = { isLoggedIn: true, ...userData };
         setAuthState(newAuthState);
@@ -235,15 +289,31 @@ export function useAuthPageLogic() {
         setIsLoading(true);
 
         const fetchSubAfterLogin = async () => {
-            if (!userData.uid) { /* ... error handling ... */ return; }
+            if (!userData.uid) {
+                /* ... error handling ... */ return;
+            }
             try {
-                await new Promise(resolve => setTimeout(resolve, 200));
-                const subData = await sendMessageToSW<{ planId: string | null; status: string | null } | null>({ type: "GET_SUBSCRIPTION_STATUS" });
-                const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
-                setSubscription(subData ? { planId: validPlanId, status: subData.status } : { planId: "free", status: null });
+                await new Promise((resolve) => setTimeout(resolve, 200));
+                const subData = await sendMessageToSW<{
+                    planId: string | null;
+                    status: string | null;
+                } | null>({ type: "GET_SUBSCRIPTION_STATUS" });
+                const validPlanId =
+                    subData?.planId === "monthly" ||
+                        subData?.planId === "lifetime"
+                        ? subData.planId
+                        : "free";
+                setSubscription(
+                    subData
+                        ? { planId: validPlanId, status: subData.status }
+                        : { planId: "free", status: null },
+                );
                 setCurrentView("account");
             } catch (subError: any) {
-                console.error("AuthPage Logic: Failed to fetch subscription after login:", subError);
+                console.error(
+                    "AuthPage Logic: Failed to fetch subscription after login:",
+                    subError,
+                );
                 setError("Logged in, but failed to load subscription details.");
                 setSubscription({ planId: null, status: null });
                 setCurrentView("account");
@@ -255,7 +325,6 @@ export function useAuthPageLogic() {
     }, []);
 
     const handleLogout = useCallback(async () => {
-        // ... (logic remains the same) ...
         setIsLoading(true);
         setError(null);
         try {
@@ -267,35 +336,56 @@ export function useAuthPageLogic() {
         }
     }, []);
 
-    const handleSelectPlan = useCallback(async (planId: CheckoutPlanId) => {
-        // ... (logic remains the same) ...
-        if (isCheckoutLoading || !authState?.isLoggedIn || isLoading || isPortalLoading) return;
-        setError(null);
-        setIsCheckoutLoading(planId);
-        try {
-            const checkoutUrl = await sendMessageToSW<string>({ type: "CREATE_CHECKOUT_SESSION", payload: { planId } });
-            if (checkoutUrl?.startsWith("http")) {
-                window.location.href = checkoutUrl;
-            } else {
-                throw new Error("Failed to retrieve a valid checkout URL.");
+    const handleSelectPlan = useCallback(
+        async (planId: CheckoutPlanId) => {
+            if (
+                isCheckoutLoading ||
+                !authState?.isLoggedIn ||
+                isLoading ||
+                isPortalLoading
+            )
+                return;
+            setError(null);
+            setIsCheckoutLoading(planId);
+            try {
+                const checkoutUrl = await sendMessageToSW<string>({
+                    type: "CREATE_CHECKOUT_SESSION",
+                    payload: { planId },
+                });
+                if (checkoutUrl?.startsWith("http")) {
+                    window.location.href = checkoutUrl;
+                } else {
+                    throw new Error("Failed to retrieve a valid checkout URL.");
+                }
+            } catch (err: any) {
+                console.error(
+                    `AuthPage Logic: Error getting checkout URL for ${planId}:`,
+                    err,
+                );
+                setError(err.message || "Could not initiate checkout.");
+                setIsCheckoutLoading(null);
             }
-        } catch (err: any) {
-            console.error(`AuthPage Logic: Error getting checkout URL for ${planId}:`, err);
-            setError(err.message || "Could not initiate checkout.");
-            setIsCheckoutLoading(null);
-        }
-    }, [authState, isLoading, isCheckoutLoading, isPortalLoading]);
+        },
+        [authState, isLoading, isCheckoutLoading, isPortalLoading],
+    );
 
     const handleManageSubscription = useCallback(async () => {
-        // ... (logic remains the same) ...
-        if (!authState?.isLoggedIn || isLoading || isCheckoutLoading || isPortalLoading) return;
+        if (
+            !authState?.isLoggedIn ||
+            isLoading ||
+            isCheckoutLoading ||
+            isPortalLoading
+        )
+            return;
         setIsPortalLoading(true);
         setError(null);
         try {
-            const portalUrl = await sendMessageToSW<string>({ type: "CREATE_CUSTOMER_PORTAL_SESSION" });
+            const portalUrl = await sendMessageToSW<string>({
+                type: "CREATE_CUSTOMER_PORTAL_SESSION",
+            });
             if (portalUrl?.startsWith("http")) {
-                window.open(portalUrl, '_blank');
-                await new Promise(resolve => setTimeout(resolve, 100));
+                window.open(portalUrl, "_blank");
+                await new Promise((resolve) => setTimeout(resolve, 100));
             } else {
                 throw new Error("Failed to retrieve a valid portal URL.");
             }
@@ -307,8 +397,6 @@ export function useAuthPageLogic() {
         }
     }, [authState, isLoading, isCheckoutLoading, isPortalLoading]);
 
-
-    // Return state and handlers
     return {
         authState,
         subscription,
@@ -322,6 +410,6 @@ export function useAuthPageLogic() {
         handleSelectPlan,
         handleManageSubscription,
         setCurrentView, // Expose setCurrentView for header/buttons
-        setError,       // Expose setError for error recovery
+        setError, // Expose setError for error recovery
     };
 }

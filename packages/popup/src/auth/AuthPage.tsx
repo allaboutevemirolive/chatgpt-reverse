@@ -47,7 +47,9 @@ function AuthPage() {
         if (criticalError) {
             return (
                 <div className={styles.container}>
-                    <p className={styles.criticalError}>Error: {criticalError}</p>
+                    <p className={styles.criticalError}>
+                        Error: {criticalError}
+                    </p>
                     {!authState?.isLoggedIn && (
                         <Button
                             onClick={() => {
@@ -96,7 +98,9 @@ function AuthPage() {
                     <div className={styles.container}>
                         {/* Show checkout cancel error above account info if present */}
                         {checkoutCancelError && (
-                            <p className={styles.criticalError}>{checkoutCancelError}</p>
+                            <p className={styles.criticalError}>
+                                {checkoutCancelError}
+                            </p>
                         )}
                         <AccountInfo
                             email={authState.email}
@@ -124,7 +128,9 @@ function AuthPage() {
                     <>
                         {/* Show checkout cancel error above pricing if present */}
                         {checkoutCancelError && (
-                            <p className={styles.criticalError}>{checkoutCancelError}</p>
+                            <p className={styles.criticalError}>
+                                {checkoutCancelError}
+                            </p>
                         )}
                         <PricingSection
                             // Pass the fetched subscription, provide a default if null
@@ -144,7 +150,8 @@ function AuthPage() {
 
     // Determine header button states based on hook values
     const showAccountButton = authState?.isLoggedIn ?? false;
-    const isHeaderLoading = isLoading || isCheckoutLoading !== null || isPortalLoading;
+    const isHeaderLoading =
+        isLoading || isCheckoutLoading !== null || isPortalLoading;
 
     return (
         <div className={styles.pageContainer}>

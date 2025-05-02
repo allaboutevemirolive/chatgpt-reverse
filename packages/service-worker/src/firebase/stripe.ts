@@ -68,7 +68,9 @@ export async function getCheckoutUrl(
             mode = "payment";
             break;
         default:
-            console.error(`Firebase Stripe (getCheckoutUrl): Invalid planId: ${planId}`);
+            console.error(
+                `Firebase Stripe (getCheckoutUrl): Invalid planId: ${planId}`,
+            );
             throw new Error(`Invalid plan selected.`);
     }
 
@@ -102,11 +104,14 @@ export async function getCheckoutUrl(
                 cancel_url: CHECKOUT_CANCEL_URL,
                 mode: mode,
                 // Optionally add metadata to link back to your internal planId if needed
-                metadata: { internalPlanId: planId }
+                metadata: { internalPlanId: planId },
             },
         );
 
-        console.log("Firebase Stripe (getCheckoutUrl): Checkout session document created:", docRef.id);
+        console.log(
+            "Firebase Stripe (getCheckoutUrl): Checkout session document created:",
+            docRef.id,
+        );
 
         // Wait for the Stripe Extension to update the document with the URL
         // (Promise logic remains the same as before)
@@ -121,11 +126,15 @@ export async function getCheckoutUrl(
                 timeoutHandle = null;
                 if (unsubscribeFirestore && !unsubscribeCalled) {
                     unsubscribeCalled = true;
-                    console.log("Firebase Stripe (getCheckoutUrl): Unsubscribing listener for", docRef.id);
+                    console.log(
+                        "Firebase Stripe (getCheckoutUrl): Unsubscribing listener for",
+                        docRef.id,
+                    );
                     unsubscribeFirestore();
                     unsubscribeFirestore = null;
                 }
-                if (error && !timedOut) { // Don't reject again if already timed out
+                if (error && !timedOut) {
+                    // Don't reject again if already timed out
                     reject(error);
                 }
             };
@@ -134,37 +143,56 @@ export async function getCheckoutUrl(
                 docRef,
                 (snap) => {
                     if (timedOut || unsubscribeCalled) return;
-                    const data = snap.data() as CheckoutSessionDocData | undefined;
+                    const data = snap.data() as
+                        | CheckoutSessionDocData
+                        | undefined;
                     console.log(
-                        "Firebase Stripe (getCheckoutUrl): Snapshot update:", docRef.id, JSON.stringify(data || {})
+                        "Firebase Stripe (getCheckoutUrl): Snapshot update:",
+                        docRef.id,
+                        JSON.stringify(data || {}),
                     );
 
                     // Check for error first
                     if (data?.error) {
                         console.error(
-                            "Firebase Stripe (getCheckoutUrl): Stripe extension reported error:", data.error
+                            "Firebase Stripe (getCheckoutUrl): Stripe extension reported error:",
+                            data.error,
                         );
-                        cleanup(new Error(`Checkout failed: ${data.error.message || "Unknown Stripe error"}`));
+                        cleanup(
+                            new Error(
+                                `Checkout failed: ${data.error.message || "Unknown Stripe error"}`,
+                            ),
+                        );
                     }
                     // Then check for URL
                     else if (data?.url) {
                         console.log(
-                            "Firebase Stripe (getCheckoutUrl): URL retrieved:", data.url
+                            "Firebase Stripe (getCheckoutUrl): URL retrieved:",
+                            data.url,
                         );
                         cleanup();
                         resolve(data.url);
                     }
                     // Otherwise, keep listening...
                     else {
-                        console.log(`Firebase Stripe: Snapshot for ${docRef.id} updated, still waiting for url/error.`);
+                        console.log(
+                            `Firebase Stripe: Snapshot for ${docRef.id} updated, still waiting for url/error.`,
+                        );
                     }
                 },
-                (error: FirestoreError) => { // Handle listener errors
+                (error: FirestoreError) => {
+                    // Handle listener errors
                     if (timedOut || unsubscribeCalled) return;
                     console.error(
-                        "Firebase Stripe (getCheckoutUrl): Firestore listener error:", docRef.id, error
+                        "Firebase Stripe (getCheckoutUrl): Firestore listener error:",
+                        docRef.id,
+                        error,
                     );
-                    cleanup(new Error(`Failed to listen for checkout session updates: ${error.message}`));
+                    cleanup(
+                        new Error(
+                            `Failed to listen for checkout session updates: ${error.message}`,
+                        ),
+                    );
                 },
             );
 
@@ -173,16 +201,20 @@ export async function getCheckoutUrl(
                 if (timedOut || unsubscribeCalled) return;
                 timedOut = true; // Mark as timed out
                 console.warn(
-                    `Firebase Stripe (getCheckoutUrl): Timeout (${CHECKOUT_LISTENER_TIMEOUT}ms) waiting for URL for doc ${docRef.id}`
+                    `Firebase Stripe (getCheckoutUrl): Timeout (${CHECKOUT_LISTENER_TIMEOUT}ms) waiting for URL for doc ${docRef.id}`,
                 );
                 // Reject *only if* cleanup hasn't already happened due to error/success
                 if (!unsubscribeCalled) {
-                    cleanup(new Error("Timeout waiting for Stripe Checkout URL. Please try again."));
+                    cleanup(
+                        new Error(
+                            "Timeout waiting for Stripe Checkout URL. Please try again.",
+                        ),
+                    );
                 }
             }, CHECKOUT_LISTENER_TIMEOUT);
         }); // End of Promise
-
-    } catch (error) { // Catch errors during addDoc
+    } catch (error) {
+        // Catch errors during addDoc
         console.error(
             "Firebase Stripe (getCheckoutUrl): Firestore error adding checkout session doc:",
             error,
@@ -193,7 +225,6 @@ export async function getCheckoutUrl(
     }
 }
 
-
 /**
  * Fetches the subscription status for a given user from Firestore.
  * Checks the subscriptions subcollection for the latest active subscription.
@@ -202,9 +233,14 @@ export async function getCheckoutUrl(
  */
 export async function getSubscriptionStatus(
     userId: string,
-): Promise<{ planId: "free" | "monthly" | "lifetime"; status: string | null } | null> {
+): Promise<{
+    planId: "free" | "monthly" | "lifetime";
+    status: string | null;
+} | null> {
     if (!userId) {
-        console.error("Firebase Stripe (getSubscriptionStatus): userId is required.");
+        console.error(
+            "Firebase Stripe (getSubscriptionStatus): userId is required.",
+        );
         return null; // Or throw new Error("User ID required");
     }
     const db = getDb();
@@ -251,13 +287,17 @@ export async function getSubscriptionStatus(
         const priceId = subData?.items?.[0]?.price?.id; // Safely access nested Price ID
 
         if (!priceId) {
-            console.warn(`Firebase Stripe (getSubscriptionStatus): Subscription document ${subDoc.id} for user ${userId} is missing items[0].price.id. Assuming free.`);
+            console.warn(
+                `Firebase Stripe (getSubscriptionStatus): Subscription document ${subDoc.id} for user ${userId} is missing items[0].price.id. Assuming free.`,
+            );
         } else if (priceId === STRIPE_PRICE_ID_MONTHLY) {
             resolvedPlanId = "monthly";
         } else if (priceId === STRIPE_PRICE_ID_LIFETIME) {
             resolvedPlanId = "lifetime";
         } else {
-            console.warn(`Firebase Stripe (getSubscriptionStatus): Unknown priceId '${priceId}' found for user ${userId}. Assuming free.`);
+            console.warn(
+                `Firebase Stripe (getSubscriptionStatus): Unknown priceId '${priceId}' found for user ${userId}. Assuming free.`,
+            );
         }
 
         const resolvedStatus = subData?.status || null; // Get the status directly
@@ -266,7 +306,6 @@ export async function getSubscriptionStatus(
             `Firebase Stripe (getSubscriptionStatus): Resolved planId=${resolvedPlanId}, status=${resolvedStatus} for ${userId} from subscription ${subDoc.id}`,
         );
         return { planId: resolvedPlanId, status: resolvedStatus };
-
     } catch (error) {
         console.error(
             `Firebase Stripe (getSubscriptionStatus): Error fetching subscription for user ${userId}:`,
@@ -286,40 +325,58 @@ export async function createPortalSession(): Promise<string> {
     const userId = currentUser?.uid;
 
     if (!userId) {
-        console.error("Firebase Stripe (createPortalSession): User not logged in.");
+        console.error(
+            "Firebase Stripe (createPortalSession): User not logged in.",
+        );
         throw new Error("User must be logged in to manage billing.");
     }
 
     try {
         const app = getFirebaseApp();
-        // TODO: Specify the region if our function is not in 'us-central1' 
+        // TODO: Specify the region if our function is not in 'us-central1'
         const functions = getFunctions(app /*, "our-function-region" */);
         const functionRef = httpsCallable<
             { returnUrl: string },
             { url: string }
-        >(functions, 'ext-firestore-stripe-payments-createPortalLink');
+        >(functions, "ext-firestore-stripe-payments-createPortalLink");
 
-        console.log(`Firebase Stripe (createPortalSession): Calling function for user ${userId}`);
+        console.log(
+            `Firebase Stripe (createPortalSession): Calling function for user ${userId}`,
+        );
 
         const returnUrl = CHECKOUT_SUCCESS_URL;
 
         const { data } = await functionRef({ returnUrl });
 
         if (!data?.url) {
-            console.error("Firebase Stripe (createPortalSession): No URL returned from function. Response data:", data);
-            throw new Error('Cloud function did not return a portal URL.');
+            console.error(
+                "Firebase Stripe (createPortalSession): No URL returned from function. Response data:",
+                data,
+            );
+            throw new Error("Cloud function did not return a portal URL.");
         }
 
-        console.log('Firebase Stripe (createPortalSession): Portal URL retrieved:', data.url);
+        console.log(
+            "Firebase Stripe (createPortalSession): Portal URL retrieved:",
+            data.url,
+        );
         return data.url;
-
     } catch (error: any) {
-        console.error('Firebase Stripe (createPortalSession): Error calling createPortalLink function:', error);
-        if (error.code === 'functions/not-found') {
-            throw new Error("Billing management function not found. Please ensure the Stripe Payments extension is correctly installed and deployed.");
-        } else if (error.code === 'functions/permission-denied') {
-            throw new Error("You do not have permission to access billing management.");
+        console.error(
+            "Firebase Stripe (createPortalSession): Error calling createPortalLink function:",
+            error,
+        );
+        if (error.code === "functions/not-found") {
+            throw new Error(
+                "Billing management function not found. Please ensure the Stripe Payments extension is correctly installed and deployed.",
+            );
+        } else if (error.code === "functions/permission-denied") {
+            throw new Error(
+                "You do not have permission to access billing management.",
+            );
         }
-        throw new Error(`Could not create customer portal session: ${error.message || 'Unknown function error'}`);
+        throw new Error(
+            `Could not create customer portal session: ${error.message || "Unknown function error"}`,
+        );
     }
 }

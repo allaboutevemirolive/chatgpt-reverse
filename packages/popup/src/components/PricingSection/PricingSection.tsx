@@ -32,8 +32,8 @@ interface UserSubscription {
 interface PricingSectionProps {
     userSubscription: UserSubscription | null;
     isLoggedIn: boolean;
-    isLoadingCheckout: PlanData['id'] | null;
-    onSelectPlan: (planId: 'monthly' | 'lifetime') => void; // Correctly type the callback
+    isLoadingCheckout: PlanData["id"] | null;
+    onSelectPlan: (planId: "monthly" | "lifetime") => void; // Correctly type the callback
     onLoginRequired: () => void;
 }
 
@@ -163,8 +163,8 @@ const PricingSection: React.FC<PricingSectionProps> = ({
                             // Only provide href for the free plan's store link
                             buttonHref={
                                 plan.id === "free" &&
-                                    plan.storeLink &&
-                                    !isCurrent
+                                plan.storeLink &&
+                                !isCurrent
                                     ? plan.storeLink
                                     : undefined
                             }

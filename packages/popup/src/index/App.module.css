@@ -162,7 +162,9 @@
     border-radius: var(--radius-sm);
     font-size: var(--fs-medium);
     font-weight: var(--fw-semibold);
-    transition: background-color var(--transition-duration-fast) var(--transition-easing), opacity var(--transition-duration-fast) var(--transition-easing);
+    transition: background-color var(--transition-duration-fast)
+        var(--transition-easing), opacity var(--transition-duration-fast)
+        var(--transition-easing);
     text-align: center;
     line-height: 1.3;
     /* cursor is handled by button element default + :disabled */

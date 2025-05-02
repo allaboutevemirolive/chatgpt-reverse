@@ -39,9 +39,7 @@ export function initializeFirebase(): void {
             // FIRESTORE_DB_NAME,
         );
 
-        console.log(
-            `Firebase Core: Firestore initialized (DB: (default)).`,
-        );
+        console.log(`Firebase Core: Firestore initialized (DB: (default)).`);
 
         // console.log(
         //     `Firebase Core: Firestore initialized (DB: ${FIRESTORE_DB_NAME}).`,

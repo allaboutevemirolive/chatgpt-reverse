@@ -10,7 +10,11 @@ import {
     awaitAuthReady,
     resetAuthReadyPromise,
 } from "@/firebase/auth";
-import { createPortalSession, getCheckoutUrl, getSubscriptionStatus } from "@/firebase/stripe";
+import {
+    createPortalSession,
+    getCheckoutUrl,
+    getSubscriptionStatus,
+} from "@/firebase/stripe";
 import { ChatGptApiClient } from "@/service/ChatGptApiClient";
 import * as ChatGptService from "@/service/ChatGptService";
 import * as ConversationProcessor from "@/service/ConversationProcessor";
@@ -208,7 +212,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 await awaitAuthReady();
                 const authState = getAuthState(); // Get current state after ready
                 if (!authState.isLoggedIn || !authState.uid) {
-                    console.warn("SW: GET_SUBSCRIPTION_STATUS called but user not logged in.");
+                    console.warn(
+                        "SW: GET_SUBSCRIPTION_STATUS called but user not logged in.",
+                    );
                     return null; // Or throw new Error("User not logged in");
                 }
                 return getSubscriptionStatus(authState.uid);
@@ -219,7 +225,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case "CREATE_CHECKOUT_SESSION":
             const planId = message.payload?.planId; // Extract planId
             if (!planId || !["monthly", "lifetime"].includes(planId)) {
-                console.error("SW: Invalid or missing planId in payload:", message.payload);
+                console.error(
+                    "SW: Invalid or missing planId in payload:",
+                    message.payload,
+                );
                 sendResponse({
                     success: false,
                     error: { message: "Invalid or missing planId in payload" },
@@ -236,7 +245,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 await awaitAuthReady();
                 const authState = getAuthState(); // Check login status explicitly
                 if (!authState.isLoggedIn) {
-                    throw new Error("User must be logged in to manage billing.");
+                    throw new Error(
+                        "User must be logged in to manage billing.",
+                    );
                 }
                 // No specific payload needed from UI, just trigger the call
                 return createPortalSession();
