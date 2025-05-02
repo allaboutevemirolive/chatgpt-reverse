@@ -13,7 +13,7 @@ import {
     FirestoreError,
     Unsubscribe,
 } from "firebase/firestore";
-import { getDb } from "./core";
+import { getDb, getFirebaseApp } from "./core";
 import { getCurrentUser } from "./auth";
 import {
     STRIPE_PRICE_ID_MONTHLY,
@@ -25,6 +25,7 @@ import {
     FIRESTORE_CHECKOUT_SESSIONS_SUBCOLLECTION,
     FIRESTORE_SUBSCRIPTIONS_SUBCOLLECTION,
 } from "@/config/constants";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 interface CheckoutSessionDocData {
     url?: string;
@@ -272,5 +273,53 @@ export async function getSubscriptionStatus(
             error,
         );
         return null;
+    }
+}
+
+/**
+ * Calls the Firebase Cloud Function to create a Stripe Customer Portal session URL.
+ * @returns A promise resolving with the portal URL string.
+ * @throws An error if the user is not logged in or the Cloud Function call fails.
+ */
+export async function createPortalSession(): Promise<string> {
+    const currentUser = getCurrentUser();
+    const userId = currentUser?.uid;
+
+    if (!userId) {
+        console.error("Firebase Stripe (createPortalSession): User not logged in.");
+        throw new Error("User must be logged in to manage billing.");
+    }
+
+    try {
+        const app = getFirebaseApp();
+        // TODO: Specify the region if our function is not in 'us-central1' 
+        const functions = getFunctions(app /*, "our-function-region" */);
+        const functionRef = httpsCallable<
+            { returnUrl: string },
+            { url: string }
+        >(functions, 'ext-firestore-stripe-payments-createPortalLink');
+
+        console.log(`Firebase Stripe (createPortalSession): Calling function for user ${userId}`);
+
+        const returnUrl = CHECKOUT_SUCCESS_URL;
+
+        const { data } = await functionRef({ returnUrl });
+
+        if (!data?.url) {
+            console.error("Firebase Stripe (createPortalSession): No URL returned from function. Response data:", data);
+            throw new Error('Cloud function did not return a portal URL.');
+        }
+
+        console.log('Firebase Stripe (createPortalSession): Portal URL retrieved:', data.url);
+        return data.url;
+
+    } catch (error: any) {
+        console.error('Firebase Stripe (createPortalSession): Error calling createPortalLink function:', error);
+        if (error.code === 'functions/not-found') {
+            throw new Error("Billing management function not found. Please ensure the Stripe Payments extension is correctly installed and deployed.");
+        } else if (error.code === 'functions/permission-denied') {
+            throw new Error("You do not have permission to access billing management.");
+        }
+        throw new Error(`Could not create customer portal session: ${error.message || 'Unknown function error'}`);
     }
 }

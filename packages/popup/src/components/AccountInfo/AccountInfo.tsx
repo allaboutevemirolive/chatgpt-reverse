@@ -1,24 +1,27 @@
+// packages/popup/src/components/AccountInfo/AccountInfo.tsx
 import React from 'react';
 import Button from '../Button/Button';
 import styles from './AccountInfo.module.css';
 
 interface AccountInfoProps {
     email: string | null;
-    planId: 'free' | 'monthly' | 'lifetime' | null; // Use specific types
+    planId: 'free' | 'monthly' | 'lifetime' | null;
     onLogout: () => void;
-    isLoading: boolean; // To disable buttons during action
-    // Add optional handler for managing subscription
+    isLoading: boolean; // Combined loading state (auth, sub fetch, portal link)
+    // Add handler prop for managing subscription
     onManageSubscription?: () => void;
+    // Add specific loading state for the portal button
+    isPortalLoading?: boolean;
 }
 
 const AccountInfo: React.FC<AccountInfoProps> = ({
     email,
     planId,
     onLogout,
-    isLoading,
+    isLoading, // General loading
     onManageSubscription, // Receive the handler
+    isPortalLoading, // Specific loading state for portal button
 }) => {
-    // Map plan IDs to display names
     const getPlanName = (id: AccountInfoProps['planId']): string => {
         switch (id) {
             case 'monthly':
@@ -32,20 +35,19 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
     };
 
     const currentPlanName = getPlanName(planId);
+    // Determine if the user has a plan that can be managed in the portal
+    // Usually, 'free' plans don't have anything to manage via Stripe Portal
     const isPaidPlan = planId === 'monthly' || planId === 'lifetime';
 
     return (
         <div className={styles.accountContainer}>
-            {/* Title */}
             <h2 className={styles.title}>Account Information</h2>
 
-            {/* Email Info */}
             <div className={styles.infoGroup}>
                 <span className={styles.infoLabel}>Email Address</span>
                 <span className={styles.infoValue}>{email || 'N/A'}</span>
             </div>
 
-            {/* Plan Info */}
             <div className={styles.infoGroup}>
                 <span className={styles.infoLabel}>Current Plan</span>
                 <span className={`${styles.infoValue} ${styles.planValue}`}>
@@ -58,23 +60,25 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                 {/* Conditionally render Manage Subscription Button */}
                 {isPaidPlan && onManageSubscription && (
                     <Button
-                        variant="secondary" // Use secondary for non-primary actions
+                        variant="secondary" // More appropriate than primary for management
                         size="normal"
-                        onClick={onManageSubscription}
-                        disabled={isLoading}
+                        onClick={onManageSubscription} // Call the passed handler
+                        // Disable if general loading OR portal specifically loading
+                        disabled={isLoading || isPortalLoading}
                         className={styles.manageButton}
                     >
-                        Manage Subscription
+                        {isPortalLoading ? "Loading Portal..." : "Manage Subscription"}
                     </Button>
                 )}
 
                 {/* Logout Button */}
                 <Button
-                    variant="ghost" // Use ghost for less emphasis, or 'outline'
+                    variant="ghost" // Use ghost for subtle logout
                     size="normal"
                     onClick={onLogout}
-                    disabled={isLoading}
-                    className={styles.logoutButton} // Specific class for subtle danger hover
+                    // Disable if general loading OR portal specifically loading
+                    disabled={isLoading || isPortalLoading}
+                    className={styles.logoutButton}
                 >
                     Logout
                 </Button>

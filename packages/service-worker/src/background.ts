@@ -10,7 +10,7 @@ import {
     awaitAuthReady,
     resetAuthReadyPromise,
 } from "@/firebase/auth";
-import { getCheckoutUrl, getSubscriptionStatus } from "@/firebase/stripe";
+import { createPortalSession, getCheckoutUrl, getSubscriptionStatus } from "@/firebase/stripe";
 import { ChatGptApiClient } from "@/service/ChatGptApiClient";
 import * as ChatGptService from "@/service/ChatGptService";
 import * as ConversationProcessor from "@/service/ConversationProcessor";
@@ -228,6 +228,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             // Pass the extracted planId string to getCheckoutUrl
             handleAsync(() => getCheckoutUrl(planId));
+            break;
+
+        case "CREATE_CUSTOMER_PORTAL_SESSION":
+            handleAsync(async () => {
+                // Ensure auth is ready before trying to call the function
+                await awaitAuthReady();
+                const authState = getAuthState(); // Check login status explicitly
+                if (!authState.isLoggedIn) {
+                    throw new Error("User must be logged in to manage billing.");
+                }
+                // No specific payload needed from UI, just trigger the call
+                return createPortalSession();
+            });
             break;
 
         // --- ChatGPT API Wrappers (Delegated) ---

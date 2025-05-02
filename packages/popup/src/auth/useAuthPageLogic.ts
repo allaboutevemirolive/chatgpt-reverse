@@ -1,4 +1,4 @@
-// src/auth/useAuthPageLogic.ts
+// packages/popup/src/auth/useAuthPageLogic.ts
 import { useState, useEffect, useCallback } from "react";
 import { sendMessageToSW } from "../utils/swMessenger";
 import type {
@@ -12,11 +12,15 @@ import type {
 export function useAuthPageLogic() {
     // --- State ---
     const [authState, setAuthState] = useState<AuthState | null>(null);
-    const [subscription, setSubscription] = useState<UserSubscription | null>(null);
-    const [currentView, setCurrentView] = useState<AuthPageView>("pricing");
+    const [subscription, setSubscription] = useState<UserSubscription | null>(
+        null,
+    );
+    const [currentView, setCurrentView] = useState<AuthPageView>("pricing"); // Start with pricing
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [isCheckoutLoading, setIsCheckoutLoading] = useState<CheckoutPlanId | null>(null);
+    const [isCheckoutLoading, setIsCheckoutLoading] =
+        useState<CheckoutPlanId | null>(null);
+    const [isPortalLoading, setIsPortalLoading] = useState<boolean>(false);
 
     // --- Effects ---
     useEffect(() => {
@@ -28,15 +32,24 @@ export function useAuthPageLogic() {
         const checkoutStatus = urlParams.get("checkout");
         const sessionId = urlParams.get("session_id");
 
+        let didCheckoutOverrideView = false; // Flag to see if checkout status determined the view
+
         if (checkoutStatus === "success") {
             console.log(
                 "AuthPage Logic: Detected checkout success.",
                 sessionId ? `Session ID: ${sessionId}` : "",
             );
-            setError(null); // Clear previous errors
+            setError(null);
+            // Don't set view yet, wait for auth state
+            didCheckoutOverrideView = true; // Mark that checkout status *might* override view
         } else if (checkoutStatus === "cancel") {
             console.log("AuthPage Logic: Detected checkout cancel.");
-            setError("Checkout process was cancelled or failed. Please try again.");
+            setError(
+                "Checkout process was cancelled or failed. Please try again.",
+            );
+            // Force pricing view on cancel
+            if (isMounted) setCurrentView("pricing");
+            didCheckoutOverrideView = true; // Mark that checkout status *did* override view
         }
 
         // Clean URL parameters
@@ -50,6 +63,7 @@ export function useAuthPageLogic() {
         const fetchInitialData = async () => {
             if (!isMounted) return;
             console.log("AuthPage Logic: fetchInitialData called.");
+            // Start loading, clear errors unless it's a specific cancel message
             setIsLoading(true);
             if (error && !error.includes("Checkout process was cancelled")) {
                 setError(null);
@@ -57,10 +71,12 @@ export function useAuthPageLogic() {
 
             let initialAuthState: AuthState = { isLoggedIn: false, uid: null, email: null };
             let initialSubscription: UserSubscription | null = null;
-            let initialView: AuthPageView = "pricing";
 
             try {
-                const userAuthData = await sendMessageToSW<UserData | null>({ type: "GET_AUTH_STATE" });
+                // 1. Fetch Auth State
+                const userAuthData = await sendMessageToSW<UserData | null>({
+                    type: "GET_AUTH_STATE",
+                });
                 if (!isMounted) return;
 
                 initialAuthState = userAuthData
@@ -68,35 +84,50 @@ export function useAuthPageLogic() {
                     : { isLoggedIn: false, uid: null, email: null };
                 setAuthState(initialAuthState); // Update state
 
+                // 2. Fetch Subscription Status *IF* logged in
                 if (initialAuthState.isLoggedIn && initialAuthState.uid) {
-                    initialView = "account"; // Assume account if logged in
                     try {
-                        const subData = await sendMessageToSW<{ planId: string | null; status: string | null } | null>({ type: "GET_SUBSCRIPTION_STATUS" });
+                        const subData = await sendMessageToSW<{
+                            planId: string | null;
+                            status: string | null;
+                        } | null>({ type: "GET_SUBSCRIPTION_STATUS" });
                         if (!isMounted) return;
 
-                        const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
-                        initialSubscription = subData ? { planId: validPlanId, status: subData.status } : { planId: "free", status: null };
+                        const validPlanId =
+                            subData?.planId === "monthly" ||
+                                subData?.planId === "lifetime"
+                                ? subData.planId
+                                : "free";
+                        initialSubscription = subData
+                            ? { planId: validPlanId, status: subData.status }
+                            : { planId: "free", status: null };
                         setSubscription(initialSubscription); // Update state
                     } catch (subError: any) {
                         if (!isMounted) return;
                         console.error("AuthPage Logic: Failed to fetch subscription:", subError);
                         setError("Could not load subscription details.");
-                        setSubscription({ planId: null, status: null }); // Reset on error
+                        setSubscription({ planId: null, status: null });
                     }
                 } else {
-                    initialView = "pricing"; // Default to pricing if not logged in
+                    // Not logged in
                     if (isMounted) setSubscription(null);
                 }
 
-                // Determine Final View (consider checkout status override)
+                // 3. Determine Final *Initial* View based on fetched data and checkout status
                 if (isMounted) {
-                    if (checkoutStatus === "success" && initialAuthState.isLoggedIn) {
+                    // Only set the view based on fetched data if checkout status didn't already dictate it
+                    if (!didCheckoutOverrideView) {
+                        if (initialAuthState.isLoggedIn) {
+                            setCurrentView("account");
+                        } else {
+                            // Stays 'pricing' (initial state) if not logged in and no cancel redirect
+                            setCurrentView("pricing");
+                        }
+                    } else if (checkoutStatus === "success" && initialAuthState.isLoggedIn) {
+                        // If checkout succeeded, ensure we end up on account page
                         setCurrentView("account");
-                    } else if (checkoutStatus === "cancel") {
-                        setCurrentView("pricing");
-                    } else {
-                        setCurrentView(initialView);
                     }
+                    // If checkout was cancelled, view was already set to 'pricing'
                 }
 
             } catch (authError: any) {
@@ -110,98 +141,103 @@ export function useAuthPageLogic() {
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
-                    console.log("AuthPage Logic: Initial data fetch complete. Final View:", currentView); // Log final view state
+                    // Log the final view state *after* all initial logic
+                    console.log("AuthPage Logic: Initial data fetch complete.");
                 }
             }
         };
 
         fetchInitialData();
 
-        // SW Message Listener
+        // SW Message Listener (Keep this as is, it handles updates *after* initial load)
         const messageListener = (message: any) => {
+            // ... (existing listener logic from previous answer) ...
             if (!isMounted) return;
             console.log("AuthPage Logic: Received message from SW:", message?.type);
 
             if (message.type === "AUTH_STATE_UPDATED") {
                 const newAuthState: AuthState = message.payload;
-                const wasLoggedIn = authState?.isLoggedIn ?? false; // Use state from hook closure
-                setAuthState(newAuthState);
+                // Use function form of setState to get previous state reliably
+                setAuthState(prevState => {
+                    const wasLoggedIn = prevState?.isLoggedIn ?? false;
+                    if (!newAuthState.isLoggedIn) {
+                        setCurrentView("pricing");
+                        setSubscription(null);
+                        setError(null);
+                        setIsLoading(false);
+                    } else if (newAuthState.isLoggedIn && !wasLoggedIn) {
+                        // Just logged in externally
+                        setIsLoading(true);
+                        sendMessageToSW<{ planId: string | null; status: string | null } | null>({ type: "GET_SUBSCRIPTION_STATUS" })
+                            .then((subData) => {
+                                if (isMounted) {
+                                    const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
+                                    setSubscription(subData ? { planId: validPlanId, status: subData.status } : { planId: "free", status: null });
+                                    setCurrentView("account");
+                                }
+                            })
+                            .catch((err) => {
+                                if (isMounted) {
+                                    console.error("AuthPage Logic: Error fetching sub after external login:", err);
+                                    setError("Failed to load subscription details after login update.");
+                                    setSubscription({ planId: null, status: null });
+                                    setCurrentView("account");
+                                }
+                            })
+                            .finally(() => {
+                                if (isMounted) setIsLoading(false);
+                            });
+                    } else if (newAuthState.isLoggedIn && currentView !== "account") {
+                        // Ensure account view if already logged in but on wrong view (e.g. manual refresh on pricing)
+                        setCurrentView("account");
+                    }
+                    return newAuthState; // Return the new state for setAuthState
+                });
 
-                if (!newAuthState.isLoggedIn) {
-                    setCurrentView("pricing");
-                    setSubscription(null);
-                    setError(null);
-                    setIsLoading(false); // Make sure loading stops
-                } else if (newAuthState.isLoggedIn && !wasLoggedIn) {
-                    // Just logged in externally
-                    setIsLoading(true); // Load sub
-                    sendMessageToSW<{ planId: string | null; status: string | null } | null>({ type: "GET_SUBSCRIPTION_STATUS" })
-                        .then((subData) => {
-                            if (isMounted) {
-                                const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
-                                setSubscription(subData ? { planId: validPlanId, status: subData.status } : { planId: "free", status: null });
-                                setCurrentView("account");
-                            }
-                        })
-                        .catch((err) => {
-                            if (isMounted) {
-                                console.error("AuthPage Logic: Error fetching sub after external login:", err);
-                                setError("Failed to load subscription details after login update.");
-                                setSubscription({ planId: null, status: null });
-                                setCurrentView("account"); // Still show account page
-                            }
-                        })
-                        .finally(() => {
-                            if (isMounted) setIsLoading(false);
-                        });
-                } else if (newAuthState.isLoggedIn && currentView !== "account") {
-                    // Ensure account view if already logged in but on wrong view
-                    setCurrentView("account");
-                }
             } else if (message.type === "SUBSCRIPTION_UPDATED") {
                 console.log("AuthPage Logic: Subscription updated via broadcast", message.payload);
                 const subPayload = message.payload;
                 const validPlanId = (subPayload?.planId === "monthly" || subPayload?.planId === "lifetime") ? subPayload.planId : "free";
                 setSubscription(subPayload ? { planId: validPlanId, status: subPayload.status } : { planId: "free", status: null });
 
-                if (authState?.isLoggedIn && currentView !== "account") { // Check hook state
-                    setCurrentView("account");
-                }
-                if (error?.includes("Checkout")) { // Check hook state
-                    setError(null);
-                }
+                // Use functional update for safety if checking previous state
+                setAuthState(prevAuthState => {
+                    if (prevAuthState?.isLoggedIn && currentView !== "account") {
+                        setCurrentView("account");
+                    }
+                    return prevAuthState;
+                })
+
+                setError(prevError => (prevError?.includes("Checkout") ? null : prevError));
             }
         };
 
         chrome.runtime.onMessage.addListener(messageListener);
 
+        // Cleanup
         return () => {
             isMounted = false;
             chrome.runtime.onMessage.removeListener(messageListener);
             console.log("AuthPage Logic: Unmounted.");
         };
+        // We intentionally keep the dependency array empty for the main setup effect.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Run only on mount
+    }, []);
 
 
-    // --- Event Handlers (using useCallback for stable references) ---
-
+    // --- Event Handlers (Keep these useCallback versions) ---
     const handleLoginSuccess = useCallback((userData: UserData) => {
+        // ... (logic remains the same) ...
         console.log("AuthPage Logic: Login successful callback", userData);
         const newAuthState = { isLoggedIn: true, ...userData };
         setAuthState(newAuthState);
         setError(null);
-        setIsLoading(true); // Load subscription
+        setIsLoading(true);
 
         const fetchSubAfterLogin = async () => {
-            if (!userData.uid) {
-                setError("Login succeeded but user ID is missing.");
-                setIsLoading(false);
-                setCurrentView("pricing");
-                return;
-            }
+            if (!userData.uid) { /* ... error handling ... */ return; }
             try {
-                await new Promise(resolve => setTimeout(resolve, 200)); // Short delay
+                await new Promise(resolve => setTimeout(resolve, 200));
                 const subData = await sendMessageToSW<{ planId: string | null; status: string | null } | null>({ type: "GET_SUBSCRIPTION_STATUS" });
                 const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
                 setSubscription(subData ? { planId: validPlanId, status: subData.status } : { planId: "free", status: null });
@@ -210,56 +246,69 @@ export function useAuthPageLogic() {
                 console.error("AuthPage Logic: Failed to fetch subscription after login:", subError);
                 setError("Logged in, but failed to load subscription details.");
                 setSubscription({ planId: null, status: null });
-                setCurrentView("account"); // Still show account
+                setCurrentView("account");
             } finally {
                 setIsLoading(false);
             }
         };
         fetchSubAfterLogin();
-    }, []); // Empty dependency array as it doesn't depend on props/state outside the hook
-
+    }, []);
 
     const handleLogout = useCallback(async () => {
+        // ... (logic remains the same) ...
         setIsLoading(true);
         setError(null);
         try {
             await sendMessageToSW({ type: "LOGOUT_USER" });
-            // Listener will update state/view
+            // Listener will update state
         } catch (err: any) {
             setError(err.message || "Logout failed.");
-            setIsLoading(false); // Stop loading on error
+            setIsLoading(false);
         }
     }, []);
 
-
     const handleSelectPlan = useCallback(async (planId: CheckoutPlanId) => {
-        // Read state directly from the hook's scope
-        if (isCheckoutLoading || !authState?.isLoggedIn || isLoading) return;
-
+        // ... (logic remains the same) ...
+        if (isCheckoutLoading || !authState?.isLoggedIn || isLoading || isPortalLoading) return;
         setError(null);
         setIsCheckoutLoading(planId);
-
         try {
-            const checkoutUrl = await sendMessageToSW<string>({
-                type: "CREATE_CHECKOUT_SESSION",
-                payload: { planId: planId },
-            });
-
-            if (checkoutUrl && typeof checkoutUrl === "string" && checkoutUrl.startsWith("http")) {
-                window.location.href = checkoutUrl; // Redirect
+            const checkoutUrl = await sendMessageToSW<string>({ type: "CREATE_CHECKOUT_SESSION", payload: { planId } });
+            if (checkoutUrl?.startsWith("http")) {
+                window.location.href = checkoutUrl;
             } else {
-                console.error("AuthPage Logic: Invalid checkout URL:", checkoutUrl);
                 throw new Error("Failed to retrieve a valid checkout URL.");
             }
         } catch (err: any) {
             console.error(`AuthPage Logic: Error getting checkout URL for ${planId}:`, err);
             setError(err.message || "Could not initiate checkout.");
-            setIsCheckoutLoading(null); // Reset loading on error
+            setIsCheckoutLoading(null);
         }
-    }, [authState, isLoading, isCheckoutLoading]); // Dependencies for the handler
+    }, [authState, isLoading, isCheckoutLoading, isPortalLoading]);
+
+    const handleManageSubscription = useCallback(async () => {
+        // ... (logic remains the same) ...
+        if (!authState?.isLoggedIn || isLoading || isCheckoutLoading || isPortalLoading) return;
+        setIsPortalLoading(true);
+        setError(null);
+        try {
+            const portalUrl = await sendMessageToSW<string>({ type: "CREATE_CUSTOMER_PORTAL_SESSION" });
+            if (portalUrl?.startsWith("http")) {
+                window.open(portalUrl, '_blank');
+                await new Promise(resolve => setTimeout(resolve, 100));
+            } else {
+                throw new Error("Failed to retrieve a valid portal URL.");
+            }
+        } catch (err: any) {
+            console.error("AuthPage Logic: Error getting portal URL:", err);
+            setError(err.message || "Could not open billing management page.");
+        } finally {
+            setIsPortalLoading(false);
+        }
+    }, [authState, isLoading, isCheckoutLoading, isPortalLoading]);
 
 
-    // Return state and handlers needed by the component
+    // Return state and handlers
     return {
         authState,
         subscription,
@@ -267,10 +316,12 @@ export function useAuthPageLogic() {
         isLoading,
         error,
         isCheckoutLoading,
+        isPortalLoading,
         handleLoginSuccess,
         handleLogout,
         handleSelectPlan,
-        setCurrentView, // Expose setCurrentView for header buttons
-        setError, // Expose setError for error recovery buttons
+        handleManageSubscription,
+        setCurrentView, // Expose setCurrentView for header/buttons
+        setError,       // Expose setError for error recovery
     };
 }

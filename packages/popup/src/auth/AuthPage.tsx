@@ -1,8 +1,7 @@
-// src/auth/AuthPage.tsx
+// packages/popup/src/auth/AuthPage.tsx
 import styles from "./AuthPage.module.css";
 import { useAuthPageLogic } from "./useAuthPageLogic";
 
-// Import Components
 import Header from "./Header";
 import PricingSection from "../components/PricingSection/PricingSection";
 import LoginForm from "../components/LoginForm/LoginForm";
@@ -17,33 +16,50 @@ function AuthPage() {
         isLoading,
         error,
         isCheckoutLoading,
+        isPortalLoading,
         handleLoginSuccess,
         handleLogout,
         handleSelectPlan,
+        handleManageSubscription,
         setCurrentView,
         setError,
     } = useAuthPageLogic();
 
-    // --- Render Content Logic --- (Remains the same as before)
+    // --- Render Content Logic ---
     const renderMainContent = () => {
-        // ... (keep the existing logic for rendering main content)
-        if (isLoading || authState === null) {
-            return <div className={styles.loading}>Loading Account...</div>;
+        // Combine all loading states for simplicity in disabling UI elements
+        const combinedLoading =
+            isLoading || isCheckoutLoading !== null || isPortalLoading;
+
+        // Show loading indicator if any primary loading is happening (and no error)
+        if (combinedLoading && !error) {
+            let loadingText = "Loading Account...";
+            if (isCheckoutLoading) loadingText = "Processing Checkout...";
+            if (isPortalLoading) loadingText = "Loading Billing Portal...";
+            return <div className={styles.loading}>{loadingText}</div>;
         }
-        if (isCheckoutLoading) {
-            return <div className={styles.loading}>Processing Checkout...</div>;
-        }
-        const criticalError = (error && !error.includes("Checkout process was cancelled")) ? error : null;
+
+        // Show critical errors first (unless it's a handled checkout cancel message)
+        const criticalError =
+            error && !error.includes("Checkout process was cancelled")
+                ? error
+                : null;
         if (criticalError) {
             return (
                 <div className={styles.container}>
                     <p className={styles.criticalError}>Error: {criticalError}</p>
-                    {!authState.isLoggedIn && (
-                        <Button onClick={() => { setError(null); setCurrentView("login"); }}>
+                    {!authState?.isLoggedIn && (
+                        <Button
+                            onClick={() => {
+                                setError(null);
+                                setCurrentView("login");
+                            }}
+                        >
                             Retry Login
                         </Button>
                     )}
-                    {authState.isLoggedIn && (
+                    {authState?.isLoggedIn && (
+                        // General refresh might help resolve temporary issues
                         <Button onClick={() => window.location.reload()}>
                             Refresh Page
                         </Button>
@@ -51,8 +67,14 @@ function AuthPage() {
                 </div>
             );
         }
-        const checkoutCancelError = error?.includes("Checkout process was cancelled") ? error : null;
+        // Show checkout cancel error specifically if needed in relevant views
+        const checkoutCancelError = error?.includes(
+            "Checkout process was cancelled",
+        )
+            ? error
+            : null;
 
+        // Render view based on state
         switch (currentView) {
             case "login":
                 return (
@@ -60,43 +82,58 @@ function AuthPage() {
                         <LoginForm onSuccess={handleLoginSuccess} />
                     </div>
                 );
+
             case "account":
-                if (!authState.isLoggedIn) {
-                    console.warn("AuthPage: Attempted to render account view while not logged in. Redirecting...");
-                    setCurrentView("pricing");
-                    return <div className={styles.loading}>Redirecting...</div>;
+                // Ensure user is actually logged in before rendering account info
+                if (!authState?.isLoggedIn) {
+                    console.warn(
+                        "AuthPage: Attempted account view while not logged in. Redirecting...",
+                    );
+                    setCurrentView("pricing"); // Use the setter from the hook
+                    return <div className={styles.loading}>Redirecting...</div>; // Placeholder while redirecting
                 }
                 return (
                     <div className={styles.container}>
-                        {checkoutCancelError && (<p className={styles.criticalError}>{checkoutCancelError}</p>)}
+                        {/* Show checkout cancel error above account info if present */}
+                        {checkoutCancelError && (
+                            <p className={styles.criticalError}>{checkoutCancelError}</p>
+                        )}
                         <AccountInfo
                             email={authState.email}
-                            planId={subscription?.planId ?? null}
+                            planId={subscription?.planId ?? null} // Default to null if sub not loaded
                             onLogout={handleLogout}
-                            isLoading={isLoading || isCheckoutLoading !== null}
+                            isLoading={combinedLoading} // Pass combined loading state
+                            onManageSubscription={handleManageSubscription} // Pass the manage handler
+                            isPortalLoading={isPortalLoading} // Pass portal specific loading state
                         />
+                        {/* Button to navigate back to pricing */}
                         <Button
                             variant="ghost"
                             onClick={() => setCurrentView("pricing")}
-                            disabled={isLoading || isCheckoutLoading !== null}
-                            style={{ marginTop: "var(--space-md)" }}
+                            disabled={combinedLoading} // Disable if anything is loading
+                            style={{ marginTop: "var(--space-md)" }} // Add some top margin
                         >
                             View Pricing Plans
                         </Button>
                     </div>
                 );
+
             case "pricing":
             default:
                 return (
                     <>
-                        {checkoutCancelError && <p className={styles.criticalError}>{checkoutCancelError}</p>}
+                        {/* Show checkout cancel error above pricing if present */}
+                        {checkoutCancelError && (
+                            <p className={styles.criticalError}>{checkoutCancelError}</p>
+                        )}
                         <PricingSection
+                            // Pass the fetched subscription, provide a default if null
                             userSubscription={subscription ?? { planId: null }}
                             isLoggedIn={authState?.isLoggedIn ?? false}
                             isLoadingCheckout={isCheckoutLoading}
                             onSelectPlan={handleSelectPlan}
                             onLoginRequired={() => {
-                                setError(null);
+                                setError(null); // Clear errors before showing login
                                 setCurrentView("login");
                             }}
                         />
@@ -105,10 +142,9 @@ function AuthPage() {
         }
     };
 
-    // Determine if Account button should show
+    // Determine header button states based on hook values
     const showAccountButton = authState?.isLoggedIn ?? false;
-    // Combine loading states for the header disable logic
-    const isHeaderLoading = isLoading || isCheckoutLoading !== null;
+    const isHeaderLoading = isLoading || isCheckoutLoading !== null || isPortalLoading;
 
     return (
         <div className={styles.pageContainer}>
@@ -116,13 +152,9 @@ function AuthPage() {
                 currentView={currentView}
                 showAccountButton={showAccountButton}
                 isLoading={isHeaderLoading} // Pass combined loading state
-                onNavigate={setCurrentView}  // Pass the navigation function
+                onNavigate={setCurrentView} // Pass state setter for navigation
             />
-
-            {/* Main content area uses the simplified render function */}
-            <main className={styles.mainContent}>
-                {renderMainContent()}
-            </main>
+            <main className={styles.mainContent}>{renderMainContent()}</main>
         </div>
     );
 }

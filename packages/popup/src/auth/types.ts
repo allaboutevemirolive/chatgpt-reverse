@@ -1,5 +1,4 @@
-// src/auth/types.ts
-
+// packages/popup/src/auth/types.ts
 export interface UserData {
     uid: string;
     email: string | null;
