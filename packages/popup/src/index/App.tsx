@@ -189,10 +189,10 @@ function App() {
             return (
                 <>
                     <p className={styles.description}>
-                        Login or Register for features.
+                        Unlock powerful features with a Pro plan.
                     </p>
                     <button onClick={openAuthPage} className={styles.button}>
-                        Login / Register
+                        Go Pro
                     </button>
                 </>
             );
