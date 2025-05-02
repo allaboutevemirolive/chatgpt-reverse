@@ -4,7 +4,6 @@ import logo from "./assets/logo.svg";
 import { sendMessageToSW } from "./utils/swMessenger";
 import styles from "./App.module.css";
 
-// --- Type Definitions ---
 interface UserData {
     uid: string;
     email: string | null;
@@ -16,7 +15,6 @@ interface AuthState {
 }
 
 function App() {
-    // --- State Variables ---
     const [authState, setAuthState] = useState<AuthState>({
         isLoggedIn: false,
         uid: null,
@@ -152,7 +150,7 @@ function App() {
             console.log("Popup: Rendering Logged In State");
             return (
                 <>
-                    <p className={styles.loggedInText}>
+                    <p className={`${styles.loggedInText} ${styles.description}`}>
                         Logged in as:
                         <br />{" "}
                         <strong className={styles.loggedInEmail}>
@@ -161,7 +159,7 @@ function App() {
                     </p>
                     <button
                         onClick={handleLogout}
-                        className={styles.logoutButton}
+                        className={`${styles.button} ${styles.logoutButton}`}
                     >
                         Logout
                     </button>
@@ -197,8 +195,8 @@ function App() {
             {/* Instruction Section */}
             <div className={styles.instructionBox}>
                 <p className={styles.instructionText}>How to Access Tools:</p>
-                <p className={styles.instructionSubText}>
-                    On <code className={styles.kbdCode}>chatgpt.com</code>,
+                <p className={`${styles.instructionSubText} ${styles.description}`}>
+                    On <code className={`${styles.kbdCode} ${styles.kbd}`}>chatgpt.com</code>,
                     press:
                 </p>
                 <div className={styles.shortcutContainer}>
