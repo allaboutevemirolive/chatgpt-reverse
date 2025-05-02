@@ -1,11 +1,11 @@
 // packages/popup/src/AuthPage.tsx
 import { useState, useEffect } from "react";
-import styles from "./AuthPage.module.css"; // Styles for the page layout (header, main)
-import { sendMessageToSW } from "./utils/swMessenger"; // Messenger with retry
+import styles from "./AuthPage.module.css";
+import { sendMessageToSW } from "./utils/swMessenger";
 import PricingSection from "./components/PricingSection/PricingSection";
 import LoginForm from "./components/LoginForm/LoginForm";
-import AccountInfo from "./components/AccountInfo/AccountInfo"; // Import AccountInfo
-import Button from "./components/Button/Button"; // Button for header
+import AccountInfo from "./components/AccountInfo/AccountInfo";
+import Button from "./components/Button/Button";
 
 // --- Types ---
 interface UserData {
@@ -17,8 +17,7 @@ interface AuthState {
     uid: string | null;
     email: string | null;
 }
-// Placeholder - replace with your actual subscription structure
-// Ensure this matches what your SW might return for GET_SUBSCRIPTION_STATUS if you implement it
+// Ensure this matches what our SW might return for GET_SUBSCRIPTION_STATUS 
 interface UserSubscription {
     planId: "free" | "monthly" | "lifetime" | null; // Example plan IDs
     // Add other relevant fields like status, expiry, etc.
@@ -107,7 +106,6 @@ function AuthPage() {
                 if (currentAuthState.isLoggedIn && currentAuthState.uid) {
                     viewAfterFetch = "account"; // If logged in, aim for account view
                     try {
-                        // --- !!! IMPLEMENT ACTUAL SUBSCRIPTION FETCH !!! ---
                         console.log(
                             "AuthPage: Fetching subscription status for UID:",
                             currentAuthState.uid,
@@ -145,13 +143,13 @@ function AuthPage() {
                 // 3. Set the view
                 if (isMounted) {
                     // Override view based on login status or checkout status
-                     if (checkoutStatus === 'success' && currentAuthState.isLoggedIn) {
-                         setCurrentView('account'); // Force account view on success if logged in
-                     } else if (checkoutStatus === 'cancel') {
-                         setCurrentView('pricing'); // Force pricing view on cancel
-                     } else {
-                         setCurrentView(viewAfterFetch); // Set view based on login/sub status otherwise
-                     }
+                    if (checkoutStatus === 'success' && currentAuthState.isLoggedIn) {
+                        setCurrentView('account'); // Force account view on success if logged in
+                    } else if (checkoutStatus === 'cancel') {
+                        setCurrentView('pricing'); // Force pricing view on cancel
+                    } else {
+                        setCurrentView(viewAfterFetch); // Set view based on login/sub status otherwise
+                    }
                 }
 
             } catch (authError: any) {
@@ -199,7 +197,7 @@ function AuthPage() {
                     // TODO: Re-fetch subscription if needed here
                 }
             } else if (message.type === 'SUBSCRIPTION_UPDATED') { // If you implement this
-                 console.log("AuthPage: Subscription updated", message.payload);
+                console.log("AuthPage: Subscription updated", message.payload);
                 setSubscription(message.payload);
                 // Ensure user sees account page after subscription update if logged in
                 if (authState?.isLoggedIn) {
@@ -332,8 +330,8 @@ function AuthPage() {
                 <div className={styles.container}>
                     <p className={styles.criticalError}>Error: {error}</p>
                     {!authState.isLoggedIn && (
-                        <Button onClick={() => {setError(null); setCurrentView('login');}}>
-                             Retry Login
+                        <Button onClick={() => { setError(null); setCurrentView('login'); }}>
+                            Retry Login
                         </Button>
                     )}
                 </div>
@@ -367,14 +365,14 @@ function AuthPage() {
                 }
                 // Implicit redirect if somehow in 'account' view but not logged in
                 console.warn("AuthPage: Attempted to render account view while not logged in. Switching to pricing.");
-                 // Use useEffect to handle state transitions more cleanly if this happens often
+                // Use useEffect to handle state transitions more cleanly if this happens often
                 setCurrentView('pricing');
                 return <div className={styles.loading}>Redirecting...</div>; // Show temp state
 
             case 'pricing':
             default:
                 return (
-                     // Pricing section handles displaying plan info and buttons
+                    // Pricing section handles displaying plan info and buttons
                     <PricingSection
                         userSubscription={subscription}
                         isLoggedIn={authState.isLoggedIn}

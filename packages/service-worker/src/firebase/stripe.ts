@@ -9,7 +9,7 @@ import {
     Unsubscribe,
 } from "firebase/firestore";
 import { getDb } from "./core";
-import { getCurrentUser } from "./auth"; // Import function to get user
+import { getCurrentUser } from "./auth";
 import {
     STRIPE_PRICE_ID_MONTHLY,
     STRIPE_PRICE_ID_LIFETIME,
@@ -36,8 +36,8 @@ interface CheckoutSessionDocData {
  */
 export async function getCheckoutUrl(
     planId: "monthly" | "lifetime",
-): Promise<string> { // Return type is now string
-    const currentUser = getCurrentUser(); // Get the cached current user
+): Promise<string> {
+    const currentUser = getCurrentUser();
     const userId = currentUser?.uid;
 
     if (!userId) {
@@ -101,7 +101,7 @@ export async function getCheckoutUrl(
         console.log("Firebase Stripe (getCheckoutUrl): Checkout session document created:", docRef.id);
 
         // Wait for the Stripe Extension to update the document with the URL
-        return new Promise<string>((resolve, reject) => { // Promise resolves with string
+        return new Promise<string>((resolve, reject) => {
             let timedOut = false;
             let unsubscribeCalled = false;
             let timeoutHandle: NodeJS.Timeout | null = null;
@@ -125,7 +125,7 @@ export async function getCheckoutUrl(
                 docRef,
                 (snap) => {
                     if (timedOut || unsubscribeCalled) return;
-                    const data = snap.data() as CheckoutSessionDocData | undefined; // Type assertion
+                    const data = snap.data() as CheckoutSessionDocData | undefined;
                     console.log(
                         "Firebase Stripe (getCheckoutUrl): Snapshot update:", docRef.id, JSON.stringify(data || {})
                     );
@@ -142,8 +142,8 @@ export async function getCheckoutUrl(
                         console.log(
                             "Firebase Stripe (getCheckoutUrl): URL retrieved:", data.url
                         );
-                        cleanup(); // Clean up listener successfully
-                        resolve(data.url); // Resolve the promise with the URL string
+                        cleanup();
+                        resolve(data.url);
                     }
                     // Otherwise, keep listening...
                     else {

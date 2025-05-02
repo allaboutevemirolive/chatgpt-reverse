@@ -34,7 +34,6 @@ try {
     console.log("SW: Firebase Initialized and Auth Listener Setup requested.");
 } catch (e) {
     console.error("SW: Critical Firebase initialization failed:", e);
-    // Depending on the error, may want to disable features
 }
 
 // Initialize API Client (async, happens in background)
@@ -111,7 +110,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Ensure Firebase Auth state is ready for operations needing it
             // (e.g., checkout, potentially some API calls if they depended on user ID implicitly)
             if (["CREATE_CHECKOUT_SESSION"].includes(messageType)) {
-                // Add other types if needed
                 console.log(`SW: Awaiting auth ready for ${messageType}...`);
                 await awaitAuthReady();
                 console.log(`SW: Auth ready for ${messageType}. Proceeding.`);
@@ -367,7 +365,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         // --- Other Utilities ---
         case "GET_COOKIE":
-            // Keep simple utilities directly here if preferred
             if (!message.payload?.name || !message.payload?.url) {
                 sendResponse({
                     success: false,

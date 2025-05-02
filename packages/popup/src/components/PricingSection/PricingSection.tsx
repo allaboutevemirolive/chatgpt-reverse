@@ -1,13 +1,13 @@
 // packages/popup/src/components/PricingSection/PricingSection.tsx
 import React from "react";
-import PricingCard from "../PricingCard/PricingCard"; // Adjust path if necessary
+import PricingCard from "../PricingCard/PricingCard";
 import styles from "./PricingSection.module.css";
 
 // --- Type Definitions ---
 
 // Describes the data structure for a single pricing plan
 interface PlanData {
-    id: "free" | "monthly" | "lifetime"; // Use specific IDs
+    id: "free" | "monthly" | "lifetime";
     planName: string;
     price: string;
     frequency?: string;
@@ -163,8 +163,8 @@ const PricingSection: React.FC<PricingSectionProps> = ({
                             // Only provide href for the free plan's store link
                             buttonHref={
                                 plan.id === "free" &&
-                                plan.storeLink &&
-                                !isCurrent
+                                    plan.storeLink &&
+                                    !isCurrent
                                     ? plan.storeLink
                                     : undefined
                             }

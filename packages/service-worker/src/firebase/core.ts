@@ -3,7 +3,7 @@ import { initializeApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import firebaseConfig from "@/config/firebaseConfigs";
-import { FIRESTORE_DB_NAME } from "@/config/constants";
+// import { FIRESTORE_DB_NAME } from "@/config/constants";
 
 let firebaseAppInstance: FirebaseApp | null = null;
 let firestoreInstance: Firestore | null = null;

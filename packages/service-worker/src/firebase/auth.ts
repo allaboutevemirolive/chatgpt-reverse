@@ -5,10 +5,9 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    Auth,
     UserCredential,
 } from "firebase/auth";
-import { getFirebaseAuth } from "./core"; // Import getter
+import { getFirebaseAuth } from "./core";
 
 // --- State Variables ---
 let currentUserState: User | null = null;
