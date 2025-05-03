@@ -1,8 +1,10 @@
 // src/config/constants.ts
 
 // --- Stripe Configuration ---
-export const STRIPE_PRICE_ID_MONTHLY = import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY;
-export const STRIPE_PRICE_ID_LIFETIME = import.meta.env.VITE_STRIPE_PRICE_ID_LIFETIME;
+export const STRIPE_PRICE_ID_MONTHLY = import.meta.env
+    .VITE_STRIPE_PRICE_ID_MONTHLY;
+export const STRIPE_PRICE_ID_LIFETIME = import.meta.env
+    .VITE_STRIPE_PRICE_ID_LIFETIME;
 
 // --- Checkout URLs ---
 const HOSTING_BASE_URL = import.meta.env.VITE_HOSTING_BASE_URL;

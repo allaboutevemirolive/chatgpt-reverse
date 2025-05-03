@@ -47,7 +47,6 @@ export const MSG = {
     // Broadcasts (SW -> UI)
     AUTH_STATE_UPDATED: "AUTH_STATE_UPDATED",
     SUBSCRIPTION_UPDATED: "SUBSCRIPTION_UPDATED",
-
 } as const; // Use "as const" for stricter type checking
 
 // Type helper for message keys

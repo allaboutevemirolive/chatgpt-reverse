@@ -89,15 +89,17 @@ export function useAuthPageLogic() {
                 // 2. Fetch Subscription Status *IF* logged in
                 if (initialAuthState.isLoggedIn && initialAuthState.uid) {
                     try {
-                        const subData = await sendMessageToSW<UserSubscription | null>({ // Adjusted type expectation
-                            type: MSG.GET_SUBSCRIPTION_STATUS, // <-- Use constant
-                        });
+                        const subData =
+                            await sendMessageToSW<UserSubscription | null>({
+                                // Adjusted type expectation
+                                type: MSG.GET_SUBSCRIPTION_STATUS, // <-- Use constant
+                            });
                         if (!isMounted) return;
 
                         // Validate planId before setting
                         const validPlanId =
                             subData?.planId === "monthly" ||
-                                subData?.planId === "lifetime"
+                            subData?.planId === "lifetime"
                                 ? subData.planId
                                 : "free";
                         initialSubscription = subData
@@ -106,10 +108,15 @@ export function useAuthPageLogic() {
                         setSubscription(initialSubscription);
                     } catch (subError: any) {
                         if (!isMounted) return;
-                        console.error("AuthPage Logic: Failed to fetch subscription:", subError);
+                        console.error(
+                            "AuthPage Logic: Failed to fetch subscription:",
+                            subError,
+                        );
                         // Distinguish between "not found" (implicitly free) and actual errors
-                        if (subError.message?.includes('unauthenticated')) {
-                            console.warn("AuthPage Logic: Subscription fetch failed due to unauthenticated state.");
+                        if (subError.message?.includes("unauthenticated")) {
+                            console.warn(
+                                "AuthPage Logic: Subscription fetch failed due to unauthenticated state.",
+                            );
                             setSubscription({ planId: "free", status: null }); // Assume free if unauthenticated error
                         } else {
                             setError("Could not load subscription details.");
@@ -131,21 +138,28 @@ export function useAuthPageLogic() {
                             // Not logged in, no checkout status => pricing view
                             setCurrentView("pricing");
                         }
-                    } else if (checkoutStatus === "success" && initialAuthState.isLoggedIn) {
+                    } else if (
+                        checkoutStatus === "success" &&
+                        initialAuthState.isLoggedIn
+                    ) {
                         // Checkout success and we confirmed login => account view
                         setCurrentView("account");
                     }
                     // Note: If checkoutStatus === 'cancel', view was already set to 'pricing'
                 }
-
             } catch (authError: any) {
                 if (isMounted) {
-                    setError(authError.message || "Failed to load account status.");
+                    setError(
+                        authError.message || "Failed to load account status.",
+                    );
                     setAuthState({ isLoggedIn: false, uid: null, email: null });
                     setSubscription(null);
                     setCurrentView("pricing"); // Reset view on critical error
                 }
-                console.error("AuthPage Logic: Error fetching initial auth data:", authError);
+                console.error(
+                    "AuthPage Logic: Error fetching initial auth data:",
+                    authError,
+                );
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -160,14 +174,20 @@ export function useAuthPageLogic() {
         const messageListener = (message: any) => {
             if (!isMounted) return;
             const messageType = message?.type; // Safe access
-            console.log("AuthPage Logic: Received message from SW:", messageType);
+            console.log(
+                "AuthPage Logic: Received message from SW:",
+                messageType,
+            );
 
-            if (messageType === MSG.AUTH_STATE_UPDATED) { // <-- Use constant
+            if (messageType === MSG.AUTH_STATE_UPDATED) {
+                // <-- Use constant
                 const newAuthState: AuthState = message.payload;
-                setAuthState(prevState => {
+                setAuthState((prevState) => {
                     const wasLoggedIn = prevState?.isLoggedIn ?? false;
-                    const justLoggedIn = newAuthState.isLoggedIn && !wasLoggedIn;
-                    const justLoggedOut = !newAuthState.isLoggedIn && wasLoggedIn;
+                    const justLoggedIn =
+                        newAuthState.isLoggedIn && !wasLoggedIn;
+                    const justLoggedOut =
+                        !newAuthState.isLoggedIn && wasLoggedIn;
 
                     if (justLoggedOut) {
                         setCurrentView("pricing");
@@ -177,47 +197,87 @@ export function useAuthPageLogic() {
                     } else if (justLoggedIn) {
                         // User just logged in externally, fetch their sub
                         setIsLoading(true); // Show loading while fetching sub
-                        sendMessageToSW<UserSubscription | null>({ type: MSG.GET_SUBSCRIPTION_STATUS }) // <-- Use constant
+                        sendMessageToSW<UserSubscription | null>({
+                            type: MSG.GET_SUBSCRIPTION_STATUS,
+                        }) // <-- Use constant
                             .then((subData) => {
                                 if (isMounted) {
-                                    const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
-                                    setSubscription(subData ? { ...subData, planId: validPlanId } : { planId: "free", status: null });
+                                    const validPlanId =
+                                        subData?.planId === "monthly" ||
+                                        subData?.planId === "lifetime"
+                                            ? subData.planId
+                                            : "free";
+                                    setSubscription(
+                                        subData
+                                            ? {
+                                                  ...subData,
+                                                  planId: validPlanId,
+                                              }
+                                            : { planId: "free", status: null },
+                                    );
                                     setCurrentView("account"); // Go to account after getting sub
                                 }
                             })
                             .catch((err) => {
                                 if (isMounted) {
-                                    console.error("AuthPage Logic: Error fetching sub after external login:", err);
-                                    setError("Failed to load subscription details after login update.");
-                                    setSubscription({ planId: null, status: null });
+                                    console.error(
+                                        "AuthPage Logic: Error fetching sub after external login:",
+                                        err,
+                                    );
+                                    setError(
+                                        "Failed to load subscription details after login update.",
+                                    );
+                                    setSubscription({
+                                        planId: null,
+                                        status: null,
+                                    });
                                     setCurrentView("account"); // Still go to account, but show error
                                 }
                             })
                             .finally(() => {
                                 if (isMounted) setIsLoading(false); // Stop loading after attempt
                             });
-                    } else if (newAuthState.isLoggedIn && currentView !== "account") {
+                    } else if (
+                        newAuthState.isLoggedIn &&
+                        currentView !== "account"
+                    ) {
                         // Logged in, but maybe on pricing/login page (e.g., refresh) -> switch to account
                         setCurrentView("account");
                         // Potentially re-fetch subscription here if needed, or rely on initial fetch/broadcasts
                     }
                     return newAuthState; // Update the auth state
                 });
-
-            } else if (messageType === MSG.SUBSCRIPTION_UPDATED) { // <-- Use constant
-                console.log("AuthPage Logic: Subscription updated via broadcast", message.payload);
+            } else if (messageType === MSG.SUBSCRIPTION_UPDATED) {
+                // <-- Use constant
+                console.log(
+                    "AuthPage Logic: Subscription updated via broadcast",
+                    message.payload,
+                );
                 const subPayload: UserSubscription | null = message.payload;
-                const validPlanId = (subPayload?.planId === "monthly" || subPayload?.planId === "lifetime") ? subPayload.planId : "free";
-                setSubscription(subPayload ? { ...subPayload, planId: validPlanId } : { planId: "free", status: null });
+                const validPlanId =
+                    subPayload?.planId === "monthly" ||
+                    subPayload?.planId === "lifetime"
+                        ? subPayload.planId
+                        : "free";
+                setSubscription(
+                    subPayload
+                        ? { ...subPayload, planId: validPlanId }
+                        : { planId: "free", status: null },
+                );
 
-                setAuthState(prevAuthState => {
-                    if (prevAuthState?.isLoggedIn && currentView !== "account") {
+                setAuthState((prevAuthState) => {
+                    if (
+                        prevAuthState?.isLoggedIn &&
+                        currentView !== "account"
+                    ) {
                         setCurrentView("account"); // Ensure account view if sub updates while logged in
                     }
                     return prevAuthState;
-                })
+                });
                 // Clear any checkout-related errors upon subscription update
-                setError(prevError => (prevError?.includes("Checkout") ? null : prevError));
+                setError((prevError) =>
+                    prevError?.includes("Checkout") ? null : prevError,
+                );
             }
         };
 
@@ -253,11 +313,22 @@ export function useAuthPageLogic() {
                 const subData = await sendMessageToSW<UserSubscription | null>({
                     type: MSG.GET_SUBSCRIPTION_STATUS, // <-- Use constant
                 });
-                const validPlanId = (subData?.planId === "monthly" || subData?.planId === "lifetime") ? subData.planId : "free";
-                setSubscription(subData ? { ...subData, planId: validPlanId } : { planId: "free", status: null });
+                const validPlanId =
+                    subData?.planId === "monthly" ||
+                    subData?.planId === "lifetime"
+                        ? subData.planId
+                        : "free";
+                setSubscription(
+                    subData
+                        ? { ...subData, planId: validPlanId }
+                        : { planId: "free", status: null },
+                );
                 setCurrentView("account"); // Navigate to account page
             } catch (subError: any) {
-                console.error("AuthPage Logic: Failed to fetch subscription after login:", subError);
+                console.error(
+                    "AuthPage Logic: Failed to fetch subscription after login:",
+                    subError,
+                );
                 setError("Logged in, but failed to load subscription details.");
                 setSubscription({ planId: null, status: null }); // Indicate error state
                 setCurrentView("account"); // Still navigate, but error will show
@@ -280,37 +351,55 @@ export function useAuthPageLogic() {
         }
     }, []);
 
-    const handleSelectPlan = useCallback(async (planId: CheckoutPlanId) => {
-        if (isCheckoutLoading || !authState?.isLoggedIn || isLoading || isPortalLoading) return;
-        setError(null);
-        setIsCheckoutLoading(planId);
-        try {
-            const checkoutUrl = await sendMessageToSW<string>({
-                type: MSG.CREATE_CHECKOUT_SESSION, // <-- Use constant
-                payload: { planId }
-            });
-            if (checkoutUrl?.startsWith("http")) {
-                window.location.href = checkoutUrl; // Redirect to Stripe
-            } else {
-                throw new Error("Failed to retrieve a valid checkout URL.");
+    const handleSelectPlan = useCallback(
+        async (planId: CheckoutPlanId) => {
+            if (
+                isCheckoutLoading ||
+                !authState?.isLoggedIn ||
+                isLoading ||
+                isPortalLoading
+            )
+                return;
+            setError(null);
+            setIsCheckoutLoading(planId);
+            try {
+                const checkoutUrl = await sendMessageToSW<string>({
+                    type: MSG.CREATE_CHECKOUT_SESSION, // <-- Use constant
+                    payload: { planId },
+                });
+                if (checkoutUrl?.startsWith("http")) {
+                    window.location.href = checkoutUrl; // Redirect to Stripe
+                } else {
+                    throw new Error("Failed to retrieve a valid checkout URL.");
+                }
+            } catch (err: any) {
+                console.error(
+                    `AuthPage Logic: Error getting checkout URL for ${planId}:`,
+                    err,
+                );
+                setError(err.message || "Could not initiate checkout.");
+                setIsCheckoutLoading(null); // Stop loading on error
             }
-        } catch (err: any) {
-            console.error(`AuthPage Logic: Error getting checkout URL for ${planId}:`, err);
-            setError(err.message || "Could not initiate checkout.");
-            setIsCheckoutLoading(null); // Stop loading on error
-        }
-    }, [authState, isLoading, isCheckoutLoading, isPortalLoading]);
+        },
+        [authState, isLoading, isCheckoutLoading, isPortalLoading],
+    );
 
     const handleManageSubscription = useCallback(async () => {
-        if (!authState?.isLoggedIn || isLoading || isCheckoutLoading || isPortalLoading) return;
+        if (
+            !authState?.isLoggedIn ||
+            isLoading ||
+            isCheckoutLoading ||
+            isPortalLoading
+        )
+            return;
         setIsPortalLoading(true);
         setError(null);
         try {
             const portalUrl = await sendMessageToSW<string>({
-                type: MSG.CREATE_CUSTOMER_PORTAL_SESSION // <-- Use constant
+                type: MSG.CREATE_CUSTOMER_PORTAL_SESSION, // <-- Use constant
             });
             if (portalUrl?.startsWith("http")) {
-                window.open(portalUrl, '_blank'); // Open portal in new tab
+                window.open(portalUrl, "_blank"); // Open portal in new tab
                 // No need to wait after opening
             } else {
                 throw new Error("Failed to retrieve a valid portal URL.");
@@ -322,7 +411,6 @@ export function useAuthPageLogic() {
             setIsPortalLoading(false); // Stop loading regardless of outcome
         }
     }, [authState, isLoading, isCheckoutLoading, isPortalLoading]);
-
 
     // Return state and handlers
     return {

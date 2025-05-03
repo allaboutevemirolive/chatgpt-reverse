@@ -35,7 +35,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({
     onSelectPlan,
     onLoginRequired,
 }) => {
-
     const pricingPlans: PlanData[] = [
         {
             id: "free",
@@ -52,7 +51,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             buttonText: "Your Current Plan",
             buttonVariant: "secondary",
             isFeatured: false,
-
         },
         {
             id: "monthly",
@@ -71,7 +69,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             buttonText: "Go Pro Monthly",
             buttonVariant: "primary",
             isFeatured: false,
-
         },
         {
             id: "lifetime",
@@ -88,14 +85,11 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             buttonText: "Get Lifetime Access",
             buttonVariant: "primary",
             isFeatured: true,
-
         },
     ];
 
     const handleButtonClick = (plan: PlanData) => {
-
         if (plan.id === "free") {
-
             if (plan.storeLink) {
                 window.open(plan.storeLink, "_blank");
             }
@@ -106,7 +100,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             if (!isLoggedIn) {
                 onLoginRequired();
             } else {
-
                 onSelectPlan(plan.id);
             }
         }
@@ -120,7 +113,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             </p>
             <div className={styles.pricingGrid}>
                 {pricingPlans.map((plan) => {
-
                     const isCurrent =
                         plan.id === (userSubscription?.planId || "free");
 
@@ -142,17 +134,14 @@ const PricingSection: React.FC<PricingSectionProps> = ({
                             buttonVariant={plan.buttonVariant}
                             isFeatured={plan.isFeatured}
                             isCurrentPlan={isCurrent}
-
                             isDisabled={isCurrent || isLoadingCheckout !== null}
-
                             buttonHref={
                                 plan.id === "free" &&
-                                    plan.storeLink &&
-                                    !isCurrent
+                                plan.storeLink &&
+                                !isCurrent
                                     ? plan.storeLink
                                     : undefined
                             }
-
                             buttonOnClick={
                                 plan.id !== "free" && !isCurrent
                                     ? () => handleButtonClick(plan)

@@ -47,13 +47,18 @@ function App() {
         const fetchSubscriptionStatus = async (userId: string | null) => {
             // Guard against running if not mounted or user isn't actually logged in
             if (!isMounted || !userId) {
-                 console.log("Popup: Skipping subscription fetch (not mounted or no userId).");
-                 setIsLoadingSub(false); // Ensure loading stops if skipped
-                 setSubscription(null); // Ensure subscription is cleared if no userId
-                 return;
+                console.log(
+                    "Popup: Skipping subscription fetch (not mounted or no userId).",
+                );
+                setIsLoadingSub(false); // Ensure loading stops if skipped
+                setSubscription(null); // Ensure subscription is cleared if no userId
+                return;
             }
 
-            console.log("Popup: Fetching subscription status for user:", userId);
+            console.log(
+                "Popup: Fetching subscription status for user:",
+                userId,
+            );
             setIsLoadingSub(true);
             setError(null); // Clear previous errors before fetching sub
 
@@ -81,12 +86,17 @@ function App() {
                     "Popup: Error fetching subscription status:",
                     subError,
                 );
-                 // Be more specific about the error if possible
-                if (subError.message?.includes('unauthenticated')) {
-                     console.warn("Popup: Subscription fetch failed due to unauthenticated state (likely during logout race condition). Assuming free.");
-                     setSubscription({ planId: "free", status: null });
+                // Be more specific about the error if possible
+                if (subError.message?.includes("unauthenticated")) {
+                    console.warn(
+                        "Popup: Subscription fetch failed due to unauthenticated state (likely during logout race condition). Assuming free.",
+                    );
+                    setSubscription({ planId: "free", status: null });
                 } else {
-                    setError(subError.message || "Failed to load subscription details.");
+                    setError(
+                        subError.message ||
+                            "Failed to load subscription details.",
+                    );
                     setSubscription(null); // Reset subscription on other errors
                 }
             } finally {
@@ -108,7 +118,10 @@ function App() {
                 const userData = await sendMessageToSW<UserData | null>({
                     type: MSG.GET_AUTH_STATE, // <-- Use constant
                 });
-                console.log("Popup: Received initial auth state response:", userData);
+                console.log(
+                    "Popup: Received initial auth state response:",
+                    userData,
+                );
                 if (!isMounted) return;
 
                 const currentAuthState = userData
@@ -129,7 +142,8 @@ function App() {
                 if (!isMounted) return;
                 console.error("Popup: Error fetching auth state:", authError);
                 setError(
-                    authError.message || "Failed to fetch authentication status.",
+                    authError.message ||
+                        "Failed to fetch authentication status.",
                 );
                 setAuthState({ isLoggedIn: false, uid: null, email: null });
                 setSubscription(null);
@@ -150,17 +164,22 @@ function App() {
             const messageType = message?.type; // Safe access
             console.log("Popup: Received message from SW:", messageType);
 
-            if (messageType === MSG.AUTH_STATE_UPDATED) { // <-- Use constant
+            if (messageType === MSG.AUTH_STATE_UPDATED) {
+                // <-- Use constant
                 const newAuthState: AuthState = message.payload;
-                console.log("Popup: Processing AUTH_STATE_UPDATED", newAuthState);
+                console.log(
+                    "Popup: Processing AUTH_STATE_UPDATED",
+                    newAuthState,
+                );
                 const wasLoggedIn = authState.isLoggedIn; // Check previous state before setting new one
                 setAuthState(newAuthState);
                 setError(null);
 
                 if (newAuthState.isLoggedIn) {
                     // If user just logged in OR state confirmed as logged in, fetch/re-fetch sub
-                    if (!wasLoggedIn || subscription === null) { // Fetch if just logged in or sub is unknown
-                         fetchSubscriptionStatus(newAuthState.uid);
+                    if (!wasLoggedIn || subscription === null) {
+                        // Fetch if just logged in or sub is unknown
+                        fetchSubscriptionStatus(newAuthState.uid);
                     }
                 } else {
                     // Just logged out
@@ -168,10 +187,13 @@ function App() {
                     setIsLoadingSub(false);
                 }
                 setIsLoadingAuth(false); // Auth loading definitely finished
-
-            } else if (messageType === MSG.SUBSCRIPTION_UPDATED) { // <-- Use constant
+            } else if (messageType === MSG.SUBSCRIPTION_UPDATED) {
+                // <-- Use constant
                 const subPayload: UserSubscription | null = message.payload;
-                console.log("Popup: Processing SUBSCRIPTION_UPDATED", subPayload);
+                console.log(
+                    "Popup: Processing SUBSCRIPTION_UPDATED",
+                    subPayload,
+                );
                 const validPlanId =
                     subPayload?.planId === "monthly" ||
                     subPayload?.planId === "lifetime"
@@ -180,7 +202,7 @@ function App() {
                 setSubscription(
                     subPayload
                         ? { ...subPayload, planId: validPlanId }
-                        : { planId: "free", status: null }
+                        : { planId: "free", status: null },
                 );
                 setIsLoadingSub(false); // Sub loading finished
                 setError(null);
@@ -197,7 +219,6 @@ function App() {
         // Re-run effect if authState.isLoggedIn changes *after* initial mount
         // This helps ensure subscription is fetched if login happens while popup is open
     }, []); // Keep empty deps array for initial load + listener setup
-
 
     // --- Event Handlers ---
     const openAuthPage = () => {
@@ -228,7 +249,8 @@ function App() {
     // --- Render Helper ---
     const renderAccountSection = () => {
         // Determine overall loading state
-        const isLoading = isLoadingAuth || (authState.isLoggedIn && isLoadingSub);
+        const isLoading =
+            isLoadingAuth || (authState.isLoggedIn && isLoadingSub);
 
         // 1. Show Loading State
         if (isLoading) {
@@ -259,11 +281,15 @@ function App() {
         if (authState.isLoggedIn) {
             console.log("Popup: Rendering Logged In State. Sub:", subscription);
             // Determine if paid AFTER loading/error checks
-            const isPaidPlan = subscription?.planId === 'monthly' || subscription?.planId === 'lifetime';
+            const isPaidPlan =
+                subscription?.planId === "monthly" ||
+                subscription?.planId === "lifetime";
 
             return (
                 <>
-                    <p className={`${styles.loggedInText} ${styles.description}`}>
+                    <p
+                        className={`${styles.loggedInText} ${styles.description}`}
+                    >
                         Logged in as:
                         <br />{" "}
                         <strong className={styles.loggedInEmail}>
@@ -331,7 +357,9 @@ function App() {
             {/* Instruction Section */}
             <div className={styles.instructionBox}>
                 <p className={styles.instructionText}>How to Access Tools:</p>
-                <p className={`${styles.instructionSubText} ${styles.description}`}>
+                <p
+                    className={`${styles.instructionSubText} ${styles.description}`}
+                >
                     On{" "}
                     <code className={`${styles.kbdCode} ${styles.kbd}`}>
                         chatgpt.com

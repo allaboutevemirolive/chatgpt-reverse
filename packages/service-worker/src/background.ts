@@ -100,7 +100,11 @@ async function storeHeaders(headersToStore: any): Promise<void> {
 // ============================================================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Use MSG constant if message.type exists, otherwise fallback
-    const messageType = message?.type ? (Object.values(MSG).includes(message.type) ? message.type : "[Unknown Type]") : "[No Type]";
+    const messageType = message?.type
+        ? Object.values(MSG).includes(message.type)
+            ? message.type
+            : "[Unknown Type]"
+        : "[No Type]";
     const senderId = sender.tab
         ? `Tab ${sender.tab.id}`
         : sender.id || "Unknown";
@@ -113,7 +117,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const handleAsync = async (asyncFn: () => Promise<any>) => {
         try {
             // Ensure Firebase Auth state is ready for operations needing it
-            if ([MSG.CREATE_CHECKOUT_SESSION, MSG.CREATE_CUSTOMER_PORTAL_SESSION].includes(messageType)) { // <-- Use constants
+            if (
+                [
+                    MSG.CREATE_CHECKOUT_SESSION,
+                    MSG.CREATE_CUSTOMER_PORTAL_SESSION,
+                ].includes(messageType)
+            ) {
+                // <-- Use constants
                 console.log(`SW: Awaiting auth ready for ${messageType}...`);
                 await awaitAuthReady();
                 console.log(`SW: Auth ready for ${messageType}. Proceeding.`);
@@ -122,10 +132,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Refresh API client headers just before making direct ChatGPT API calls
             // (More robust to check if it's *not* an internal/auth/storage message)
             const isApiCall = ![
-                MSG.HEADERS_RECEIVED, MSG.AUTH_RECEIVED, MSG.ACCOUNT_RECEIVED,
-                MSG.CONVERSATION_LIMIT_RECEIVED, MSG.MODELS_RECEIVED,
-                MSG.REGISTER_USER, MSG.LOGIN_USER, MSG.LOGOUT_USER, MSG.GET_AUTH_STATE,
-                MSG.GET_SUBSCRIPTION_STATUS, MSG.CREATE_CHECKOUT_SESSION, MSG.CREATE_CUSTOMER_PORTAL_SESSION,
+                MSG.HEADERS_RECEIVED,
+                MSG.AUTH_RECEIVED,
+                MSG.ACCOUNT_RECEIVED,
+                MSG.CONVERSATION_LIMIT_RECEIVED,
+                MSG.MODELS_RECEIVED,
+                MSG.REGISTER_USER,
+                MSG.LOGIN_USER,
+                MSG.LOGOUT_USER,
+                MSG.GET_AUTH_STATE,
+                MSG.GET_SUBSCRIPTION_STATUS,
+                MSG.CREATE_CHECKOUT_SESSION,
+                MSG.CREATE_CUSTOMER_PORTAL_SESSION,
                 MSG.GET_COOKIE,
             ].includes(messageType as any); // Cast to any temporarily if type mismatch occurs
 
@@ -169,8 +187,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case MSG.ACCOUNT_RECEIVED:
         case MSG.CONVERSATION_LIMIT_RECEIVED:
         case MSG.MODELS_RECEIVED:
-            handleAsync(() =>
-                chrome.storage.local.set({ [messageType]: message.data }), // Here messageType is still the string value which is fine for dynamic keys
+            handleAsync(
+                () => chrome.storage.local.set({ [messageType]: message.data }), // Here messageType is still the string value which is fine for dynamic keys
             );
             break;
 
@@ -200,9 +218,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 await awaitAuthReady();
                 const authState = getAuthState();
                 if (!authState.isLoggedIn || !authState.uid) {
-                    console.warn("SW: GET_SUBSCRIPTION_STATUS called but user not logged in.");
+                    console.warn(
+                        "SW: GET_SUBSCRIPTION_STATUS called but user not logged in.",
+                    );
                     // Consider throwing specific error or returning a structured response indicating not logged in
-                    return { planId: null, status: 'unauthenticated' }; // Example structure
+                    return { planId: null, status: "unauthenticated" }; // Example structure
                 }
                 return getSubscriptionStatus(authState.uid);
             });
@@ -226,7 +246,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 await awaitAuthReady();
                 const authState = getAuthState();
                 if (!authState.isLoggedIn) {
-                    throw new Error("User must be logged in to manage billing.");
+                    throw new Error(
+                        "User must be logged in to manage billing.",
+                    );
                 }
                 return createPortalSession();
             });
@@ -411,14 +433,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.warn(`SW: Unknown message type received: ${messageType}`);
             sendResponse({
                 success: false,
-                error: { message: `Unknown message type '${String(messageType)}'.` },
+                error: {
+                    message: `Unknown message type '${String(messageType)}'.`,
+                },
             });
             return false; // Sync response for unknown type
     }
 
     // Indicate that we *might* send a response asynchronously for handled cases
     return true;
-});// ============================================================================
+}); // ============================================================================
 
 // ============================================================================
 // LIFECYCLE LISTENERS

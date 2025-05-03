@@ -231,9 +231,7 @@ export async function getCheckoutUrl(
  * @param userId - The Firebase Authentication user ID.
  * @returns A promise resolving with the user's subscription data (planId and status) or null if error.
  */
-export async function getSubscriptionStatus(
-    userId: string,
-): Promise<{
+export async function getSubscriptionStatus(userId: string): Promise<{
     planId: "free" | "monthly" | "lifetime";
     status: string | null;
 } | null> {
@@ -333,7 +331,8 @@ export async function createPortalSession(): Promise<string> {
 
     try {
         const app = getFirebaseApp();
-        const functionsRegion = import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || "us-central1";
+        const functionsRegion =
+            import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || "us-central1";
         const functions = getFunctions(app, functionsRegion);
         const functionRef = httpsCallable<
             { returnUrl: string },

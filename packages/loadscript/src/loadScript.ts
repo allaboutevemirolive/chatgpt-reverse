@@ -45,7 +45,8 @@ async function safeSendMessage(message: {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
             await new Promise<void>((resolve, reject) => {
-                chrome.runtime.sendMessage(message, (_) => { // Pass the correctly typed message
+                chrome.runtime.sendMessage(message, (_) => {
+                    // Pass the correctly typed message
                     if (chrome.runtime.lastError) {
                         console.warn(
                             `LoadScript: chrome.runtime.lastError on attempt ${attempt + 1}/${MAX_RETRIES + 1} sending ${message.type}:`,
@@ -114,7 +115,7 @@ function injectScript(scriptUrl: string): void {
             document.createElement("script");
         newScriptElement.setAttribute("src", scriptUrl);
         newScriptElement.setAttribute("type", "text/javascript");
-        newScriptElement.onload = function(
+        newScriptElement.onload = function (
             this: GlobalEventHandlers,
             _ev: Event,
         ): void {
@@ -156,11 +157,16 @@ function initialize(): void {
             }
         }) as EventListener);
 
-        window.addEventListener(INTERCEPTOR_EVENT.AUTH_RECEIVED, ((event: AuthEventResponse) => {
+        window.addEventListener(INTERCEPTOR_EVENT.AUTH_RECEIVED, ((
+            event: AuthEventResponse,
+        ) => {
             if (event.detail?.accessToken) {
                 console.log("LoadScript: Event 'authReceived' caught.");
                 // Map the event type string to the MSG constant
-                safeSendMessage({ type: MSG.AUTH_RECEIVED, data: event.detail }); // <-- Use constant
+                safeSendMessage({
+                    type: MSG.AUTH_RECEIVED,
+                    data: event.detail,
+                }); // <-- Use constant
             }
         }) as EventListener);
 
@@ -177,20 +183,21 @@ function initialize(): void {
             }
         }) as EventListener);
 
-        window.addEventListener(INTERCEPTOR_EVENT.CONVERSATION_LIMIT_RECEIVED, ((
-            event: ConversationLimitEventResponse,
-        ) => {
-            if (event.detail?.message_cap) {
-                console.log(
-                    "LoadScript: Event 'conversationLimitReceived' caught.",
-                );
-                // Map the event type string to the MSG constant
-                safeSendMessage({
-                    type: MSG.CONVERSATION_LIMIT_RECEIVED, // <-- Use constant
-                    data: event.detail,
-                });
-            }
-        }) as EventListener);
+        window.addEventListener(
+            INTERCEPTOR_EVENT.CONVERSATION_LIMIT_RECEIVED,
+            ((event: ConversationLimitEventResponse) => {
+                if (event.detail?.message_cap) {
+                    console.log(
+                        "LoadScript: Event 'conversationLimitReceived' caught.",
+                    );
+                    // Map the event type string to the MSG constant
+                    safeSendMessage({
+                        type: MSG.CONVERSATION_LIMIT_RECEIVED, // <-- Use constant
+                        data: event.detail,
+                    });
+                }
+            }) as EventListener,
+        );
 
         window.addEventListener(INTERCEPTOR_EVENT.MODELS_RECEIVED, ((
             event: ModelsEventResponse,
