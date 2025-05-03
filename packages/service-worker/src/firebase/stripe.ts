@@ -333,8 +333,8 @@ export async function createPortalSession(): Promise<string> {
 
     try {
         const app = getFirebaseApp();
-        // TODO: Specify the region if our function is not in 'us-central1'
-        const functions = getFunctions(app /*, "our-function-region" */);
+        const functionsRegion = import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || "us-central1";
+        const functions = getFunctions(app, functionsRegion);
         const functionRef = httpsCallable<
             { returnUrl: string },
             { url: string }

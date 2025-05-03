@@ -69,7 +69,11 @@ importers:
 
   packages/interceptor: {}
 
-  packages/loadscript: {}
+  packages/loadscript:
+    dependencies:
+      '@my-ext/shared':
+        specifier: workspace:*
+        version: link:../shared
 
   packages/popup:
     dependencies:

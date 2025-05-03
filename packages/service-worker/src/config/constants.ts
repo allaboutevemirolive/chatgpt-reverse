@@ -1,11 +1,11 @@
 // src/config/constants.ts
 
 // --- Stripe Configuration ---
-export const STRIPE_PRICE_ID_MONTHLY = "price_1RJwp5GBa76vUuq3NNO39uvH";
-export const STRIPE_PRICE_ID_LIFETIME = "price_1RJwp5GBa76vUuq3NNO39uvH";
+export const STRIPE_PRICE_ID_MONTHLY = import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY;
+export const STRIPE_PRICE_ID_LIFETIME = import.meta.env.VITE_STRIPE_PRICE_ID_LIFETIME;
 
 // --- Checkout URLs ---
-const HOSTING_BASE_URL = "https://chatgpt-reverse.web.app";
+const HOSTING_BASE_URL = import.meta.env.VITE_HOSTING_BASE_URL;
 export const CHECKOUT_SUCCESS_URL = `${HOSTING_BASE_URL}/checkout-success.html`;
 export const CHECKOUT_CANCEL_URL = `${HOSTING_BASE_URL}/checkout-cancel.html`;
 
@@ -21,3 +21,5 @@ export const FIRESTORE_SUBSCRIPTIONS_SUBCOLLECTION = "subscriptions";
 // --- Storage Keys ---
 export const STORAGE_API_HEADERS_KEY = "apiHeaders";
 export const STORAGE_AUTH_DATA_KEY = "authData";
+
+export const CHATGPT_BASE_URL = "https://chatgpt.com";

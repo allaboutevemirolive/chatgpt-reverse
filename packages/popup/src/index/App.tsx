@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import logo from "../assets/logo.svg";
 import { sendMessageToSW } from "../utils/swMessenger";
+import { MSG } from "@shared"; // Import message constants
 import styles from "./App.module.css";
-import Button from "../components/Button/Button"; // Import the Button component
+import Button from "../components/Button/Button";
 
-// --- Type Definitions (Locally defined or import if shared) ---
+// --- Type Definitions (Align with shared types if possible) ---
 interface UserData {
     uid: string;
     email: string | null;
@@ -18,8 +19,9 @@ interface AuthState {
 // Define the subscription type needed in this component
 interface UserSubscription {
     planId: "free" | "monthly" | "lifetime" | null;
-    status?: string | null;
+    status?: string | null; // Keep status if relevant for display or logic later
 }
+
 // --- Component ---
 
 function App() {
@@ -29,13 +31,12 @@ function App() {
         uid: null,
         email: null,
     });
-    // Add state for subscription and its loading status
     const [subscription, setSubscription] = useState<UserSubscription | null>(
         null,
     );
     const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
-    const [isLoadingSub, setIsLoadingSub] = useState<boolean>(false); // Separate loading for subscription
-    const [error, setError] = useState<string | null>(null); // Consolidated error state
+    const [isLoadingSub, setIsLoadingSub] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
     // --- Effects ---
     useEffect(() => {
@@ -43,16 +44,22 @@ function App() {
         let isMounted = true;
 
         // Function to fetch subscription status
-        const fetchSubscriptionStatus = async () => {
-            if (!isMounted || !authState.isLoggedIn || !authState.uid) return; // Only run if mounted and logged in
+        const fetchSubscriptionStatus = async (userId: string | null) => {
+            // Guard against running if not mounted or user isn't actually logged in
+            if (!isMounted || !userId) {
+                 console.log("Popup: Skipping subscription fetch (not mounted or no userId).");
+                 setIsLoadingSub(false); // Ensure loading stops if skipped
+                 setSubscription(null); // Ensure subscription is cleared if no userId
+                 return;
+            }
 
-            console.log("Popup: Fetching subscription status...");
+            console.log("Popup: Fetching subscription status for user:", userId);
             setIsLoadingSub(true);
             setError(null); // Clear previous errors before fetching sub
 
             try {
                 const subData = await sendMessageToSW<UserSubscription | null>({
-                    type: "GET_SUBSCRIPTION_STATUS",
+                    type: MSG.GET_SUBSCRIPTION_STATUS, // <-- Use constant
                 });
                 console.log("Popup: Received subscription status:", subData);
                 if (!isMounted) return;
@@ -60,7 +67,7 @@ function App() {
                 // Ensure planId is valid or defaults to 'free'
                 const validPlanId =
                     subData?.planId === "monthly" ||
-                        subData?.planId === "lifetime"
+                    subData?.planId === "lifetime"
                         ? subData.planId
                         : "free";
                 setSubscription(
@@ -74,10 +81,14 @@ function App() {
                     "Popup: Error fetching subscription status:",
                     subError,
                 );
-                setError(
-                    subError.message || "Failed to load subscription details.",
-                );
-                setSubscription(null); // Reset subscription on error
+                 // Be more specific about the error if possible
+                if (subError.message?.includes('unauthenticated')) {
+                     console.warn("Popup: Subscription fetch failed due to unauthenticated state (likely during logout race condition). Assuming free.");
+                     setSubscription({ planId: "free", status: null });
+                } else {
+                    setError(subError.message || "Failed to load subscription details.");
+                    setSubscription(null); // Reset subscription on other errors
+                }
             } finally {
                 if (isMounted) {
                     setIsLoadingSub(false);
@@ -88,15 +99,16 @@ function App() {
         // Function to fetch initial auth state
         const fetchAuthState = async () => {
             if (!isMounted) return;
-            setIsLoadingAuth(true);
+            // Don't reset loading here, let the finally block handle it
             setError(null);
 
             try {
                 console.log("Popup: Sending GET_AUTH_STATE message...");
+                // Get initial auth state
                 const userData = await sendMessageToSW<UserData | null>({
-                    type: "GET_AUTH_STATE",
+                    type: MSG.GET_AUTH_STATE, // <-- Use constant
                 });
-                console.log("Popup: Received auth state response:", userData);
+                console.log("Popup: Received initial auth state response:", userData);
                 if (!isMounted) return;
 
                 const currentAuthState = userData
@@ -104,9 +116,14 @@ function App() {
                     : { isLoggedIn: false, uid: null, email: null };
                 setAuthState(currentAuthState);
 
-                // If logged in, trigger subscription fetch
-                if (currentAuthState.isLoggedIn) {
-                    fetchSubscriptionStatus(); // Don't await here, let it run in background
+                // If logged in, immediately trigger subscription fetch
+                if (currentAuthState.isLoggedIn && currentAuthState.uid) {
+                    // Don't await here, let it update state asynchronously
+                    fetchSubscriptionStatus(currentAuthState.uid);
+                } else {
+                    // If not logged in, ensure subscription is cleared and sub loading stopped
+                    setSubscription(null);
+                    setIsLoadingSub(false);
                 }
             } catch (authError: any) {
                 if (!isMounted) return;
@@ -115,45 +132,49 @@ function App() {
                     authError.message || "Failed to fetch authentication status.",
                 );
                 setAuthState({ isLoggedIn: false, uid: null, email: null });
-                setSubscription(null); // Ensure subscription is cleared on auth error
+                setSubscription(null);
+                setIsLoadingSub(false);
             } finally {
                 if (isMounted) {
-                    setIsLoadingAuth(false);
+                    setIsLoadingAuth(false); // Auth loading is finished after initial check
                 }
             }
         };
 
+        setIsLoadingAuth(true); // Set loading true *before* starting the async fetch
         fetchAuthState();
 
         // --- SW Message Listener ---
         const messageListener = (message: any) => {
             if (!isMounted) return;
-            console.log("Popup: Received message from SW:", message?.type);
+            const messageType = message?.type; // Safe access
+            console.log("Popup: Received message from SW:", messageType);
 
-            if (message.type === "AUTH_STATE_UPDATED") {
+            if (messageType === MSG.AUTH_STATE_UPDATED) { // <-- Use constant
                 const newAuthState: AuthState = message.payload;
                 console.log("Popup: Processing AUTH_STATE_UPDATED", newAuthState);
-                setAuthState(newAuthState); // Update auth state
-                setError(null); // Clear errors on auth update
+                const wasLoggedIn = authState.isLoggedIn; // Check previous state before setting new one
+                setAuthState(newAuthState);
+                setError(null);
 
                 if (newAuthState.isLoggedIn) {
-                    // If user just logged in (or state re-confirmed), fetch/re-fetch subscription
-                    fetchSubscriptionStatus();
+                    // If user just logged in OR state confirmed as logged in, fetch/re-fetch sub
+                    if (!wasLoggedIn || subscription === null) { // Fetch if just logged in or sub is unknown
+                         fetchSubscriptionStatus(newAuthState.uid);
+                    }
                 } else {
-                    // If user logged out, clear subscription state
+                    // Just logged out
                     setSubscription(null);
-                    setIsLoadingSub(false); // Ensure sub loading stops if user logs out
+                    setIsLoadingSub(false);
                 }
-                // Auth loading is finished once we get an update
-                setIsLoadingAuth(false);
+                setIsLoadingAuth(false); // Auth loading definitely finished
 
-            } else if (message.type === "SUBSCRIPTION_UPDATED") {
+            } else if (messageType === MSG.SUBSCRIPTION_UPDATED) { // <-- Use constant
                 const subPayload: UserSubscription | null = message.payload;
                 console.log("Popup: Processing SUBSCRIPTION_UPDATED", subPayload);
-                // Ensure planId is valid or defaults to 'free'
                 const validPlanId =
                     subPayload?.planId === "monthly" ||
-                        subPayload?.planId === "lifetime"
+                    subPayload?.planId === "lifetime"
                         ? subPayload.planId
                         : "free";
                 setSubscription(
@@ -161,8 +182,8 @@ function App() {
                         ? { ...subPayload, planId: validPlanId }
                         : { planId: "free", status: null }
                 );
-                setIsLoadingSub(false); // Subscription update means loading is done
-                setError(null); // Clear potential previous errors
+                setIsLoadingSub(false); // Sub loading finished
+                setError(null);
             }
         };
         chrome.runtime.onMessage.addListener(messageListener);
@@ -173,7 +194,10 @@ function App() {
             isMounted = false;
             chrome.runtime.onMessage.removeListener(messageListener);
         };
-    }, []); // Empty dependency array means this runs once on mount
+        // Re-run effect if authState.isLoggedIn changes *after* initial mount
+        // This helps ensure subscription is fetched if login happens while popup is open
+    }, []); // Keep empty deps array for initial load + listener setup
+
 
     // --- Event Handlers ---
     const openAuthPage = () => {
@@ -188,28 +212,25 @@ function App() {
     };
 
     const handleLogout = async () => {
-        // Indicate loading during the logout process
-        setIsLoadingAuth(true);
-        setIsLoadingSub(false); // Stop sub loading if logout starts
-        setSubscription(null); // Clear subscription immediately
+        setIsLoadingAuth(true); // Show loading during logout
+        setIsLoadingSub(false); // Stop any sub loading
+        setSubscription(null); // Clear subscription state
         setError(null);
         try {
-            await sendMessageToSW({ type: "LOGOUT_USER" });
-            // The listener will handle the final state update
+            await sendMessageToSW({ type: MSG.LOGOUT_USER }); // <-- Use constant
+            // Listener will set authState to logged out and finish loading state
         } catch (error: any) {
             setError(error.message || "Logout failed.");
-            // If logout fails, we might still be technically logged in,
-            // so revert loading state but keep potentially logged-in authState
-            setIsLoadingAuth(false);
+            setIsLoadingAuth(false); // Re-enable UI if logout call fails
         }
-        // Don't set isLoadingAuth false here, let the listener do it
     };
 
     // --- Render Helper ---
     const renderAccountSection = () => {
-        // Combined loading state check
+        // Determine overall loading state
         const isLoading = isLoadingAuth || (authState.isLoggedIn && isLoadingSub);
 
+        // 1. Show Loading State
         if (isLoading) {
             console.log("Popup: Rendering Loading State");
             return (
@@ -217,6 +238,7 @@ function App() {
             );
         }
 
+        // 2. Show Error State (if not loading)
         if (error) {
             console.log("Popup: Rendering Error State:", error);
             return (
@@ -233,9 +255,10 @@ function App() {
             );
         }
 
-        // ---- Logged In State ----
+        // 3. Show Logged In State (if not loading and no error)
         if (authState.isLoggedIn) {
             console.log("Popup: Rendering Logged In State. Sub:", subscription);
+            // Determine if paid AFTER loading/error checks
             const isPaidPlan = subscription?.planId === 'monthly' || subscription?.planId === 'lifetime';
 
             return (
@@ -251,12 +274,12 @@ function App() {
                     <div className={styles.accountActions}>
                         {/* Conditional Button: Go Pro / Manage Account */}
                         <Button
-                            onClick={openAuthPage}
-                            // Style as primary action if free, secondary if paid
+                            onClick={openAuthPage} // Always goes to auth.html
                             variant={isPaidPlan ? "secondary" : "primary"}
                             size="normal"
-                            disabled={isLoading} // Use combined loading
-                            className={styles.manageButton} // Apply consistent class if needed
+                            // Button component already handles disabled state internally via props
+                            // disabled={isLoading} // We already checked isLoading above
+                            className={styles.manageButton} // Use manageButton class for consistent styling/flex
                         >
                             {isPaidPlan ? "Manage Account" : "Go Pro"}
                         </Button>
@@ -266,7 +289,7 @@ function App() {
                             onClick={handleLogout}
                             variant="ghost"
                             size="normal"
-                            disabled={isLoading} // Use combined loading
+                            // disabled={isLoading} // Already checked isLoading
                             className={styles.logoutButton}
                         >
                             Logout
@@ -275,7 +298,7 @@ function App() {
                 </>
             );
         }
-        // ---- Logged Out State ----
+        // 4. Show Logged Out State (if not loading, no error, not logged in)
         else {
             console.log("Popup: Rendering Logged Out State");
             return (
@@ -283,11 +306,10 @@ function App() {
                     <p className={styles.description}>
                         Unlock powerful features with a Pro plan.
                     </p>
-                    {/* Use Button component here too */}
                     <Button
                         onClick={openAuthPage}
-                        variant="primary" // Primary action style
-                        disabled={isLoading} // Should be false here, but good practice
+                        variant="primary"
+                        // disabled={isLoading} // isLoading should be false here
                     >
                         Go Pro
                     </Button>

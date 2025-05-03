@@ -1,5 +1,6 @@
 // packages/content-script/src/utils/apiUtils.ts
 import { sendMessageToSW, SendMessageToSW } from "./swMessenger";
+import { MSG } from "@shared"; // Import the message constants
 
 // --- Generic API Action Caller ---
 
@@ -15,7 +16,7 @@ import { sendMessageToSW, SendMessageToSW } from "./swMessenger";
  *         or the service worker indicates an error in its response.
  */
 export async function callServiceWorkerAction<T = any>(
-    type: string,
+    type: string, // Keep type as string here, the caller provides the constant
     payloadBuilder: () => any | Promise<any>,
     messageSender: SendMessageToSW = sendMessageToSW,
 ): Promise<T> {
@@ -36,11 +37,13 @@ export async function callServiceWorkerAction<T = any>(
     }
 
     try {
+        // Message structure expects type and payload
         const message = { type, payload: payload ?? {} };
         const data = await messageSender<T>(message);
         return data;
     } catch (error) {
         console.error(`Error calling service worker action "${type}":`, error);
+        // Re-throw the error from swMessenger, which should be structured
         throw error;
     }
 }
@@ -70,7 +73,7 @@ export async function fetchConversations(
     messageSender?: SendMessageToSW,
 ): Promise<ConversationListResponse> {
     const offset = Number(params.offset) || 0;
-    const limit = Number(params.limit) || 28;
+    const limit = Number(params.limit) || 28; // Default limit used by ChatGPT UI
     const order = params.order || "updated";
     const payloadBuilder = () => ({ offset, limit, order });
     console.log(
@@ -78,7 +81,7 @@ export async function fetchConversations(
         payloadBuilder(),
     );
     return callServiceWorkerAction<ConversationListResponse>(
-        "FETCH_CONVERSATIONS",
+        MSG.FETCH_CONVERSATIONS, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -96,7 +99,7 @@ export async function fetchConversationDetail(
         throw new Error("Conversation ID is required.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction<ConversationDetailResponse>(
-        "FETCH_CONVERSATION",
+        MSG.FETCH_CONVERSATION, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -111,7 +114,7 @@ export async function deleteConversationById(
         throw new Error("Conversation ID is required to delete.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction(
-        "DELETE_CONVERSATION",
+        MSG.DELETE_CONVERSATION, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -122,7 +125,7 @@ interface ShareConversationParams {
     conversationId: string;
     currentNodeId: string;
 }
-type ShareResponse = { share_url?: string; [key: string]: any };
+type ShareResponse = { share_url?: string;[key: string]: any };
 
 export async function shareConversation(
     params: ShareConversationParams,
@@ -136,7 +139,7 @@ export async function shareConversation(
         currentNodeId: params.currentNodeId.trim(),
     });
     return callServiceWorkerAction<ShareResponse>(
-        "SHARE_CONVERSATION",
+        MSG.SHARE_CONVERSATION, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -151,7 +154,7 @@ export async function archiveConversation(
         throw new Error("Conversation ID is required to archive.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction(
-        "ARCHIVE_CONVERSATION",
+        MSG.ARCHIVE_CONVERSATION, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -171,7 +174,7 @@ export async function renameConversation(
         newTitle: newTitle.trim(),
     });
     return callServiceWorkerAction(
-        "RENAME_CONVERSATION",
+        MSG.RENAME_CONVERSATION, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -183,13 +186,13 @@ interface AutocompletionsParams {
     numCompletions?: number | string;
     inSearchMode?: boolean | string;
 }
-type AutocompletionsResponse = { completions?: string[]; [key: string]: any };
+type AutocompletionsResponse = { completions?: string[];[key: string]: any };
 
 export async function generateAutocompletions(
     params: AutocompletionsParams,
     messageSender?: SendMessageToSW,
 ): Promise<AutocompletionsResponse> {
-    if (params.inputText == null)
+    if (params.inputText == null) // Check for null or undefined
         throw new Error("Input text is required for autocompletions.");
     const payloadBuilder = () => ({
         inputText: params.inputText,
@@ -198,7 +201,7 @@ export async function generateAutocompletions(
             params.inSearchMode === "true" || params.inSearchMode === true,
     });
     return callServiceWorkerAction<AutocompletionsResponse>(
-        "GENERATE_AUTOCOMPLETIONS",
+        MSG.GENERATE_AUTOCOMPLETIONS, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -218,7 +221,7 @@ export async function sendCopyFeedback(
     if (
         !params.messageId?.trim() ||
         !params.conversationId?.trim() ||
-        params.selectedText == null
+        params.selectedText == null // Check for null or undefined
     ) {
         throw new Error(
             "Message ID, Conversation ID, and Selected Text are required.",
@@ -226,7 +229,7 @@ export async function sendCopyFeedback(
     }
     const payloadBuilder = () => params;
     return callServiceWorkerAction(
-        "SEND_COPY_FEEDBACK",
+        MSG.SEND_COPY_FEEDBACK, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -255,11 +258,11 @@ export async function fetchAudioData(
     const payloadBuilder = () => ({
         messageId: params.messageId.trim(),
         conversationId: params.conversationId.trim(),
-        voice: params.voice || "alloy",
-        format: params.format || "aac",
+        voice: params.voice || "alloy", // Default voice
+        format: params.format || "aac", // Default format
     });
     return callServiceWorkerAction<FetchAudioResponse>(
-        "GET_AUDIO",
+        MSG.GET_AUDIO, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -277,7 +280,7 @@ export async function fetchConversationMessageIds(
         throw new Error("Conversation ID is required.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction<FetchMessageIdsResponse>(
-        "FETCH_CONVERSATION_MESSAGE_IDS",
+        MSG.FETCH_CONVERSATION_MESSAGE_IDS, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -295,7 +298,7 @@ export async function fetchConversationMessages(
         throw new Error("Conversation ID is required.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction<FetchMessagesResponse>(
-        "FETCH_CONVERSATION_MESSAGES",
+        MSG.FETCH_CONVERSATION_MESSAGES, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -317,7 +320,7 @@ export async function fetchConversationContext(
         throw new Error("Conversation ID is required.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction<FetchContextResponse>(
-        "FETCH_CONVERSATION_CONTEXT",
+        MSG.FETCH_CONVERSATION_CONTEXT, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -338,7 +341,7 @@ export async function markMessageThumbsUp(
     }
     const payloadBuilder = () => params;
     return callServiceWorkerAction(
-        "MARK_MESSAGE_THUMBS_UP",
+        MSG.MARK_MESSAGE_THUMBS_UP, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -353,7 +356,7 @@ export async function markMessageThumbsDown(
     }
     const payloadBuilder = () => params;
     return callServiceWorkerAction(
-        "MARK_MESSAGE_THUMBS_DOWN",
+        MSG.MARK_MESSAGE_THUMBS_DOWN, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -374,7 +377,7 @@ export async function fetchMarkdownExportData(
         throw new Error("Conversation ID is required.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction<FetchExportDataResponse>(
-        "EXPORT_CONVERSATION_MARKDOWN",
+        MSG.EXPORT_CONVERSATION_MARKDOWN, // <-- Use constant
         payloadBuilder,
         messageSender,
     );
@@ -391,7 +394,7 @@ export async function fetchConversationAuthorCounts(
         throw new Error("Conversation ID is required.");
     const payloadBuilder = () => ({ conversationId: conversationId.trim() });
     return callServiceWorkerAction<AuthorCounts>(
-        "FETCH_CONVERSATION_AUTHOR_COUNTS",
+        MSG.FETCH_CONVERSATION_AUTHOR_COUNTS, // <-- Use constant
         payloadBuilder,
         messageSender,
     );

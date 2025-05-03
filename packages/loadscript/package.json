@@ -12,6 +12,8 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "dependencies": {},
+    "dependencies": {
+        "@my-ext/shared": "workspace:*"
+    },
     "devDependencies": {}
 }

@@ -1,4 +1,6 @@
 // src/service/ChatGptApiClient.ts
+import { CHATGPT_BASE_URL, STORAGE_API_HEADERS_KEY } from "@/config/constants";
+
 interface RequestHeaders {
     [key: string]: string;
 }
@@ -9,14 +11,14 @@ interface RequestHeaders {
  */
 async function getStoredHeadersFromWorker(): Promise<RequestHeaders> {
     try {
-        // Ensure we wait for the promise to resolve
-        const data = await chrome.storage.local.get("apiHeaders");
+        const data = await chrome.storage.local.get(STORAGE_API_HEADERS_KEY);
         console.log(
             "ChatGptApiClient (getStoredHeaders): Retrieved headers from storage",
-            data?.apiHeaders, // Use optional chaining for safety
+            data?.apiHeaders,
+            data?.[STORAGE_API_HEADERS_KEY],
         );
         // Return the headers or an empty object if not found
-        return data?.apiHeaders || {};
+        return data?.[STORAGE_API_HEADERS_KEY] || {};
     } catch (error) {
         console.error(
             "ChatGptApiClient (getStoredHeaders): Error retrieving headers from storage",
@@ -34,8 +36,7 @@ export class ChatGptApiClient {
     private static instance: ChatGptApiClient;
     private headers: RequestHeaders = {};
 
-    private readonly baseUrl: string = "https://chatgpt.com";
-
+    private readonly baseUrl: string = CHATGPT_BASE_URL;
     /**
      * Private constructor to enforce singleton pattern.
      */

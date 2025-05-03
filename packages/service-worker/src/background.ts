@@ -1,5 +1,5 @@
 // src/background.ts
-import { VERSION } from "@shared";
+import { VERSION, MSG } from "@shared";
 import { initializeFirebase } from "@/firebase/core";
 import {
     setupAuthListener,
@@ -99,7 +99,8 @@ async function storeHeaders(headersToStore: any): Promise<void> {
 // MESSAGE LISTENER
 // ============================================================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    const messageType = message?.type ?? "[Unknown Type]";
+    // Use MSG constant if message.type exists, otherwise fallback
+    const messageType = message?.type ? (Object.values(MSG).includes(message.type) ? message.type : "[Unknown Type]") : "[No Type]";
     const senderId = sender.tab
         ? `Tab ${sender.tab.id}`
         : sender.id || "Unknown";
@@ -112,26 +113,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const handleAsync = async (asyncFn: () => Promise<any>) => {
         try {
             // Ensure Firebase Auth state is ready for operations needing it
-            // (e.g., checkout, potentially some API calls if they depended on user ID implicitly)
-            if (["CREATE_CHECKOUT_SESSION"].includes(messageType)) {
+            if ([MSG.CREATE_CHECKOUT_SESSION, MSG.CREATE_CUSTOMER_PORTAL_SESSION].includes(messageType)) { // <-- Use constants
                 console.log(`SW: Awaiting auth ready for ${messageType}...`);
                 await awaitAuthReady();
                 console.log(`SW: Auth ready for ${messageType}. Proceeding.`);
             }
 
             // Refresh API client headers just before making direct ChatGPT API calls
-            if (
-                messageType.startsWith("FETCH_") ||
-                messageType.startsWith("GET_AUDIO") ||
-                messageType.startsWith("MARK_") ||
-                messageType.startsWith("SHARE_") ||
-                messageType.startsWith("ARCHIVE_") ||
-                messageType.startsWith("RENAME_") ||
-                messageType.startsWith("GENERATE_") ||
-                messageType.startsWith("SEND_") ||
-                messageType === "EXPORT_CONVERSATION_MARKDOWN" ||
-                messageType === "COUNT_CONVERSATION_TOKENS"
-            ) {
+            // (More robust to check if it's *not* an internal/auth/storage message)
+            const isApiCall = ![
+                MSG.HEADERS_RECEIVED, MSG.AUTH_RECEIVED, MSG.ACCOUNT_RECEIVED,
+                MSG.CONVERSATION_LIMIT_RECEIVED, MSG.MODELS_RECEIVED,
+                MSG.REGISTER_USER, MSG.LOGIN_USER, MSG.LOGOUT_USER, MSG.GET_AUTH_STATE,
+                MSG.GET_SUBSCRIPTION_STATUS, MSG.CREATE_CHECKOUT_SESSION, MSG.CREATE_CUSTOMER_PORTAL_SESSION,
+                MSG.GET_COOKIE,
+            ].includes(messageType as any); // Cast to any temporarily if type mismatch occurs
+
+            if (isApiCall) {
                 console.log(`SW: Refreshing API headers before ${messageType}`);
                 await ChatGptApiClient.getInstance().refreshHeadersFromStorage();
             }
@@ -155,107 +153,87 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // --- Message Handling Logic ---
     switch (messageType) {
         // --- Interceptor Data ---
-        case "HEADERS_RECEIVED":
+        case MSG.HEADERS_RECEIVED:
             handleAsync(() => storeHeaders(message.data));
             break;
-        case "AUTH_RECEIVED":
-            // Store auth token specifically if needed, and also update headers
+        case MSG.AUTH_RECEIVED:
             handleAsync(async () => {
                 await storeHeaders({
                     Authorization: `Bearer ${message.data.accessToken}`,
                 });
                 await chrome.storage.local.set({
                     [STORAGE_AUTH_DATA_KEY]: message.data,
-                }); // Use constant key
+                });
             });
             break;
-        // Generic storage for other intercepted data
-        case "ACCOUNT_RECEIVED":
-        case "CONVERSATION_LIMIT_RECEIVED":
-        case "MODELS_RECEIVED":
+        case MSG.ACCOUNT_RECEIVED:
+        case MSG.CONVERSATION_LIMIT_RECEIVED:
+        case MSG.MODELS_RECEIVED:
             handleAsync(() =>
-                chrome.storage.local.set({ [messageType]: message.data }),
+                chrome.storage.local.set({ [messageType]: message.data }), // Here messageType is still the string value which is fine for dynamic keys
             );
             break;
 
         // --- Authentication (Delegated) ---
-        case "REGISTER_USER":
+        case MSG.REGISTER_USER:
             handleAsync(() =>
                 registerUser(message.payload.email, message.payload.password),
             );
             break;
-        case "LOGIN_USER":
+        case MSG.LOGIN_USER:
             handleAsync(() =>
                 loginUser(message.payload.email, message.payload.password),
             );
             break;
-        case "LOGOUT_USER":
+        case MSG.LOGOUT_USER:
             handleAsync(logoutUser);
             break;
-        case "GET_AUTH_STATE":
-            // Wait for initial state then return cached state
+        case MSG.GET_AUTH_STATE:
             handleAsync(async () => {
-                console.log(
-                    "SW: GET_AUTH_STATE awaiting auth ready promise...",
-                );
-                await awaitAuthReady(); // Ensure listener has fired at least once
-                console.log(
-                    "SW: GET_AUTH_STATE promise resolved, returning current state.",
-                );
-                return getAuthState(); // Return the synchronous state
+                await awaitAuthReady();
+                return getAuthState();
             });
             break;
 
-        case "GET_SUBSCRIPTION_STATUS":
+        case MSG.GET_SUBSCRIPTION_STATUS:
             handleAsync(async () => {
-                // Ensure auth is ready before trying to get UID
                 await awaitAuthReady();
-                const authState = getAuthState(); // Get current state after ready
+                const authState = getAuthState();
                 if (!authState.isLoggedIn || !authState.uid) {
-                    console.warn(
-                        "SW: GET_SUBSCRIPTION_STATUS called but user not logged in.",
-                    );
-                    return null; // Or throw new Error("User not logged in");
+                    console.warn("SW: GET_SUBSCRIPTION_STATUS called but user not logged in.");
+                    // Consider throwing specific error or returning a structured response indicating not logged in
+                    return { planId: null, status: 'unauthenticated' }; // Example structure
                 }
                 return getSubscriptionStatus(authState.uid);
             });
             break;
 
         // --- Stripe (Delegated) ---
-        case "CREATE_CHECKOUT_SESSION":
-            const planId = message.payload?.planId; // Extract planId
+        case MSG.CREATE_CHECKOUT_SESSION:
+            const planId = message.payload?.planId;
             if (!planId || !["monthly", "lifetime"].includes(planId)) {
-                console.error(
-                    "SW: Invalid or missing planId in payload:",
-                    message.payload,
-                );
                 sendResponse({
                     success: false,
                     error: { message: "Invalid or missing planId in payload" },
                 });
-                return false; // Sync validation fail
+                return false;
             }
-            // Pass the extracted planId string to getCheckoutUrl
             handleAsync(() => getCheckoutUrl(planId));
             break;
 
-        case "CREATE_CUSTOMER_PORTAL_SESSION":
+        case MSG.CREATE_CUSTOMER_PORTAL_SESSION:
             handleAsync(async () => {
-                // Ensure auth is ready before trying to call the function
                 await awaitAuthReady();
-                const authState = getAuthState(); // Check login status explicitly
+                const authState = getAuthState();
                 if (!authState.isLoggedIn) {
-                    throw new Error(
-                        "User must be logged in to manage billing.",
-                    );
+                    throw new Error("User must be logged in to manage billing.");
                 }
-                // No specific payload needed from UI, just trigger the call
                 return createPortalSession();
             });
             break;
 
         // --- ChatGPT API Wrappers (Delegated) ---
-        case "FETCH_CONVERSATIONS":
+        case MSG.FETCH_CONVERSATIONS:
             handleAsync(() =>
                 ChatGptService.fetchConversations(
                     message.payload?.offset,
@@ -264,21 +242,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ),
             );
             break;
-        case "FETCH_CONVERSATION":
+        case MSG.FETCH_CONVERSATION:
             handleAsync(() =>
                 ChatGptService.fetchConversation(
                     message.payload.conversationId,
                 ),
             );
             break;
-        case "DELETE_CONVERSATION":
+        case MSG.DELETE_CONVERSATION:
             handleAsync(() =>
                 ChatGptService.deleteConversation(
                     message.payload.conversationId,
                 ),
             );
             break;
-        case "SHARE_CONVERSATION":
+        case MSG.SHARE_CONVERSATION:
             handleAsync(() =>
                 ChatGptService.shareConversation(
                     message.payload.conversationId,
@@ -286,14 +264,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ),
             );
             break;
-        case "ARCHIVE_CONVERSATION":
+        case MSG.ARCHIVE_CONVERSATION:
             handleAsync(() =>
                 ChatGptService.archiveConversation(
                     message.payload.conversationId,
                 ),
             );
             break;
-        case "RENAME_CONVERSATION":
+        case MSG.RENAME_CONVERSATION:
             handleAsync(() =>
                 ChatGptService.renameConversation(
                     message.payload.conversationId,
@@ -301,7 +279,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ),
             );
             break;
-        case "GENERATE_AUTOCOMPLETIONS":
+        case MSG.GENERATE_AUTOCOMPLETIONS:
             handleAsync(() =>
                 ChatGptService.generateAutocompletions(
                     message.payload.inputText,
@@ -310,7 +288,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ),
             );
             break;
-        case "SEND_COPY_FEEDBACK":
+        case MSG.SEND_COPY_FEEDBACK:
             handleAsync(() =>
                 ChatGptService.sendCopyFeedback(
                     message.payload.messageId,
@@ -319,7 +297,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ),
             );
             break;
-        case "GET_AUDIO":
+        case MSG.GET_AUDIO:
             handleAsync(async () => {
                 const blob = await ChatGptService.getAudioForMessage(
                     message.payload.messageId,
@@ -340,7 +318,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 };
             });
             break;
-        case "MARK_MESSAGE_THUMBS_UP":
+        case MSG.MARK_MESSAGE_THUMBS_UP:
             handleAsync(() =>
                 ChatGptService.markMessageAsThumbsUp(
                     message.payload.messageId,
@@ -348,7 +326,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ),
             );
             break;
-        case "MARK_MESSAGE_THUMBS_DOWN":
+        case MSG.MARK_MESSAGE_THUMBS_DOWN:
             handleAsync(() =>
                 ChatGptService.markMessageAsThumbsDown(
                     message.payload.messageId,
@@ -358,40 +336,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
 
         // --- Conversation Processing (Delegated) ---
-        case "FETCH_CONVERSATION_MESSAGE_IDS":
+        case MSG.FETCH_CONVERSATION_MESSAGE_IDS:
             handleAsync(() =>
                 ConversationProcessor.fetchConversationMessageIds(
                     message.payload.conversationId,
                 ),
             );
             break;
-        case "FETCH_CONVERSATION_MESSAGES":
+        case MSG.FETCH_CONVERSATION_MESSAGES:
             handleAsync(() =>
                 ConversationProcessor.fetchConversationMessages(
                     message.payload.conversationId,
                 ),
             );
             break;
-        case "FETCH_CONVERSATION_CONTEXT":
+        case MSG.FETCH_CONVERSATION_CONTEXT:
             handleAsync(() =>
                 ConversationProcessor.fetchConversationContext(
                     message.payload.conversationId,
                 ),
             );
             break;
-        case "FETCH_CONVERSATION_AUTHOR_COUNTS":
+        case MSG.FETCH_CONVERSATION_AUTHOR_COUNTS:
             handleAsync(() =>
                 ConversationProcessor.fetchConversationAuthorCounts(
                     message.payload.conversationId,
                 ),
             );
             break;
-        case "EXPORT_CONVERSATION_MARKDOWN":
+        case MSG.EXPORT_CONVERSATION_MARKDOWN:
             handleAsync(() =>
                 exportConversationAsMarkdown(message.payload.conversationId),
             );
             break;
-        case "COUNT_CONVERSATION_TOKENS":
+        case MSG.COUNT_CONVERSATION_TOKENS:
             handleAsync(() =>
                 countConversationTokens(
                     message.payload.conversationId,
@@ -401,7 +379,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
 
         // --- Other Utilities ---
-        case "GET_COOKIE":
+        case MSG.GET_COOKIE:
             if (!message.payload?.name || !message.payload?.url) {
                 sendResponse({
                     success: false,
@@ -433,15 +411,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.warn(`SW: Unknown message type received: ${messageType}`);
             sendResponse({
                 success: false,
-                error: { message: `Unknown message type '${messageType}'.` },
+                error: { message: `Unknown message type '${String(messageType)}'.` },
             });
             return false; // Sync response for unknown type
     }
 
     // Indicate that we *might* send a response asynchronously for handled cases
     return true;
-});
-// ============================================================================
+});// ============================================================================
 
 // ============================================================================
 // LIFECYCLE LISTENERS

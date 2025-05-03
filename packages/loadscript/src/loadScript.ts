@@ -1,5 +1,7 @@
 // packages/loadscript/src/loadScript.ts
+import { MSG } from "@shared"; // Import the message constants
 
+// --- Type Definitions for Events from Interceptor ---
 type AuthEventResponse = CustomEvent<{ accessToken: string }>;
 type AccountEventResponse = CustomEvent<{ accounts: any[] }>;
 type ConversationLimitEventResponse = CustomEvent<{ message_cap: any }>;
@@ -9,6 +11,16 @@ type HeadersEventResponse = CustomEvent<{
     "OAI-Device-Id"?: string;
     Authorization?: string;
 }>;
+
+// Define the event type strings used by interceptor.ts for mapping
+// (These MUST match the keys in interceptor.ts -> EVENT_TYPES)
+const INTERCEPTOR_EVENT = {
+    HEADERS_RECEIVED: "headersReceived",
+    AUTH_RECEIVED: "authReceived",
+    ACCOUNT_RECEIVED: "accountReceived",
+    CONVERSATION_LIMIT_RECEIVED: "conversationLimitReceived",
+    MODELS_RECEIVED: "modelsReceived",
+} as const;
 
 console.log("LoadScript script executing...");
 
@@ -20,10 +32,10 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
  * Safely sends a message to the service worker with retry logic for connection errors.
  * This version is fire-and-forget, it doesn't wait for or process the SW response.
- * @param message The message object { type: string; data: any } to send.
+ * @param message The message object { type: string (from MSG constants); data: any } to send.
  */
 async function safeSendMessage(message: {
-    type: string;
+    type: (typeof MSG)[keyof typeof MSG]; // Enforce type from MSG values
     data: any;
 }): Promise<void> {
     console.log(
@@ -33,8 +45,7 @@ async function safeSendMessage(message: {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
             await new Promise<void>((resolve, reject) => {
-                // Use '_' to indicate the response parameter is intentionally unused
-                chrome.runtime.sendMessage(message, (_) => {
+                chrome.runtime.sendMessage(message, (_) => { // Pass the correctly typed message
                     if (chrome.runtime.lastError) {
                         console.warn(
                             `LoadScript: chrome.runtime.lastError on attempt ${attempt + 1}/${MAX_RETRIES + 1} sending ${message.type}:`,
@@ -53,10 +64,8 @@ async function safeSendMessage(message: {
                             "LoadScript: Unhandled runtime.lastError:",
                             chrome.runtime.lastError.message,
                         );
-                        resolve(); // Resolve for other lastErrors in fire-and-forget
+                        resolve();
                     } else {
-                        // Optional: Log successful send
-                        // console.log(`LoadScript: Message ${message.type} sent successfully (Attempt ${attempt + 1}).`);
                         resolve();
                     }
                 });
@@ -80,13 +89,12 @@ async function safeSendMessage(message: {
                     `LoadScript: Connection error on attempt ${attempt + 1}. Retrying after ${RETRY_DELAY_MS}ms...`,
                 );
                 await delay(RETRY_DELAY_MS);
-                // Continue to next loop iteration
             } else {
                 console.error(
                     `LoadScript: Failed to send ${message.type} message after ${attempt + 1} attempts. Final error:`,
                     error,
                 );
-                return; // Exit loop after final failure
+                return;
             }
         }
     }
@@ -95,7 +103,7 @@ async function safeSendMessage(message: {
     );
 }
 
-// Helper function to inject the interceptor script
+// Helper function to inject the interceptor script (remains the same)
 function injectScript(scriptUrl: string): void {
     if (document.querySelector(`script[src="${scriptUrl}"]`)) {
         console.log("LoadScript: Interceptor script already injected.");
@@ -106,7 +114,7 @@ function injectScript(scriptUrl: string): void {
             document.createElement("script");
         newScriptElement.setAttribute("src", scriptUrl);
         newScriptElement.setAttribute("type", "text/javascript");
-        newScriptElement.onload = function (
+        newScriptElement.onload = function(
             this: GlobalEventHandlers,
             _ev: Event,
         ): void {
@@ -133,58 +141,65 @@ function initialize(): void {
             chrome.runtime.getURL("interceptor.js");
         injectScript(interceptorScriptUrl);
 
-        window.addEventListener("headersReceived", ((
+        // --- Event Listeners using MSG constants for forwarding ---
+
+        window.addEventListener(INTERCEPTOR_EVENT.HEADERS_RECEIVED, ((
             event: HeadersEventResponse,
         ) => {
             if (event.detail) {
                 console.log("LoadScript: Event 'headersReceived' caught.");
+                // Map the event type string to the MSG constant
                 safeSendMessage({
-                    type: "HEADERS_RECEIVED",
+                    type: MSG.HEADERS_RECEIVED, // <-- Use constant
                     data: event.detail,
                 });
             }
         }) as EventListener);
 
-        window.addEventListener("authReceived", ((event: AuthEventResponse) => {
+        window.addEventListener(INTERCEPTOR_EVENT.AUTH_RECEIVED, ((event: AuthEventResponse) => {
             if (event.detail?.accessToken) {
                 console.log("LoadScript: Event 'authReceived' caught.");
-                safeSendMessage({ type: "AUTH_RECEIVED", data: event.detail });
+                // Map the event type string to the MSG constant
+                safeSendMessage({ type: MSG.AUTH_RECEIVED, data: event.detail }); // <-- Use constant
             }
         }) as EventListener);
 
-        window.addEventListener("accountReceived", ((
+        window.addEventListener(INTERCEPTOR_EVENT.ACCOUNT_RECEIVED, ((
             event: AccountEventResponse,
         ) => {
             if (event.detail?.accounts) {
                 console.log("LoadScript: Event 'accountReceived' caught.");
+                // Map the event type string to the MSG constant
                 safeSendMessage({
-                    type: "ACCOUNT_RECEIVED",
+                    type: MSG.ACCOUNT_RECEIVED, // <-- Use constant
                     data: event.detail,
                 });
             }
         }) as EventListener);
 
-        window.addEventListener("conversationLimitReceived", ((
+        window.addEventListener(INTERCEPTOR_EVENT.CONVERSATION_LIMIT_RECEIVED, ((
             event: ConversationLimitEventResponse,
         ) => {
             if (event.detail?.message_cap) {
                 console.log(
                     "LoadScript: Event 'conversationLimitReceived' caught.",
                 );
+                // Map the event type string to the MSG constant
                 safeSendMessage({
-                    type: "CONVERSATION_LIMIT_RECEIVED",
+                    type: MSG.CONVERSATION_LIMIT_RECEIVED, // <-- Use constant
                     data: event.detail,
                 });
             }
         }) as EventListener);
 
-        window.addEventListener("modelsReceived", ((
+        window.addEventListener(INTERCEPTOR_EVENT.MODELS_RECEIVED, ((
             event: ModelsEventResponse,
         ) => {
             if (event.detail?.models) {
                 console.log("LoadScript: Event 'modelsReceived' caught.");
+                // Map the event type string to the MSG constant
                 safeSendMessage({
-                    type: "MODELS_RECEIVED",
+                    type: MSG.MODELS_RECEIVED, // <-- Use constant
                     data: event.detail,
                 });
             }
