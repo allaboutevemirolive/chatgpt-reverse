@@ -16,10 +16,17 @@
         }
 
         h1,
-        h2 {
+        h2,
+        h3 {
             border-bottom: 1px solid #eee;
             padding-bottom: 5px;
             color: #111;
+            margin-top: 1.5em;
+            /* Add space above headings */
+        }
+
+        h1 {
+            margin-top: 0;
         }
 
         code {
@@ -35,16 +42,20 @@
 
         ul {
             padding-left: 20px;
+            margin-top: 0.5em;
+            /* Reduce space before lists */
         }
 
         li {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            /* Slightly more space between list items */
         }
 
         .last-updated {
             font-style: italic;
             color: #555;
-            margin-top: 20px;
+            margin-bottom: 20px;
+            /* Space after last updated */
         }
     </style>
 </head>
@@ -52,149 +63,295 @@
 <body>
     <h1>Privacy Policy for ChatGPT Reverse</h1>
 
-    <p class="last-updated">Last Updated: 2024-04-06</p>
+    <p class="last-updated">Last Updated: 2025-05-02</p> <!-- Update Date -->
 
     <h2>1. Introduction</h2>
     <p>
         This Privacy Policy describes how the "ChatGPT Reverse" Chrome
-        Extension ("the Extension", "we", "us", or "our") handles your
-        information when you use the extension. This Extension is designed
-        to enhance your experience on chatgpt.com by interacting with its
-        underlying API.
-    </p>
-    <p>
-        <strong>Important:</strong> This extension operates entirely within
-        your browser. We do not operate any external servers, and we do not
-        collect or transmit your personal data or conversation content to
-        our own servers.
+        Extension ("the Extension", "we", "us", or "our") collects, uses,
+        and handles your information when you use the extension. This
+        Extension is designed to enhance your experience on
+        <code>chatgpt.com</code> by interacting with its underlying API and
+        offering optional premium features requiring user accounts and
+        payments.
     </p>
 
-    <h2>2. Information We Handle</h2>
+    <h2>2. Information We Collect or Handle</h2>
     <p>
-        To function, the Extension needs to access certain information
-        available within your browser session on chatgpt.com. This includes:
+        To provide its core and premium features, the Extension handles or
+        collects the following types of information:
     </p>
+
+    <h3>2.1 Information Handled for Core ChatGPT Interaction:</h3>
     <ul>
         <li>
-            <strong>API Headers/Tokens:</strong> The Extension intercepts
-            and stores necessary authentication tokens and headers (like
-            <code>Authorization</code>, <code>OAI-Device-Id</code>,
-            <code>OAI-Language</code>) generated during your session with
-            chatgpt.com.
+            <strong>ChatGPT API Headers/Tokens:</strong> The Extension
+            intercepts and stores necessary authentication tokens and headers
+            (like <code>Authorization</code>, <code>OAI-Device-Id</code>)
+            generated during your session with <code>chatgpt.com</code>.
+            This happens locally within your browser.
         </li>
         <li>
-            <strong>Session-Related Data (Potentially):</strong> If specific
-            features require it, the Extension may attempt to read certain
-            cookies from the chatgpt.com domain using the
-            <code>chrome.cookies</code> API (e.g., cookies related to your
-            session or user settings on ChatGPT).
-        </li>
-        <li>
-            <strong>Conversation Data (Locally Processed):</strong> For
-            features like Markdown export, audio generation, or token
+            <strong>ChatGPT Conversation Data (Locally Processed):</strong>
+            For features like Markdown export, audio generation, or token
             counting, the Extension accesses conversation data (IDs,
-            content, metadata) via the chatgpt.com API using your stored
-            headers/tokens. This processing happens locally within the
-            Extension's service worker.
+            content, metadata) via the <code>chatgpt.com</code> API using
+            your stored headers/tokens. This processing happens locally
+            within the Extension's service worker.
+        </li>
+        <li>
+            <strong>ChatGPT Website Content:</strong> The Extension reads the
+            text content of your conversations on <code>chatgpt.com</code>
+            to enable its features.
+        </li>
+        <li>
+            <strong>Network Activity (on chatgpt.com):</strong> The Extension
+            monitors network requests made to <code>chatgpt.com</code> to
+            intercept necessary API tokens and headers. This monitoring is
+            limited to the <code>chatgpt.com</code> domain.
+        </li>
+        <li>
+            <strong>ChatGPT Cookies (Potentially):</strong> The Extension
+            requests permission to read cookies specifically from the
+            <code>chatgpt.com</code> domain. This may be used to ensure
+            proper interaction with your ChatGPT session if required by future
+            updates or specific features. The Extension does not set its own
+            cookies on this domain.
         </li>
     </ul>
 
-    <h2>3. How We Use Information</h2>
-    <p>The information handled by the Extension is used solely for:</p>
+    <h3>2.2 Information Collected for Optional Accounts & Subscriptions:</h3>
+    <p>
+        To access premium ("Pro") features, you may choose to create an
+        account and purchase a subscription. This involves collecting:
+    </p>
     <ul>
         <li>
-            <strong>Enabling Functionality:</strong> Stored API
-            headers/tokens are used exclusively to make authenticated
-            requests to the official chatgpt.com API endpoints from within
-            the Extension (e.g., fetching conversations, deleting chats,
-            generating audio, exporting).
+            <strong>Personally Identifiable Information (PII):</strong>
+            <ul>
+                <li>
+                    <strong>Email Address:</strong> Collected during account
+                    registration or login for account identification and
+                    communication.
+                </li>
+                <li>
+                    <strong>User ID (UID):</strong> A unique identifier assigned
+                    by Firebase Authentication upon account creation, used to
+                    link your account to your subscription data.
+                </li>
+            </ul>
         </li>
         <li>
-            <strong>Local Processing:</strong> Conversation data accessed
-            via the API is processed locally within your browser to provide
-            features like formatting exports or counting tokens. It is not
-            sent elsewhere by the Extension.
+            <strong>Authentication Information:</strong>
+            <ul>
+                <li>
+                    <strong>Password:</strong> Collected securely during
+                    registration and login via Firebase Authentication for
+                    account security. We do not store your plaintext password.
+                </li>
+            </ul>
         </li>
         <li>
-            <strong>Session Management (Potentially):</strong> Information
-            read from cookies (if implemented and necessary) would be used
-            to ensure the Extension interacts correctly with your
-            chatgpt.com session.
+            <strong>Financial and Payment Information:</strong>
+            <ul>
+                <li>
+                    <strong>Transaction Facilitation:</strong> When you choose
+                    to purchase a subscription, you are redirected to Stripe,
+                    our third-party payment processor. Stripe collects your
+                    payment information (like credit card numbers) directly; we
+                    <strong>do not</strong> collect or store this sensitive
+                    payment information ourselves.
+                </li>
+                <li>
+                    <strong>Subscription Status & History:</strong> We store
+                    information about your subscription plan (e.g., "monthly",
+                    "lifetime"), its status (e.g., "active", "canceled"), and
+                    associated identifiers (linked to your User ID) provided by
+                    Stripe via the Firebase Stripe Payments Extension. This is
+                    stored in our Firestore database to manage your access to
+                    Pro features.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>Location (IP Address):</strong> Like most online services,
+            when you interact with our authentication (Firebase) or payment
+            processing (Stripe via Firebase Functions), your IP address is
+            transmitted as part of standard internet communication protocols.
+            We do not specifically store or use your IP address for tracking
+            location beyond what is necessary for these services to function
+            (e.g., for security, regional compliance).
+        </li>
+    </ul>
+
+    <h3>2.3 Information Handled Through Extension UI Interaction:</h3>
+    <ul>
+        <li>
+            <strong>User Activity (Clicks):</strong> We register clicks within the
+            extension's popup and sidebar UI to trigger extension features
+            (e.g., clicking "Export", "Login", "Manage Subscription").
+        </li>
+    </ul>
+
+    <h2>3. How We Use Your Information</h2>
+    <ul>
+        <li>
+            <strong>Core ChatGPT Interaction:</strong> Stored ChatGPT API
+            headers/tokens are used exclusively to make authenticated requests
+            to the official <code>chatgpt.com</code> API endpoints from
+            within the Extension (e.g., fetching conversations, deleting
+            chats, generating audio, exporting). Conversation content is
+            processed locally for features like export or audio generation.
+        </li>
+        <li>
+            <strong>Account Management:</strong> Your email, password (hashed),
+            and Firebase UID are used by Firebase Authentication to create and
+            secure your optional account for accessing Pro features.
+        </li>
+        <li>
+            <strong>Subscription Management:</strong> Your Firebase UID and
+            subscription status information (received from Stripe and stored
+            in Firestore) are used to grant access to Pro features and allow
+            you to manage your subscription via the Stripe Customer Portal.
+        </li>
+        <li>
+            <strong>Payment Processing:</strong> We initiate redirects to
+            Stripe for payment processing. We use the subscription status
+            provided by Stripe to manage your access.
+        </li>
+        <li>
+            <strong>Functionality and Improvement:</strong> We use click data
+            within the extension UI to understand feature usage and improve
+            the user experience. IP addresses are used implicitly by underlying
+            services (Firebase, Stripe) for security and operation.
+        </li>
+        <li>
+            <strong>Communication:</strong> We may use your provided email address
+            to communicate important information regarding your account or
+            subscription (if you create an account).
         </li>
     </ul>
 
     <h2>4. Data Storage and Security</h2>
     <ul>
         <li>
-            <strong>Local Storage:</strong> API headers/tokens and any other
-            necessary session data intercepted or configured are stored
-            using the <code>chrome.storage.local</code> API. This data
-            remains on your computer within the browser's secure extension
-            storage.
+            <strong>Local Storage (Browser):</strong> ChatGPT API
+            headers/tokens are stored using
+            <code>chrome.storage.local</code> on your computer.
         </li>
         <li>
-            <strong>Security:</strong> While we store this data locally for
-            functionality, please be aware that browser storage security
-            depends on the overall security of your computer and Google
-            account. The stored tokens grant access to your ChatGPT
-            account, similar to being logged into the website.
+            <strong>Firebase Authentication:</strong> Your email and hashed
+            password are stored securely within Google's Firebase
+            Authentication service when you create an account.
         </li>
         <li>
-            <strong>No External Transmission:</strong> We reiterate that the
-            Extension does not send your API tokens, conversation content,
-            or any personal data to any external servers operated by us or
-            third parties. All API communication happens directly between
-            your browser (via the Extension) and the official chatgpt.com
-            servers.
+            <strong>Firestore Database:</strong> Your Firebase User ID and
+            associated subscription details (plan type, status, Stripe IDs)
+            are stored in Google's Firestore database, secured using
+            standard Firebase security rules.
+        </li>
+        <li>
+            <strong>Stripe:</strong> Payment details (credit card numbers,
+            etc.) are handled and stored directly by Stripe, our payment
+            processor, which adheres to stringent security standards (PCI
+            DSS). We do not store this information.
+        </li>
+        <li>
+            <strong>No External Transmission (Core Functionality):</strong>
+            The Extension does not send your ChatGPT API tokens, ChatGPT
+            conversation content, or any personal data related to your ChatGPT
+            usage to any external servers operated by us. All core API
+            communication happens directly between your browser (via the
+            Extension) and the official <code>chatgpt.com</code> servers.
+        </li>
+        <li>
+            <strong>Security Note:</strong> The security of locally stored data
+            (like ChatGPT tokens) and your Firebase/Stripe accounts depends on
+            the overall security of your computer and your account credentials.
         </li>
     </ul>
 
     <h2>5. Data Sharing</h2>
-    <p>
-        We do not share any of the information handled by the Extension with
-        any third parties. The data stays within your browser.
-    </p>
-
-    <h2>6. Cookies</h2>
-    <p>
-        The Extension requests permission to access cookies specifically for
-        the <code>chatgpt.com</code> domain. This permission may be used in
-        the future to read necessary session or configuration cookies from
-        ChatGPT to ensure proper functioning or enable specific features.
-        The Extension does not set its own cookies and only reads cookies
-        set by <code>chatgpt.com</code> when necessary for its operation.
-    </p>
-
-    <h2>7. User Control</h2>
     <ul>
         <li>
-            You can clear the data stored by the Extension (including API
-            tokens) by clearing your browser's extension data or by
-            uninstalling the Extension.
+            <strong>No Sharing of ChatGPT Data:</strong> We do not share your
+            ChatGPT API tokens or conversation content with any third parties.
         </li>
         <li>
-            Uninstalling the Extension will remove all stored data and stop
-            all its functionality.
+            <strong>Firebase & Stripe:</strong> Information required for
+            authentication (email, hashed password) is processed by Firebase.
+            Information required for payment and subscription management
+            (including linking your Firebase UID to Stripe customer/subscription
+            IDs) is processed by Stripe and Firestore via the Firebase Stripe
+            Payments Extension. These are essential service providers for the
+            optional account/subscription features. Please refer to the
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Firebase (Google)
+                Privacy Policy</a>
+            and the <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">Stripe Privacy
+                Policy</a>
+            for details on how they handle data.
+        </li>
+        <li>
+            <strong>Other Third Parties:</strong> We do not share your personal
+            information or usage data with any other third parties, except as
+            required by law.
         </li>
     </ul>
+
+
+    <h2>6. User Control and Rights</h2>
+    <ul>
+        <li>
+            <strong>Local Data:</strong> You can clear locally stored ChatGPT
+            API tokens by clearing your browser's extension data for this
+            Extension or by uninstalling it.
+        </li>
+        <li>
+            <strong>Account Data:</strong> If you create an account, you can
+            typically manage your email and password through standard
+            Firebase Authentication methods (which may be exposed via account
+            management features in the future). You can request account
+            deletion by contacting us (see Section 9).
+        </li>
+        <li>
+            <strong>Subscription Management:</strong> If you have a paid
+            subscription, you can manage it (e.g., cancel, update payment
+            method) via the Stripe Customer Portal, accessible through the
+            "Manage Subscription" button in the Extension's account interface.
+        </li>
+        <li>
+            <strong>Uninstalling:</strong> Uninstalling the Extension will
+            remove locally stored data and stop all its functionality. It does
+            not automatically delete your Firebase account or cancel your
+            Stripe subscription (if applicable); these must be managed
+            separately if desired.
+        </li>
+    </ul>
+
+    <h2>7. Children's Privacy</h2>
+    <p>
+        The Extension is not intended for use by children under the age of 13
+        (or the relevant age of digital consent in your region). We do not
+        knowingly collect personal information from children.
+    </p>
 
     <h2>8. Changes to This Privacy Policy</h2>
     <p>
         We may update this Privacy Policy from time to time. We will notify
-        you of any changes by posting the new Privacy Policy on this page
-        and updating the "Last Updated" date. You are advised to review
-        this Privacy Policy periodically for any changes.
+        you of any significant changes by posting the new Privacy Policy on
+        this page and updating the "Last Updated" date. You are advised to
+        review this Privacy Policy periodically for any changes.
     </p>
 
     <h2>9. Contact Us</h2>
     <p>
-        If you have any questions about this Privacy Policy, please contact
-        us:
+        If you have any questions about this Privacy Policy or your data,
+        please contact us:
     </p>
     <p>
         Akmal Firdaus <br />
         xkmxlfirdxus@gmail.com <br />
-        https://x.com/akmalfirdxus
+        <a href="https://x.com/akmalfirdxus" target="_blank" rel="noopener noreferrer">https://x.com/akmalfirdxus</a>
     </p>
 </body>
 
